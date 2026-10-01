@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NovaShop — tienda online moderna con catálogo, carrito y pedidos por WhatsApp.">
+  <title>NovaShop — Compra online</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="announcement">🚚 Envíos y atención personalizada · Compra fácil desde tu celular</div>
+
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="#inicio" aria-label="NovaShop inicio">
+        <span class="brand-mark">N</span>
+        <span>Nova<span>Shop</span></span>
+      </a>
+      <nav class="main-nav" aria-label="Navegación principal">
+        <a href="#inicio">Inicio</a>
+        <a href="#categorias">Categorías</a>
+        <a href="#productos">Productos</a>
+        <a href="#beneficios">Beneficios</a>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="searchToggle" aria-label="Buscar">⌕</button>
+        <button class="cart-btn" id="cartToggle" aria-label="Abrir carrito">
+          🛒 <span>Carrito</span><b id="cartCount">0</b>
+        </button>
+      </div>
+    </div>
+    <div class="search-bar-wrap" id="searchBarWrap">
+      <div class="container search-inner">
+        <label class="search-box" aria-label="Buscar productos">
+          <span>⌕</span>
+          <input id="searchInput" type="search" placeholder="Busca productos, categorías...">
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <main id="inicio">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">NUEVOS PRODUCTOS · OFERTAS DESTACADAS</span>
+          <h1>Lo que buscas.<br><em>Más fácil.</em></h1>
+          <p>Descubre productos útiles, modernos y con una experiencia de compra rápida desde cualquier dispositivo.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="#productos">Explorar productos</a>
+            <a class="btn btn-ghost" href="#categorias">Ver categorías</a>
+          </div>
+          <div class="micro-trust">
+            <span>✓ Atención personalizada</span>
+            <span>✓ Carrito guardado</span>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-card main">
+            <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1100&q=80" alt="Producto destacado">
+            <div class="hero-badge">OFERTA</div>
+            <div class="hero-caption"><span>Producto destacado</span><strong>Hasta 35% OFF</strong></div>
+          </div>
+          <div class="float-card float-one">⚡ <span>Compra rápida</span></div>
+          <div class="float-card float-two">★ <span>Productos seleccionados</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="categorias">
+      <div class="container">
+        <div class="section-head">
+          <div><span class="eyebrow">DESCUBRE</span><h2>Compra por categoría</h2></div>
+          <a href="#productos" class="text-link">Ver todo →</a>
+        </div>
+        <div class="category-grid" id="categoryGrid"></div>
+      </div>
+    </section>
+
+    <section class="section muted" id="productos">
+      <div class="container">
+        <div class="section-head product-heading">
+          <div><span class="eyebrow">SELECCIÓN DE HOY</span><h2>Productos populares</h2></div>
+          <div class="toolbar">
+            <select id="categoryFilter" aria-label="Filtrar por categoría">
+              <option value="all">Todas las categorías</option>
+            </select>
+            <select id="sortSelect" aria-label="Ordenar productos">
+              <option value="featured">Destacados</option>
+              <option value="priceAsc">Precio: menor a mayor</option>
+              <option value="priceDesc">Precio: mayor a menor</option>
+              <option value="name">Nombre A–Z</option>
+            </select>
+          </div>
+        </div>
+        <div class="product-grid" id="productGrid"></div>
+        <div class="empty-state" id="emptyState" hidden>No encontramos productos con esos filtros.</div>
+      </div>
+    </section>
+
+    <section class="benefits section" id="beneficios">
+      <div class="container benefits-grid">
+        <article><span>⚡</span><div><h3>Compra sencilla</h3><p>Encuentra, agrega al carrito y envía tu pedido en pocos pasos.</p></div></article>
+        <article><span>💬</span><div><h3>Atención directa</h3><p>Recibe tu resumen de compra y continúa la conversación por WhatsApp.</p></div></article>
+        <article><span>🔒</span><div><h3>Pago fuera del sitio</h3><p>La página no solicita números de tarjeta ni contraseñas.</p></div></article>
+      </div>
+    </section>
+
+    <section class="newsletter section">
+      <div class="container newsletter-card">
+        <div><span class="eyebrow">NOVEDADES</span><h2>Recibe ofertas y nuevos productos</h2><p>Déjanos tu correo para futuras campañas y lanzamientos.</p></div>
+        <form id="newsletterForm" class="newsletter-form">
+          <input type="email" placeholder="tu@email.com" required aria-label="Correo electrónico">
+          <button class="btn btn-primary" type="submit">Suscribirme</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div><a class="brand footer-brand" href="#inicio"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a><p>Tienda online demo lista para personalizar y publicar en GitHub Pages.</p></div>
+      <div><h4>Tienda</h4><a href="#productos">Productos</a><a href="#categorias">Categorías</a><a href="#beneficios">Beneficios</a></div>
+      <div><h4>Ayuda</h4><a href="#" onclick="openModal('shipping');return false;">Envíos</a><a href="#" onclick="openModal('returns');return false;">Cambios y devoluciones</a><a href="#" onclick="openModal('privacy');return false;">Privacidad</a></div>
+      <div><h4>Contacto</h4><p>WhatsApp: +57 300 000 0000</p><p>hola@novashop.co</p></div>
+    </div>
+    <div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Plantilla estática para GitHub Pages</span></div>
+  </footer>
+
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="cart-drawer" id="cartDrawer" aria-label="Carrito de compras">
+    <div class="drawer-head"><div><span class="eyebrow">TU PEDIDO</span><h2>Carrito</h2></div><button class="close-btn" id="cartClose" aria-label="Cerrar carrito">×</button></div>
+    <div id="cartItems" class="cart-items"></div>
+    <div class="cart-footer">
+      <div class="subtotal"><span>Subtotal</span><strong id="cartSubtotal">$0</strong></div>
+      <button class="btn btn-primary wide" id="whatsappCheckout">Pedir por WhatsApp</button>
+      <small>El pedido se abrirá en WhatsApp con el resumen de productos. No introduzcas datos de tarjeta en esta página.</small>
+    </div>
+  </aside>
+
+  <div class="modal" id="infoModal" aria-hidden="true">
+    <div class="modal-card"><button class="close-btn" onclick="closeModal()">×</button><div id="modalContent"></div></div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script src="products.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

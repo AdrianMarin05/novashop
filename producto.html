@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Detalle del producto — NovaShop.">
+  <title>Producto — NovaShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="product-page">
+  <div class="announcement">🚚 Envíos y atención personalizada · Compra fácil desde tu celular</div>
+
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html" aria-label="NovaShop inicio">
+        <span class="brand-mark">N</span>
+        <span>Nova<span>Shop</span></span>
+      </a>
+      <nav class="main-nav" aria-label="Navegación principal">
+        <a href="index.html">Inicio</a>
+        <a href="index.html#categorias">Categorías</a>
+        <a href="index.html#productos">Productos</a>
+      </nav>
+      <div class="header-actions">
+        <a class="cart-btn product-cart-link" href="index.html#carrito" aria-label="Ver carrito">
+          🛒 <span>Carrito</span><b id="productCartCount">0</b>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="product-detail-section">
+      <div class="container">
+        <nav class="breadcrumbs" aria-label="Migas de pan">
+          <a href="index.html">Inicio</a><span>›</span>
+          <a id="breadcrumbCategory" href="index.html#productos">Categoría</a><span>›</span>
+          <strong id="breadcrumbProduct">Producto</strong>
+        </nav>
+
+        <div class="product-detail-grid">
+          <div class="product-gallery">
+            <div class="product-main-image-wrap">
+              <span class="tag product-detail-tag" id="productTag">OFERTA</span>
+              <img id="productMainImage" src="" alt="" class="product-main-image">
+            </div>
+            <div class="product-thumbnails" id="productThumbnails"></div>
+          </div>
+
+          <article class="product-info">
+            <span class="eyebrow" id="productCategory">CATEGORÍA</span>
+            <h1 id="productName">Cargando producto...</h1>
+            <div class="rating-row">
+              <span class="stars" id="productRatingStars">★★★★★</span>
+              <strong id="productRating">4.8</strong>
+              <span id="productReviews">(0 reseñas)</span>
+            </div>
+
+            <div class="detail-price-row">
+              <strong class="detail-price" id="productPrice">$0</strong>
+              <span class="detail-old-price" id="productOldPrice"></span>
+              <span class="detail-discount" id="productDiscount"></span>
+            </div>
+
+            <p class="product-description" id="productDescription"></p>
+
+            <div class="trust-list">
+              <div>✓ <span>Producto disponible</span></div>
+              <div>✓ <span>Envíos a todo Colombia</span></div>
+              <div>✓ <span>Atención directa por WhatsApp</span></div>
+            </div>
+
+            <div class="purchase-box">
+              <div>
+                <span class="quantity-label">Cantidad</span>
+                <div class="quantity-picker">
+                  <button type="button" id="qtyMinus" aria-label="Disminuir cantidad">−</button>
+                  <span id="quantityValue">1</span>
+                  <button type="button" id="qtyPlus" aria-label="Aumentar cantidad">+</button>
+                </div>
+              </div>
+              <button class="btn btn-primary product-add-btn" id="addProductToCart">Añadir al carrito</button>
+            </div>
+            <button class="btn btn-ghost wide" id="buyNow">Comprar por WhatsApp</button>
+
+            <div class="detail-note">
+              <strong>Envíos</strong>
+              <p id="productShipping"></p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="product-information section muted">
+      <div class="container product-info-grid">
+        <div>
+          <span class="eyebrow">INFORMACIÓN</span>
+          <h2>Descripción del producto</h2>
+          <p id="longDescription"></p>
+        </div>
+        <div>
+          <span class="eyebrow">DETALLES</span>
+          <h2>Características</h2>
+          <ul id="productFeatures" class="feature-list"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="productToast" role="status"></div>
+
+  <script src="products.js"></script>
+  <script src="product.js"></script>
+</body>
+</html>
