@@ -125,7 +125,7 @@
       <div><a class="brand footer-brand" href="#inicio"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a><p>Tienda online demo lista para personalizar y publicar en GitHub Pages.</p></div>
       <div><h4>Tienda</h4><a href="#productos">Productos</a><a href="#categorias">Categorías</a><a href="#beneficios">Beneficios</a></div>
       <div><h4>Ayuda</h4><a href="#" onclick="openModal('shipping');return false;">Envíos</a><a href="#" onclick="openModal('returns');return false;">Cambios y devoluciones</a><a href="#" onclick="openModal('privacy');return false;">Privacidad</a></div>
-      <div><h4>Contacto</h4><p>WhatsApp: +57 300 000 0000</p><p>hola@novashop.co</p></div>
+      <div><h4>Contacto</h4><p>WhatsApp: +57 300 335 8382</p><p>hola@novashop.co</p></div>
     </div>
     <div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Plantilla estática para GitHub Pages</span></div>
   </footer>
@@ -143,6 +143,100 @@
 
   <div class="modal" id="infoModal" aria-hidden="true">
     <div class="modal-card"><button class="close-btn" onclick="closeModal()">×</button><div id="modalContent"></div></div>
+  </div>
+
+  <div class="modal checkout-modal" id="checkoutModal" aria-hidden="true">
+    <div class="modal-card checkout-card" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
+      <button class="close-btn checkout-close" id="checkoutClose" type="button" aria-label="Cerrar formulario">×</button>
+      <div class="checkout-head">
+        <span class="eyebrow">FINALIZAR PEDIDO</span>
+        <h2 id="checkoutTitle">Completa tu pedido</h2>
+        <p>✨ Déjanos tus datos para preparar el pedido. Al finalizar, se abrirá WhatsApp con toda la información organizada para confirmar tu compra.</p>
+      </div>
+
+      <form id="checkoutForm" class="checkout-form">
+        <div class="form-section-title">👤 Información personal</div>
+        <div class="form-grid two-cols">
+          <label>
+            <span>Nombres *</span>
+            <input name="firstName" type="text" autocomplete="given-name" required maxlength="60" placeholder="Ej. Juan Carlos">
+          </label>
+          <label>
+            <span>Apellidos *</span>
+            <input name="lastName" type="text" autocomplete="family-name" required maxlength="60" placeholder="Ej. Pérez Gómez">
+          </label>
+          <label>
+            <span>Teléfono / WhatsApp *</span>
+            <input name="phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="20" placeholder="300 123 4567">
+          </label>
+          <label>
+            <span>Correo electrónico</span>
+            <input name="email" type="email" autocomplete="email" maxlength="100" placeholder="correo@ejemplo.com">
+          </label>
+        </div>
+
+        <div class="form-section-title">📍 Dirección de entrega</div>
+        <div class="form-grid two-cols">
+          <label class="full">
+            <span>Dirección completa *</span>
+            <input name="address" type="text" autocomplete="street-address" required maxlength="140" placeholder="Ej. Carrera 20 # 15-30, Apto 302">
+          </label>
+          <label>
+            <span>Barrio *</span>
+            <input name="neighborhood" type="text" autocomplete="address-level3" required maxlength="80" placeholder="Ej. Centro">
+          </label>
+          <label>
+            <span>Ciudad / Municipio *</span>
+            <input name="city" type="text" autocomplete="address-level2" required maxlength="80" placeholder="Ej. Bucaramanga">
+          </label>
+          <label>
+            <span>Departamento *</span>
+            <select name="department" required autocomplete="address-level1">
+              <option value="">Selecciona tu departamento</option>
+              <option>Amazonas</option><option>Antioquia</option><option>Arauca</option><option>Atlántico</option>
+              <option>Bolívar</option><option>Boyacá</option><option>Caldas</option><option>Caquetá</option>
+              <option>Casanare</option><option>Cauca</option><option>Cesar</option><option>Chocó</option>
+              <option>Córdoba</option><option>Cundinamarca</option><option>Guainía</option><option>Guaviare</option>
+              <option>Huila</option><option>La Guajira</option><option>Magdalena</option><option>Meta</option>
+              <option>Nariño</option><option>Norte de Santander</option><option>Putumayo</option><option>Quindío</option>
+              <option>Risaralda</option><option>San Andrés y Providencia</option><option>Santander</option><option>Sucre</option>
+              <option>Tolima</option><option>Valle del Cauca</option><option>Vaupés</option><option>Vichada</option>
+            </select>
+          </label>
+          <label>
+            <span>Código postal</span>
+            <input name="postalCode" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="10" placeholder="Opcional">
+          </label>
+          <label class="full">
+            <span>Referencia o indicaciones de entrega</span>
+            <textarea name="reference" maxlength="240" rows="3" placeholder="Ej. Casa de rejas negras, frente al parque..."></textarea>
+          </label>
+        </div>
+
+        <div class="form-section-title">💳 Pago y confirmación</div>
+        <div class="form-grid two-cols">
+          <label class="full">
+            <span>Método de pago preferido *</span>
+            <select name="paymentMethod" required>
+              <option value="">Selecciona una opción</option>
+              <option>Contraentrega (si está disponible)</option>
+              <option>Transferencia bancaria</option>
+              <option>Nequi / Daviplata</option>
+              <option>Otro / por confirmar</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="consent-row">
+          <input name="consent" type="checkbox" required>
+          <span>Acepto que mis datos se utilicen para gestionar este pedido y coordinar la entrega. *</span>
+        </label>
+
+        <div class="checkout-summary" id="checkoutSummary"></div>
+        <button class="btn btn-primary wide checkout-submit" type="submit">💬 Continuar a WhatsApp</button>
+        <p class="checkout-privacy">No introduzcas datos de tarjetas, contraseñas ni códigos de seguridad en este formulario.</p>
+      </form>
+    </div>
   </div>
 
   <div class="toast" id="toast" role="status"></div>

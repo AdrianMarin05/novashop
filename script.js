@@ -54,9 +54,137 @@ function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('sh
 
 function checkoutWhatsApp(){
   if(!cart.length){ toast('Añade al menos un producto'); return; }
-  const lines=cart.map(i=>`• ${i.name} x${i.qty} — ${money(i.price*i.qty)}`).join('\n');
-  const text=`Hola, quiero hacer este pedido en ${CONFIG.storeName}:\n\n${lines}\n\nSubtotal: ${money(cartTotal())}\n\n¿Me confirman disponibilidad, envío y formas de pago?`;
-  window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`,'_blank','noopener,noreferrer');
+  renderCheckoutSummary();
+  openCheckoutModal();
+}
+
+function renderCheckoutSummary(){
+  const summary=$('#checkoutSummary');
+  if(!summary) return;
+  const itemCount=cartCount();
+  const lines=cart.map(i=>`<li>${escapeHTML(i.name)} ×${i.qty} — <strong>${money(i.price*i.qty)}</strong></li>`).join('');
+  summary.innerHTML=`<div class="checkout-summary-title"><strong>Resumen del pedido</strong><span>${itemCount} ${itemCount===1?'producto':'productos'}</span></div><ul class="checkout-summary-list">${lines}</ul><div class="checkout-summary-total"><span>Subtotal</span><strong>${money(cartTotal())}</strong></div>`;
+}
+
+function openCheckoutModal(){
+  const modal=$('#checkoutModal');
+  if(!modal) return;
+  renderCheckoutSummary();
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+  const first=modal.querySelector('input[name="firstName"]');
+  window.setTimeout(()=>first?.focus(),50);
+}
+
+function closeCheckoutModal(){
+  const modal=$('#checkoutModal');
+  if(!modal) return;
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden','true');
+  document.body.style.overflow='';
+}
+
+function escapeHTML(value){
+  return String(value).replace(/[&<>"']/g, char=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[char]));
+}
+
+function cleanField(value){
+  return String(value||'').trim().replace(/\s+/g,' ');
+}
+
+function buildWhatsAppMessage(data){
+  const lines=cart.map((i,index)=>[
+    `${index+1}. ${i.name}`,
+    `   Cantidad: ${i.qty}`,
+    `   Precio: ${money(i.price)} c/u`,
+    `   Total: ${money(i.price*i.qty)}`
+  ].join('\n')).join('\n\n');
+
+  const I = {
+    wave: '\u{1F44B}',
+    bag: '\u{1F6CD}',
+    package: '\u{1F4E6}',
+    user: '\u{1F464}',
+    phone: '\u{1F4F1}',
+    email: '\u{1F4E7}',
+    pin: '\u{1F4CD}',
+    house: '\u{1F3E0}',
+    map: '\u{1F5FA}',
+    note: '\u{1F4DD}',
+    card: '\u{1F4B3}',
+    check: '\u{2705}',
+    pray: '\u{1F64F}'
+  };
+
+  return [
+    `${I.wave} Hola, ${data.firstName}! Quiero realizar un pedido en ${CONFIG.storeName}.`,
+    '',
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${I.bag} *MI PEDIDO*`,
+    '━━━━━━━━━━━━━━━━━━━━',
+    lines,
+    '',
+    `${I.package} *Subtotal:* ${money(cartTotal())}`,
+    '',
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${I.user} *DATOS DEL CLIENTE*`,
+    '━━━━━━━━━━━━━━━━━━━━',
+    `Nombre: ${data.firstName} ${data.lastName}`,
+    `${I.phone} Teléfono / WhatsApp: ${data.phone}`,
+    data.email ? `${I.email} Correo: ${data.email}` : null,
+    '',
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${I.pin} *DIRECCIÓN DE ENTREGA*`,
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${I.house} Dirección: ${data.address}`,
+    `Barrio: ${data.neighborhood}`,
+    `Ciudad / Municipio: ${data.city}`,
+    `Departamento: ${data.department}`,
+    data.postalCode ? `Código postal: ${data.postalCode}` : null,
+    data.reference ? `${I.note} Referencia: ${data.reference}` : null,
+    '',
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${I.card} *MÉTODO DE PAGO*`,
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${data.paymentMethod}`,
+    '',
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${I.check} *POR FAVOR, CONFIRMAR*`,
+    '━━━━━━━━━━━━━━━━━━━━',
+    '• Disponibilidad de los productos',
+    '• Costo de envío',
+    '• Tiempo estimado de entrega',
+    '',
+    `${I.pray} ¡Muchas gracias! Quedo atento a su confirmación.`
+  ].filter(Boolean).join('\n');
+}
+
+function submitCheckoutForm(event){
+  event.preventDefault();
+  if(!cart.length){ closeCheckoutModal(); toast('Tu carrito está vacío'); return; }
+  const form=event.currentTarget;
+  if(!form.checkValidity()){ form.reportValidity(); return; }
+
+  const raw=new FormData(form);
+  const data={
+    firstName:cleanField(raw.get('firstName')),
+    lastName:cleanField(raw.get('lastName')),
+    phone:cleanField(raw.get('phone')),
+    email:cleanField(raw.get('email')),
+    address:cleanField(raw.get('address')),
+    neighborhood:cleanField(raw.get('neighborhood')),
+    city:cleanField(raw.get('city')),
+    department:cleanField(raw.get('department')),
+    postalCode:cleanField(raw.get('postalCode')),
+    reference:cleanField(raw.get('reference')),
+    paymentMethod:cleanField(raw.get('paymentMethod'))
+  };
+
+  const text=buildWhatsAppMessage(data);
+  const url=`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
+  closeCheckoutModal();
+  window.open(url,'_blank','noopener,noreferrer');
 }
 
 window.openModal=function(type){
@@ -76,7 +204,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('#categoryFilter').addEventListener('change',renderProducts); $('#sortSelect').addEventListener('change',renderProducts); $('#searchInput').addEventListener('input',renderProducts);
   $('#searchToggle').addEventListener('click',()=>{ const x=$('#searchBarWrap'); x.classList.toggle('open'); if(x.classList.contains('open')) $('#searchInput').focus(); });
   $('#cartToggle').addEventListener('click',openCart); $('#cartClose').addEventListener('click',closeCart); $('#drawerOverlay').addEventListener('click',closeCart); $('#whatsappCheckout').addEventListener('click',checkoutWhatsApp);
+  $('#checkoutForm').addEventListener('submit',submitCheckoutForm);
+  $('#checkoutClose').addEventListener('click',closeCheckoutModal);
+  $('#checkoutModal').addEventListener('click',e=>{if(e.target.id==='checkoutModal') closeCheckoutModal();});
   $('#newsletterForm').addEventListener('submit',e=>{e.preventDefault();e.target.reset();toast('Gracias. Suscripción registrada en modo demo.');});
   if(window.location.hash==='#carrito') openCart();
   $('#infoModal').addEventListener('click',e=>{if(e.target.id==='infoModal') closeModal();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCheckoutModal(); closeModal(); if($('#cartDrawer').classList.contains('open')) closeCart();}});
 });

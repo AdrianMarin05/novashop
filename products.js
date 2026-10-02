@@ -1,6 +1,6 @@
 const CONFIG = {
   storeName: 'NovaShop',
-  whatsapp: '573000000000',
+  whatsapp: '573003358382',
   currency: 'COP'
 };
 

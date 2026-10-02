@@ -53,10 +53,130 @@ function addCurrentProduct(amount = quantity) {
   showToast(`${currentProduct.name} añadido al carrito`);
 }
 
-function buyNow() {
+function cleanField(value) {
+  return String(value || '').trim().replace(/\s+/g, ' ');
+}
+
+function renderProductCheckoutSummary() {
+  const total = currentProduct.price * quantity;
+  const summary = $('#productCheckoutSummary');
+  if (!summary) return;
+  summary.innerHTML = `
+    <div class="checkout-summary-title"><strong>🛍️ Tu compra</strong><span>${quantity} ${quantity === 1 ? 'unidad' : 'unidades'}</span></div>
+    <ul class="checkout-summary-list">
+      <li>${currentProduct.name} ×${quantity} — <strong>${money(total)}</strong></li>
+    </ul>
+    <div class="checkout-summary-total"><span>Subtotal de productos</span><strong>${money(total)}</strong></div>
+  `;
+}
+
+function openProductCheckout() {
+  renderProductCheckoutSummary();
+  const modal = $('#productCheckoutModal');
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  window.setTimeout(() => $('#productCheckoutForm input[name="firstName"]')?.focus(), 50);
+}
+
+function closeProductCheckout() {
+  const modal = $('#productCheckoutModal');
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+function buildProductWhatsAppMessage(data) {
   const subtotal = currentProduct.price * quantity;
-  const text = `Hola, quiero comprar este producto en ${CONFIG.storeName}:\n\n• ${currentProduct.name} x${quantity} — ${money(subtotal)}\n\n¿Me confirman disponibilidad, envío y formas de pago?`;
-  window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+
+  const I = {
+    wave: '\u{1F44B}',
+    bag: '\u{1F6CD}',
+    package: '\u{1F4E6}',
+    user: '\u{1F464}',
+    phone: '\u{1F4F1}',
+    email: '\u{1F4E7}',
+    pin: '\u{1F4CD}',
+    house: '\u{1F3E0}',
+    note: '\u{1F4DD}',
+    card: '\u{1F4B3}',
+    check: '\u{2705}',
+    pray: '\u{1F64F}'
+  };
+
+  return [
+    `${I.wave} Hola, ${data.firstName}! Quiero comprar este producto en ${CONFIG.storeName}.`,
+    '',
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${I.bag} *MI COMPRA*`,
+    '━━━━━━━━━━━━━━━━━━━━',
+    `1. ${currentProduct.name}`,
+    `   Cantidad: ${quantity}`,
+    `   Precio: ${money(currentProduct.price)} c/u`,
+    `   Total: ${money(subtotal)}`,
+    '',
+    `${I.package} *Subtotal:* ${money(subtotal)}`,
+    '',
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${I.user} *DATOS DEL CLIENTE*`,
+    '━━━━━━━━━━━━━━━━━━━━',
+    `Nombre: ${data.firstName} ${data.lastName}`,
+    `${I.phone} Teléfono / WhatsApp: ${data.phone}`,
+    data.email ? `${I.email} Correo: ${data.email}` : null,
+    '',
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${I.pin} *DIRECCIÓN DE ENTREGA*`,
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${I.house} Dirección: ${data.address}`,
+    `Barrio: ${data.neighborhood}`,
+    `Ciudad / Municipio: ${data.city}`,
+    `Departamento: ${data.department}`,
+    data.postalCode ? `Código postal: ${data.postalCode}` : null,
+    data.reference ? `${I.note} Referencia: ${data.reference}` : null,
+    '',
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${I.card} *MÉTODO DE PAGO*`,
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${data.paymentMethod}`,
+    '',
+    '━━━━━━━━━━━━━━━━━━━━',
+    `${I.check} *POR FAVOR, CONFIRMAR*`,
+    '━━━━━━━━━━━━━━━━━━━━',
+    '• Disponibilidad del producto',
+    '• Costo de envío',
+    '• Tiempo estimado de entrega',
+    '',
+    `${I.pray} ¡Muchas gracias! Quedo atento a su confirmación.`
+  ].filter(Boolean).join('\n');
+}
+
+function submitProductCheckout(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  const raw = new FormData(form);
+  const data = {
+    firstName: cleanField(raw.get('firstName')),
+    lastName: cleanField(raw.get('lastName')),
+    phone: cleanField(raw.get('phone')),
+    email: cleanField(raw.get('email')),
+    address: cleanField(raw.get('address')),
+    neighborhood: cleanField(raw.get('neighborhood')),
+    city: cleanField(raw.get('city')),
+    department: cleanField(raw.get('department')),
+    postalCode: cleanField(raw.get('postalCode')),
+    reference: cleanField(raw.get('reference')),
+    paymentMethod: cleanField(raw.get('paymentMethod'))
+  };
+
+  const text = buildProductWhatsAppMessage(data);
+  const url = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
+  closeProductCheckout();
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 function renderProduct() {
@@ -64,7 +184,7 @@ function renderProduct() {
 
   $('#breadcrumbCategory').textContent = currentProduct.category;
   $('#breadcrumbProduct').textContent = currentProduct.name;
-  $('#breadcrumbCategory').href = `index.html#productos`;
+  $('#breadcrumbCategory').href = 'index.html#productos';
 
   $('#productCategory').textContent = currentProduct.category.toUpperCase();
   $('#productName').textContent = currentProduct.name;
@@ -113,7 +233,20 @@ $('#qtyPlus').addEventListener('click', () => {
 });
 
 $('#addProductToCart').addEventListener('click', () => addCurrentProduct());
-$('#buyNow').addEventListener('click', buyNow);
+$('#buyNow').addEventListener('click', openProductCheckout);
+$('#productCheckoutClose').addEventListener('click', closeProductCheckout);
+$('#productCheckoutModal').addEventListener('click', (event) => {
+  if (event.target.id === 'productCheckoutModal') closeProductCheckout();
+});
+$('#productCheckoutForm').addEventListener('submit', submitProductCheckout);
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeProductCheckout();
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') updateCartCount();
+});
 
 renderProduct();
 updateCartCount();
