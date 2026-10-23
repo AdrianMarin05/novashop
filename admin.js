@@ -50,6 +50,7 @@ async function inviteUser(event){
  finally{button.disabled=false;button.textContent="Enviar invitación por correo";}
 }
 function configureRolePanels(){
+ document.body.classList.add("admin-authorized");
  const users=$("#adminUsersWrap"),editor=document.querySelector(".admin-grid > section:first-child"),catalog=document.querySelector(".admin-grid > section:nth-child(2)"),metricsWrap=document.querySelector(".admin-metrics-wrap");
  const canManage=["owner","admin"].includes(currentRole),canEdit=["owner","admin","catalog_manager"].includes(currentRole),canAnalyze=["owner","admin","analyst"].includes(currentRole);
  if(users)users.hidden=!canManage;
