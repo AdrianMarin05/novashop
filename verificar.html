@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Verifica tu correo o teléfono para terminar de crear tu cuenta NovaShop.">
+<title>Verificar cuenta — NovaShop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=16">
+<style>
+.verify-wrap{max-width:560px;margin:56px auto 80px;padding:0 20px}.verify-card{border:1px solid #e0e6eb;border-radius:24px;background:#fff;padding:clamp(24px,5vw,42px);box-shadow:0 22px 65px #13283d12;text-align:center}
+.verify-icon{margin:0 auto 18px;width:62px;height:62px;border-radius:20px;display:grid;place-items:center;background:#fff0eb;color:#d64b2e;font-size:28px}
+.verify-card h1{font-size:clamp(27px,4vw,36px);letter-spacing:-.05em;margin:0 0 11px}.verify-card p{font-size:14px;line-height:1.65;color:#63717c}.verify-destination{background:#f5f8fa;border:1px solid #e2e9ee;border-radius:12px;padding:12px 14px;font-weight:800;color:#26394b;overflow-wrap:anywhere;margin:18px 0 24px}
+.verify-code{font-size:30px!important;letter-spacing:.32em;text-align:center;font-weight:800;height:62px!important}.verify-status{border-radius:12px;padding:12px;margin:16px 0 0;font-size:13px;line-height:1.55;background:#eef5ff;color:#244b72}.verify-status.error{background:#fff0ee;color:#9f3022}.verify-status.success{background:#eaf8ef;color:#20653a}
+</style></head><body>
+<div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
+<header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a><nav class="main-nav"><a href="index.html">Inicio</a><a href="streaming.html">Streaming</a></nav><div class="header-actions account-actions"><a class="account-btn" href="cuenta.html">Volver a mi cuenta</a></div></div></header>
+<main class="verify-wrap"><section class="verify-card">
+<div class="verify-icon">✉</div><span class="eyebrow">ÚLTIMO PASO</span><h1>Verifica tu cuenta</h1>
+<p>Te enviamos un solo código de verificación al canal que elegiste. Escríbelo aquí una vez para activar tu cuenta.</p>
+<div id="verifyDestination" class="verify-destination">Preparando verificación…</div>
+<form id="verifyCodeForm" class="account-form" novalidate>
+<label style="text-align:left"><span>Código de 6 dígitos</span><input class="verify-code" name="token" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required placeholder="••••••"></label>
+<button type="submit" id="verifyButton" class="btn btn-primary wide">Verificar y crear mi cuenta</button>
+</form>
+<div id="verifyStatus" class="verify-status" role="status" aria-live="polite" hidden></div>
+<p style="font-size:12px;margin-top:20px">Si elegiste correo, revisa también la carpeta de spam. Si el código no llega, revisa que tu proveedor de correo/SMS esté configurado.</p>
+<a class="account-ghost" href="cuenta.html?tab=register">Volver al registro</a>
+</section></main>
+<footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Verificación de un solo uso</span></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=16"></script><script src="supabase-client.js?v=16"></script><script src="verify.js?v=16"></script>
+</body></html>
