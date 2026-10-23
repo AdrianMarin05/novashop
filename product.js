@@ -164,6 +164,8 @@ async function submitProductCheckout(event) {
     showToast('Para productos físicos, completa dirección, barrio, ciudad y departamento.');
     return;
   }
+  // Pre-open WhatsApp during the click to avoid browser popup blocking after the async database call.
+  const whatsappTab=window.open('about:blank','_blank');
   let savedOrder=null;
   if(window.NovaShopDB?.isConfigured?.()){
     const button=form.querySelector('button[type="submit"]');
@@ -171,6 +173,7 @@ async function submitProductCheckout(event) {
     try{
       savedOrder=await window.NovaShopDB.createOrder(data,[{product_id:Number(currentProduct.id),quantity:Number(quantity)}]);
     }catch(error){
+      whatsappTab?.close();
       showToast(error?.message||'No pudimos guardar el pedido. Inténtalo de nuevo.');
       if(button){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}
       return;
