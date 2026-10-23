@@ -122,15 +122,6 @@ Guarda la plantilla y vuelve a intentar con un correo que no esté registrado pr
 La opción de verificación por WhatsApp está inactiva hasta conectar Twilio/Twilio Verify con canal WhatsApp. La autenticación por correo no necesita esa integración. No actives el canal WhatsApp hasta que las credenciales del proveedor estén configuradas.
 
 
-## Administración de usuarios y acceso inicial
+## Seguridad administrativa
 
-- La cuenta ya verificada `adrianmarinnn05@gmail.com` tiene el alias de acceso `ADMIN` y rol `owner` en Supabase.
-- Para iniciar como `ADMIN`, usa la contraseña existente de esa cuenta; no se ha cambiado automáticamente a `Admin05`.
-- El panel invita usuarios por correo y asigna roles: cliente, gestor de catálogo, analista y administrador.
-- Solo owner/admin pueden administrar cuentas; solo owner puede otorgar el rol admin. El propietario está protegido contra cambios de rol desde la UI.
-- `public.store_user_roles` queda sin permisos directos para `anon`/ `authenticated`; las operaciones de roles pasan por la Edge Function con sesión validada.
-- Para recibir un código OTP de correo, configurar Authentication → Email Templates → Confirm signup con `{{ .Token }}`. La URL del código se fuerza a GitHub Pages para evitar enlaces `localhost`.
-
-
-### Cuenta administrativa inicial
-El usuario de inicio `ADMIN` es un alias del usuario propietario existente (`adrianmarinnn05@gmail.com`) con rol `owner`. Por seguridad, la contraseña de esa cuenta no se cambió automáticamente al texto débil compartido en el chat: debe seguir usándose la contraseña actual o restablecerse mediante el correo de recuperación. No publiques la contraseña del panel.
+El panel administrativo está protegido por roles validados en el servidor. No guardes credenciales ni contraseñas en este repositorio. El acceso y la asignación de roles se realizan desde Supabase y el panel privado.
