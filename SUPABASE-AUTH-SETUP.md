@@ -8,6 +8,7 @@ Configura:
 - **Redirect URLs:**
   - `https://adrianmarin05.github.io/novashop/verificar.html`
   - `https://adrianmarin05.github.io/novashop/cuenta.html`
+  - `https://adrianmarin05.github.io/novashop/restablecer.html`
 
 Guarda los cambios. No uses localhost para el sitio publicado.
 
@@ -31,3 +32,7 @@ La opción de verificación por WhatsApp está inactiva hasta conectar Twilio/Tw
 Los registros de Auth mostraron `user_repeated_signup` para el correo que ya estaba verificado. Supabase no genera un segundo código al intentar registrar otra vez un correo ya existente/confirmado. Para probar un registro nuevo, usa un correo nuevo; para esa cuenta, inicia sesión o usa la recuperación de contraseña.
 
 La solicitud anterior se inició desde `http://localhost:3000`. El código actual ahora fija la redirección a la página publicada de GitHub Pages, pero el correo solo se convertirá en código numérico después de guardar la plantilla de **Confirm signup** con `{{ .Token }}`.
+
+
+## Página separada de recuperación de contraseña
+La recuperación y el formulario de contraseña nueva están en `restablecer.html`, separado de la página de cuenta. En URL Configuration asegúrate de permitir también `https://adrianmarin05.github.io/novashop/restablecer.html`. La nueva página envía el enlace de recuperación con esa redirección.
