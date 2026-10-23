@@ -212,21 +212,24 @@ function renderProduct() {
   const stars = '★'.repeat(Math.round(currentProduct.rating)) + '☆'.repeat(5 - Math.round(currentProduct.rating));
   $('#productRatingStars').textContent = stars;
 
-  $('#productMainImage').src = currentProduct.images[0];
-  $('#productMainImage').alt = currentProduct.name;
-
-  $('#productThumbnails').innerHTML = currentProduct.images.map((image, index) => `
-    <button class="thumbnail ${index === 0 ? 'active' : ''}" type="button" data-index="${index}" aria-label="Ver imagen ${index + 1}">
-      <img src="${image}" alt="${currentProduct.name} imagen ${index + 1}">
-    </button>
-  `).join('');
-
-  document.querySelectorAll('.thumbnail').forEach(button => {
-    button.addEventListener('click', () => {
-      const index = Number(button.dataset.index);
-      $('#productMainImage').src = currentProduct.images[index];
-      document.querySelectorAll('.thumbnail').forEach(item => item.classList.remove('active'));
+  const mainImage=$('#productMainImage'),mainVideo=$('#productMainVideo');
+  mainImage.hidden=false;mainImage.src=currentProduct.images?.[0]||'images/streaming-placeholder.svg';mainImage.alt=currentProduct.name;
+  mainVideo.pause();mainVideo.hidden=true;mainVideo.removeAttribute('src');mainVideo.load();
+  if(currentProduct.videoUrl){mainVideo.src=currentProduct.videoUrl;}
+  $('#productThumbnails').innerHTML = (currentProduct.images||[]).map((image,index)=>`
+    <button class="thumbnail ${index===0?'active':''}" type="button" data-index="${index}" aria-label="Ver imagen ${index+1}">
+      <img src="${image}" alt="${currentProduct.name} imagen ${index+1}">
+    </button>`).join('') + (currentProduct.videoUrl ? '<button class="thumbnail video-thumbnail" type="button" data-video="true" aria-label="Reproducir video del producto"><span>▶</span><small>Ver video</small></button>' : '');
+  document.querySelectorAll('.thumbnail').forEach(button=>{
+    button.addEventListener('click',()=>{
+      document.querySelectorAll('.thumbnail').forEach(item=>item.classList.remove('active'));
       button.classList.add('active');
+      if(button.dataset.video==='true'){
+        mainImage.hidden=true;mainVideo.hidden=false;mainVideo.play().catch(()=>{});
+      }else{
+        mainVideo.pause();mainVideo.hidden=true;mainImage.hidden=false;
+        const imageIndex=Number(button.dataset.index);mainImage.src=currentProduct.images[imageIndex];
+      }
     });
   });
 
