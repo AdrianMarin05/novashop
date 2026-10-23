@@ -23,13 +23,57 @@ function renderAdminUsers(){
  $("#adminUsersCount").textContent=String(adminUsers.length);
  if(!adminUsers.length){box.innerHTML='<p class="admin-help">Todavía no hay usuarios registrados.</p>';return;}
  box.innerHTML=adminUsers.map(u=>{
-   const locked=u.role==="owner"||u.id===db.client.auth.getUser?.id;
-   const options=[["customer","Cliente"],["catalog_manager","Gestor de catálogo"],["analyst","Analista"],["admin","Administrador"]];
-   const safeOptions=options.filter(([value])=>value!=="admin"||currentRole==="owner"||u.role==="admin");
-   const select=safeOptions.map(([value,label])=>'<option value="'+value+'" '+(u.role===value?'selected':'')+'>'+label+'</option>').join("");
-   return '<article class="admin-user" data-user-row="'+esc(u.id)+'"><div class="admin-user-top"><div><div class="admin-user-name">'+esc(u.full_name||u.username||"Usuario")+'</div><div class="admin-user-email">'+esc(u.email||u.phone||"Sin correo")+'</div></div><span class="admin-pill '+(u.role==="customer"?"off":"")+'">'+esc(roleLabel(u.role))+'</span></div><div class="admin-user-meta"><span>'+ (u.email_confirmed?"Correo confirmado":"Correo pendiente") +'</span><span>·</span><span>Alta: '+esc(new Date(u.created_at).toLocaleDateString("es-CO"))+'</span>'+(u.last_sign_in_at?'<span>·</span><span>Último acceso: '+esc(new Date(u.last_sign_in_at).toLocaleDateString("es-CO"))+'</span>':'')+'</div><div class="admin-user-controls"><label>Asignar rol<select data-role-select="'+esc(u.id)+'" '+(u.role==="owner"?"disabled":"")+'>'+select+'</select></label><button type="button" data-role-save="'+esc(u.id)+'" '+(u.role==="owner"?"disabled":"")+'>Guardar rol</button></div></article>';
+  const id=esc(u.id);
+  const options=[["customer","Cliente"],["catalog_manager","Gestor de catálogo"],["analyst","Analista"],["admin","Administrador"]];
+  const safeOptions=options.filter(([value])=>value!=="admin"||currentRole==="owner"||u.role==="admin");
+  const select=safeOptions.map(([value,label])=>'<option value="'+value+'" '+(u.role===value?'selected':'')+'>'+label+'</option>').join("");
+  const reset=currentRole==="owner"&&u.role!=="owner"
+   ? '<div class="admin-password-reset"><button type="button" class="admin-password-toggle" data-password-panel-toggle="'+id+'">Establecer contraseña temporal</button><form class="admin-password-form" data-password-reset-form="'+id+'" hidden><p class="admin-help">Para '+esc(u.email||u.full_name||"este usuario")+'. Solo el propietario puede realizar este cambio.</p><label>Contraseña temporal<input name="password" type="password" required minlength="12" maxlength="128" autocomplete="new-password" placeholder="Mínimo 12 caracteres"></label><label>Confirmar contraseña<input name="confirmPassword" type="password" required minlength="12" maxlength="128" autocomplete="new-password" placeholder="Escríbela otra vez"></label><div class="admin-password-actions"><button type="button" data-password-generate="'+id+'">Generar segura</button><button type="button" data-password-reveal="'+id+'">Mostrar</button><button type="submit">Guardar contraseña</button></div><p class="admin-help">Después de guardar, podrás copiar la contraseña temporal del formulario y enviarla en un chat privado.</p></form></div>'
+   : "";
+  return '<article class="admin-user" data-user-row="'+id+'"><div class="admin-user-top"><div><div class="admin-user-name">'+esc(u.full_name||u.username||"Usuario")+'</div><div class="admin-user-email">'+esc(u.email||u.phone||"Sin correo")+'</div></div><span class="admin-pill '+(u.role==="customer"?"off":"")+'">'+esc(roleLabel(u.role))+'</span></div><div class="admin-user-meta"><span>'+(u.email_confirmed?"Correo confirmado":"Correo pendiente")+'</span><span>·</span><span>Alta: '+esc(new Date(u.created_at).toLocaleDateString("es-CO"))+'</span>'+(u.last_sign_in_at?'<span>·</span><span>Último acceso: '+esc(new Date(u.last_sign_in_at).toLocaleDateString("es-CO"))+'</span>':'')+'</div><div class="admin-user-controls"><label>Asignar rol<select data-role-select="'+id+'" '+(u.role==="owner"?"disabled":"")+'>'+select+'</select></label><button type="button" data-role-save="'+id+'" '+(u.role==="owner"?"disabled":"")+'>Guardar rol</button></div>'+reset+'</article>';
  }).join("");
  box.querySelectorAll("[data-role-save]").forEach(button=>button.addEventListener("click",()=>saveUserRole(button.dataset.roleSave)));
+ box.querySelectorAll("[data-password-panel-toggle]").forEach(button=>button.addEventListener("click",()=>{
+  const form=box.querySelector('[data-password-reset-form="'+CSS.escape(button.dataset.passwordPanelToggle)+'"]');
+  if(!form)return;form.hidden=!form.hidden;
+  button.textContent=form.hidden?"Establecer contraseña temporal":"Cerrar formulario";
+  if(!form.hidden)form.querySelector('input[name="password"]').focus();
+ }));
+ box.querySelectorAll("[data-password-generate]").forEach(button=>button.addEventListener("click",()=>{
+  const form=box.querySelector('[data-password-reset-form="'+CSS.escape(button.dataset.passwordGenerate)+'"]');
+  if(!form)return;
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%*-_";
+  const random=new Uint32Array(20);crypto.getRandomValues(random);
+  const value=Array.from(random,n=>chars[n%chars.length]).join("");
+  form.elements.password.value=value;form.elements.confirmPassword.value=value;
+  form.elements.password.type="text";form.elements.confirmPassword.type="text";
+ }));
+ box.querySelectorAll("[data-password-reveal]").forEach(button=>button.addEventListener("click",()=>{
+  const form=box.querySelector('[data-password-reset-form="'+CSS.escape(button.dataset.passwordReveal)+'"]');
+  if(!form)return;
+  const show=form.elements.password.type==="password";
+  form.elements.password.type=show?"text":"password";form.elements.confirmPassword.type=show?"text":"password";
+  button.textContent=show?"Ocultar":"Mostrar";
+ }));
+ box.querySelectorAll("[data-password-reset-form]").forEach(form=>form.addEventListener("submit",event=>setUserPassword(event,form)));
+}
+async function setUserPassword(event,form){
+ event.preventDefault();
+ if(currentRole!=="owner"){userStatus("Solo el propietario puede cambiar contraseñas desde el panel.","error");return;}
+ if(!form.reportValidity())return;
+ const userId=form.dataset.passwordResetForm;
+ const password=String(form.elements.password.value||""),confirmation=String(form.elements.confirmPassword.value||"");
+ if(password.length<12){userStatus("La contraseña debe tener al menos 12 caracteres.","error");return;}
+ if(password!==confirmation){userStatus("Las contraseñas no coinciden.","error");return;}
+ const button=form.querySelector('[type="submit"]');button.disabled=true;button.textContent="Guardando…";
+ try{
+  await call({action:"set-user-password",user_id:userId,password});
+  form.elements.password.type="text";form.elements.confirmPassword.type="text";
+  button.textContent="Contraseña guardada";
+  const target=adminUsers.find(u=>u.id===userId);
+  userStatus("Contraseña temporal actualizada para "+(target?.email||target?.full_name||"el usuario")+". Copia la clave y compártela solo por un chat privado.","success");
+ }catch(error){userStatus(error.message||"No se pudo cambiar la contraseña. Inténtalo otra vez.","error");button.textContent="Guardar contraseña";}
+ finally{button.disabled=false;}
 }
 async function saveUserRole(userId){
  const select=$('[data-role-select="'+CSS.escape(userId)+'"]');if(!select)return;
