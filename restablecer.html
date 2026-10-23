@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Recupera el acceso a tu cuenta NovaShop.">
+<meta name="robots" content="noindex,nofollow">
+<title>Recuperar contraseña — NovaShop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=26">
+<style>
+.reset-wrap{max-width:560px;margin:54px auto 80px;padding:0 20px}.reset-card{border:1px solid #e0e6eb;border-radius:24px;background:#fff;padding:clamp(24px,5vw,42px);box-shadow:0 22px 65px #13283d12}.reset-card h1{font-size:clamp(28px,4vw,36px);letter-spacing:-.05em;margin:0 0 10px}.reset-card>p{font-size:14px;line-height:1.65;color:#63717c;margin:0 0 22px}.reset-icon{width:58px;height:58px;display:grid;place-items:center;background:#fff0eb;color:#d64b2e;border-radius:18px;font-size:26px;margin-bottom:18px}.reset-form{display:grid;gap:15px}.reset-form label{display:grid;gap:7px;font-size:12px;font-weight:750;color:#43515e}.reset-form input{min-height:46px;width:100%;border:1px solid #dce3e9;border-radius:11px;padding:10px 12px;font:inherit;color:#172332;outline:none}.reset-form input:focus{border-color:#ff5a36;box-shadow:0 0 0 3px #ff5a3618}.password-field{position:relative;display:flex;align-items:center}.password-field input{padding-right:50px}.password-toggle{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:38px;height:36px;border:0;border-radius:8px;background:transparent;color:#697783;cursor:pointer;font-size:17px;display:grid;place-items:center}.password-toggle:hover{background:#f0f3f5}.reset-message{padding:12px 14px;border-radius:11px;font-size:13px;line-height:1.55;margin-top:15px;background:#eef5ff;color:#244b72}.reset-message.error{background:#fff0ee;color:#a63220}.reset-message.success{background:#eaf8ef;color:#20653a}.reset-back{display:block;margin-top:20px;text-align:center;color:#526b7d;font-weight:750;font-size:12px}.reset-hint{font-size:12px;color:#697783;line-height:1.55;margin-top:18px}@media(max-width:600px){.reset-wrap{margin-top:25px}.reset-card{padding:22px}}
+</style>
+</head>
+<body>
+<div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>💳 Opciones de pago</span><b>•</b><span>🔒 Protección de datos</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>💳 Opciones de pago</span><b>•</b><span>🔒 Protección de datos</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
+<header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a><nav class="main-nav"><a href="index.html">Inicio</a><a href="streaming.html">Streaming</a></nav><div class="header-actions"><a class="account-btn" href="cuenta.html?tab=login">Volver a iniciar sesión</a></div></div></header>
+<main class="reset-wrap"><section class="reset-card">
+<div class="reset-icon">🔐</div><span class="eyebrow">ACCESO A TU CUENTA</span>
+<h1 id="resetTitle">Recuperar contraseña</h1>
+<p id="resetIntro">Introduce el correo de tu cuenta. Te enviaremos un enlace seguro para crear una contraseña nueva en esta página.</p>
+<form id="requestResetForm" class="reset-form">
+<label>Correo electrónico<input name="email" type="email" required autocomplete="email" maxlength="120" placeholder="tu@correo.com"></label>
+<button type="submit" id="requestResetButton" class="btn btn-primary wide">Enviar enlace de recuperación</button>
+</form>
+<form id="changePasswordForm" class="reset-form" hidden>
+<label>Nueva contraseña<div class="password-field"><input name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Mínimo 8 caracteres"><button type="button" class="password-toggle" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false">👁</button></div></label>
+<label>Repite la contraseña<div class="password-field"><input name="confirmPassword" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Escríbela otra vez"><button type="button" class="password-toggle" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false">👁</button></div></label>
+<button type="submit" id="changePasswordButton" class="btn btn-primary wide">Guardar nueva contraseña</button>
+</form>
+<div id="resetMessage" class="reset-message" role="status" aria-live="polite" hidden></div>
+<p id="resetHint" class="reset-hint">Si el mensaje no llega, revisa spam. El enlace es de un solo uso y caduca por seguridad.</p>
+<a class="reset-back" href="cuenta.html?tab=login">← Volver a iniciar sesión</a>
+</section></main>
+<footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Recuperación segura de cuenta</span></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=26"></script><script src="supabase-client.js?v=26"></script><script src="restablecer.js?v=26"></script>
+</body></html>
