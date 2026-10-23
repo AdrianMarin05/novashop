@@ -7,6 +7,32 @@ function cartCount(){ return cart.reduce((sum,i)=>sum+i.qty,0); }
 function cartTotal(){ return cart.reduce((sum,i)=>sum+i.price*i.qty,0); }
 function product(id){ return products.find(p=>p.id===id); }
 
+
+function renderFeaturedProduct(){
+  const link=$('#featuredProductLink');
+  if(!link || !Array.isArray(products) || !products.length)return;
+  if(document.body.dataset.page==='streaming'){
+    const first=products.find(p=>p.category==='Streaming');
+    if(first)link.href='producto.html?id='+first.id;
+    $('#featuredProductImage').src='https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=1100&q=85';
+    $('#featuredProductImage').alt='Catálogo de plataformas y servicios digitales';
+    $('#featuredProductBadge').textContent='STREAMING';
+    $('#featuredProductName').textContent='Catálogo de servicios digitales';
+    $('#featuredProductDiscount').textContent='Explorar';
+    return;
+  }
+  const featured=products.find(p=>p.category!=='Streaming' && p.oldPrice) || products.find(p=>p.category!=='Streaming');
+  if(!featured)return;
+  const pct=featured.oldPrice?Math.round((1-(featured.price/featured.oldPrice))*100):0;
+  link.href='producto.html?id='+featured.id;
+  link.setAttribute('aria-label','Ver detalles de '+featured.name);
+  $('#featuredProductImage').src=(featured.images&&featured.images[0])||'';
+  $('#featuredProductImage').alt=featured.name;
+  $('#featuredProductBadge').textContent=featured.oldPrice?'OFERTA':'DESTACADO';
+  $('#featuredProductName').textContent=featured.name;
+  $('#featuredProductDiscount').textContent=featured.oldPrice?(pct+'% OFF'):'Ver producto';
+}
+
 function renderCategories(){
   const visibleCategories = categoryMeta.filter(c => document.body.dataset.page === 'streaming' ? c.name === 'Streaming' : true);
   $('#categoryGrid').innerHTML = visibleCategories.map(c=>`<button class="category-card" data-cat="${c.name}" aria-label="Ver ${c.name}"><img src="${c.image}" alt="${c.name}" loading="lazy"><div class="category-info"><h3>${c.name}</h3><span>${c.count}</span></div></button>`).join('');
@@ -216,7 +242,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   const pageCategories = [...new Set(products.filter(p=>streamingPage ? p.category==='Streaming' : p.category!=='Streaming').map(p=>p.category))];
   $('#categoryFilter').innerHTML='<option value="all">'+(streamingPage?'Todas las plataformas':'Todas las categorías')+'</option>'+pageCategories.map(c=>`<option>${c}</option>`).join('');
   if(streamingPage){ $('#categorias')?.setAttribute('hidden',''); const h=$('.product-heading h2'); if(h) h.textContent='Plataformas de Streaming'; const eye=$('.product-heading .eyebrow'); if(eye) eye.textContent='SERVICIOS DIGITALES'; }
-  renderCategories(); renderProducts(); renderCart();
+  renderFeaturedProduct(); renderCategories(); renderProducts(); renderCart();
+  window.NovaShopDB?.syncCatalog?.(products).then(()=>{renderCategories();renderProducts();renderFeaturedProduct();}).catch(err=>console.warn('Catálogo Supabase:',err));
   $('#categoryFilter').addEventListener('change',renderProducts); $('#sortSelect').addEventListener('change',renderProducts); $('#searchInput').addEventListener('input',renderProducts);
   $('#searchToggle').addEventListener('click',()=>{ const x=$('#searchBarWrap'); x.classList.toggle('open'); if(x.classList.contains('open')) $('#searchInput').focus(); });
   $('#cartToggle').addEventListener('click',openCart); $('#cartClose').addEventListener('click',closeCart); $('#drawerOverlay').addEventListener('click',closeCart); $('#whatsappCheckout').addEventListener('click',checkoutWhatsApp);
