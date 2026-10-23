@@ -4,8 +4,10 @@
 <meta name="description" content="Crea una cuenta gratuita en NovaShop o compra como invitado.">
 <title>Mi cuenta — NovaShop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=27">
+<link rel="stylesheet" href="styles.css?v=28">
 <style>
+/* Los formularios con atributo hidden deben seguir ocultos aunque .account-form use display:grid. */
+[hidden], .account-form[hidden], #registerForm[hidden], #loginForm[hidden], #dashboard[hidden], .register-step[hidden]{display:none!important}
 .account-wrap{max-width:1160px;margin:36px auto 65px;padding:0 22px;display:grid;grid-template-columns:minmax(270px,.85fr) minmax(360px,1.15fr);gap:25px;align-items:start}
 .account-story{background:linear-gradient(135deg,#112239,#2b3f5d);color:#fff;border-radius:24px;padding:32px;min-height:430px;position:relative;overflow:hidden}.account-story:after{content:"";position:absolute;width:250px;height:250px;border-radius:50%;background:#ff5a3628;right:-90px;bottom:-90px}
 .account-story h1{font-size:clamp(30px,4vw,45px);letter-spacing:-.05em;line-height:1.06;margin:16px 0}.account-story p{color:#dce7ef;line-height:1.7;font-size:14px}.account-perks{display:grid;gap:12px;margin-top:23px}.account-perks span{display:flex;gap:10px;align-items:center;font-size:13px;color:#f4f6f9}
@@ -103,5 +105,5 @@
 
 </section></main>
 <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Cuenta gratuita y opcional</span></div></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=27"></script><script src="supabase-client.js?v=28"></script><script src="auth-nav.js?v=26"></script><script src="account.js?v=32"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=28"></script><script src="supabase-client.js?v=29"></script><script src="auth-nav.js?v=27"></script><script src="account.js?v=33"></script>
 </body></html>
