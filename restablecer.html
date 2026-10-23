@@ -1,107 +1,16 @@
 <!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Recupera de forma segura el acceso a tu cuenta NovaShop.">
-<meta name="robots" content="noindex,nofollow">
-<title>Recuperar contraseña — NovaShop</title>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="description" content="Soporte para recuperar el acceso a NovaShop">
+<title>Ayuda con tu contraseña — NovaShop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=27">
 <style>
-.reset-page{background:#f5f7f9;min-height:100vh;display:flex;flex-direction:column}
-.reset-page .site-header{background:rgba(255,255,255,.96);border-bottom:1px solid #e9edf1}
-.reset-main{width:min(100% - 32px,520px);margin:48px auto 64px;flex:1;display:flex;align-items:flex-start}
-.reset-card{width:100%;background:#fff;border:1px solid #e5eaf0;border-radius:24px;padding:clamp(24px,5vw,40px);box-shadow:0 18px 55px rgba(18,38,58,.08)}
-.reset-brand-icon{display:grid;place-items:center;width:56px;height:56px;margin-bottom:22px;border-radius:17px;background:#fff0eb;color:#d94d2d}
-.reset-brand-icon svg{width:27px;height:27px;display:block}
-.reset-kicker{display:block;margin-bottom:10px;color:#d84a2b;font-size:10px;font-weight:800;letter-spacing:.15em}
-.reset-card h1{margin:0 0 11px;color:#17212b;font-size:clamp(28px,5vw,35px);letter-spacing:-.055em;line-height:1.1}
-.reset-intro{margin:0 0 26px;color:#687581;font-size:13px;line-height:1.75}
-.reset-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 27px}
-.reset-step{position:relative;display:flex;align-items:center;gap:7px;min-width:0;color:#8a959e;font-size:10px;font-weight:700}
-.reset-step:before{content:"";position:absolute;top:-9px;left:0;right:0;height:3px;border-radius:4px;background:#e8edf1}
-.reset-step-number{display:grid;place-items:center;flex:0 0 22px;width:22px;height:22px;border-radius:50%;background:#edf0f3;color:#77838d;font-size:10px}
-.reset-step.active{color:#17212b}
-.reset-step.active:before,.reset-step.completed:before{background:#ff5a36}
-.reset-step.active .reset-step-number{background:#ff5a36;color:#fff}
-.reset-step.completed .reset-step-number{background:#e4f5ea;color:#237246}
-.reset-form{display:grid;gap:15px}
-.reset-form[hidden],.reset-message[hidden]{display:none!important}
-.reset-form label{display:grid;gap:8px;color:#394955;font-size:11px;font-weight:800}
-.reset-form input{display:block;width:100%;min-width:0;height:48px;border:1px solid #dce4eb;border-radius:12px;background:#fff;padding:0 14px;color:#17212b;font:inherit;font-size:13px;outline:none;transition:border-color .16s,box-shadow .16s}
-.reset-form input::placeholder{color:#a0aab3;font-weight:500}
-.reset-form input:focus{border-color:#ff7658;box-shadow:0 0 0 4px rgba(255,90,54,.10)}
-.reset-form input:disabled{background:#f7f9fa;color:#6c7882}
-.reset-code-input{font-size:25px!important;font-weight:800!important;letter-spacing:.35em;text-align:center;padding-left:1em!important;font-variant-numeric:tabular-nums}
-.reset-email-summary{margin:-3px 0 2px;padding:12px 13px;border:1px solid #e6ebef;border-radius:12px;background:#f8fafb;color:#697680;font-size:11px;line-height:1.55}
-.reset-email-summary strong{display:block;margin-top:3px;color:#182938;font-size:12px;word-break:break-word}
-.reset-password-field{position:relative;display:block}
-.reset-password-field input{padding-right:51px}
-.reset-password-toggle{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;border:0;border-radius:9px;background:transparent;color:#65727d;cursor:pointer}
-.reset-password-toggle:hover{background:#f0f3f5}
-.reset-password-toggle svg{width:18px;height:18px}
-.reset-page .btn.btn-primary{min-height:48px;border:0;border-radius:12px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:transform .15s,opacity .15s}
-.reset-page .btn.btn-primary:hover:not(:disabled){transform:translateY(-1px)}
-.reset-page .btn.btn-primary:disabled{opacity:.6;cursor:wait}
-.reset-secondary-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:5px}
-.reset-text-button{padding:3px 0;border:0;background:transparent;color:#d84a2b;font:inherit;font-size:11px;font-weight:800;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.reset-text-button:disabled{color:#8e9aa3;cursor:wait}
-.reset-message{margin-top:17px;padding:12px 14px;border-radius:12px;font-size:12px;line-height:1.6;background:#edf4ff;color:#244f7b;overflow-wrap:anywhere}
-.reset-message.error{background:#fff0ee;color:#a63220}
-.reset-message.success{background:#eaf8ef;color:#20653a}
-.reset-footnote{margin:23px 0 0;padding-top:17px;border-top:1px solid #edf0f3;color:#87929b;font-size:10px;line-height:1.7;text-align:center}
-.reset-back{display:block;margin-top:19px;text-align:center;color:#526779;font-size:11px;font-weight:800}
-.reset-back:hover{color:#d84a2b}
-.reset-page .site-footer{margin-top:0;padding:18px 0;background:#102236}
-.reset-page .footer-bottom{margin-top:0;padding-top:0;border:0}
-@media(max-width:600px){.reset-main{width:min(100% - 24px,520px);margin:26px auto 38px}.reset-card{border-radius:20px;padding:24px 20px}.reset-step{gap:5px;font-size:9px}.reset-step-number{flex-basis:20px;width:20px;height:20px}.reset-email-summary{font-size:10px}}
-</style>
-</head>
-<body class="reset-page">
-<div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>💳 Opciones de pago</span><b>•</b><span>🔒 Protección de datos</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>💳 Opciones de pago</span><b>•</b><span>🔒 Protección de datos</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
+.support-wrap{max-width:560px;margin:48px auto 76px;padding:0 20px}.support-card{background:#fff;border:1px solid #e0e6eb;border-radius:24px;padding:clamp(24px,5vw,42px);box-shadow:0 22px 65px #13283d12}.support-icon{display:grid;place-items:center;width:58px;height:58px;border-radius:18px;background:#e9f9ef;font-size:28px;margin-bottom:20px}.support-kicker{font-size:10px;font-weight:800;letter-spacing:.15em;color:#188747}.support-card h1{font-size:clamp(28px,4vw,36px);letter-spacing:-.05em;line-height:1.12;margin:10px 0 12px}.support-card p{font-size:13px;line-height:1.75;color:#63717c}.support-note{margin:22px 0;padding:15px;border:1px solid #e3e9ee;background:#f8fafb;border-radius:14px;font-size:12px;line-height:1.7;color:#52616e}.support-btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:49px;padding:12px;border-radius:12px;background:#1fa855;color:#fff;font-size:13px;font-weight:800;text-align:center}.support-btn:hover{background:#178646}.support-back{display:block;margin-top:20px;text-align:center;font-size:11px;font-weight:800;color:#526b7d}.site-footer{margin-top:0}.footer-bottom{margin-top:0}@media(max-width:600px){.support-wrap{margin:25px auto 40px}.support-card{padding:23px 20px;border-radius:20px}}
+</style></head><body>
+<div class="announcement" role="region" aria-label="Beneficios"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>🔒 Compra segura</span><b>•</b><span>💬 Soporte por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>🔒 Compra segura</span><b>•</b><span>💬 Soporte por WhatsApp</span><b>•</b></div></div></div></div>
 <header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a><nav class="main-nav"><a href="index.html">Inicio</a><a href="streaming.html">Streaming</a></nav><div class="header-actions"><a class="account-btn" href="cuenta.html?tab=login">Iniciar sesión</a></div></div></header>
-<main class="reset-main">
-<section class="reset-card" aria-labelledby="resetTitle">
-<div class="reset-brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/></svg></div>
-<span class="reset-kicker">SEGURIDAD DE TU CUENTA</span>
-<h1 id="resetTitle">Recuperar contraseña</h1>
-<p id="resetIntro" class="reset-intro">Escribe el correo con el que te registraste. Te enviaremos un código de seis dígitos para verificar que la cuenta sea tuya.</p>
-<div class="reset-steps" aria-label="Pasos de recuperación">
-<div class="reset-step active" data-step="1"><span class="reset-step-number">1</span><span>Tu correo</span></div>
-<div class="reset-step" data-step="2"><span class="reset-step-number">2</span><span>Verificación</span></div>
-<div class="reset-step" data-step="3"><span class="reset-step-number">3</span><span>Contraseña</span></div>
-</div>
-<form id="requestResetForm" class="reset-form" novalidate>
-<label for="resetEmail">Correo electrónico</label>
-<input id="resetEmail" name="email" type="email" required autocomplete="email" maxlength="120" placeholder="tu@correo.com">
-<button type="submit" id="requestResetButton" class="btn btn-primary wide">Enviar código de verificación</button>
-</form>
-<form id="verifyCodeForm" class="reset-form" hidden novalidate>
-<div class="reset-email-summary">Escribe el código de verificación enviado a:<strong id="codeEmailDisplay"></strong></div>
-<label for="resetToken">Código de seis dígitos</label>
-<input id="resetToken" class="reset-code-input" name="token" type="text" required inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" placeholder="••••••" aria-describedby="codeHelp">
-<small id="codeHelp" style="color:#7a8791;font-size:10px;line-height:1.5">Revisa también la carpeta de correo no deseado.</small>
-<button type="submit" id="verifyCodeButton" class="btn btn-primary wide">Verificar código</button>
-<div class="reset-secondary-actions"><button type="button" id="changeEmailButton" class="reset-text-button">Cambiar correo</button><button type="button" id="resendCodeButton" class="reset-text-button">Reenviar código</button></div>
-</form>
-<form id="changePasswordForm" class="reset-form" hidden novalidate>
-<label for="newPassword">Nueva contraseña<span class="reset-password-field"><input id="newPassword" name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Mínimo 8 caracteres"><button type="button" class="reset-password-toggle" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></span></label>
-<label for="confirmPassword">Confirmar contraseña<span class="reset-password-field"><input id="confirmPassword" name="confirmPassword" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Vuelve a escribirla"><button type="button" class="reset-password-toggle" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></span></label>
-<small style="color:#7a8791;font-size:10px;line-height:1.5">Usa al menos 8 caracteres. Evita contraseñas que utilices en otros sitios.</small>
-<button type="submit" id="changePasswordButton" class="btn btn-primary wide">Guardar nueva contraseña</button>
-</form>
-<div id="resetMessage" class="reset-message" role="status" aria-live="polite" hidden></div>
-<p class="reset-footnote">Por tu seguridad, solo podrás cambiar la contraseña después de verificar el código enviado al correo de tu cuenta.</p>
-<a class="reset-back" href="cuenta.html?tab=login">← Volver a iniciar sesión</a>
-</section>
-</main>
-<footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Recuperación segura de cuenta</span></div></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js?v=27"></script>
-<script src="supabase-client.js?v=26"></script>
-<script src="restablecer.js?v=27"></script>
-</body>
-</html>
+<main class="support-wrap"><section class="support-card"><div class="support-icon">🔐</div><span class="support-kicker">AYUDA CON TU CUENTA</span><h1>¿Necesitas cambiar tu contraseña?</h1><p>Para evitar errores con los enlaces automáticos, ahora gestionamos las solicitudes de recuperación directamente por WhatsApp.</p><div class="support-note"><strong>Para ayudarte:</strong><br>Escríbenos e indica el correo o teléfono con el que te registraste. Nuestro equipo verificará los datos y gestionará el cambio desde el panel privado. Nunca compartas contraseñas que uses en otros servicios.</div><a class="support-btn" href="https://wa.me/573003358382?text=Hola%2C%20necesito%20ayuda%20para%20recuperar%20mi%20cuenta%20de%20NovaShop.%20Mi%20correo%20o%20tel%C3%A9fono%20registrado%20es%3A%20" target="_blank" rel="noopener noreferrer">💬 Contactar por WhatsApp</a><a class="support-back" href="cuenta.html?tab=login">← Volver a iniciar sesión</a></section></main>
+<footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Soporte al cliente</span></div></footer>
+</body></html>
