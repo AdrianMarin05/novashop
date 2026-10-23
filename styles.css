@@ -74,3 +74,7 @@ body[data-page="streaming"] .hero .eyebrow{color:#ffb49f}
 .checkout-account-hint{margin:0 0 16px;padding:12px 14px;border:1px solid #f6d4cb;border-radius:12px;background:#fff7f4;color:#5b514e;font-size:12px;line-height:1.55}.checkout-account-hint a{color:#cb4528;font-weight:800;text-decoration:underline;text-underline-offset:2px}
 @media(max-width:600px){.announcement-track{animation-duration:19s}.announcement-group{gap:15px;padding-right:15px}.announcement-group span{font-size:11px}.account-actions{gap:4px}.auth-nav-link{font-size:9px;padding:8px 6px}.account-actions .cart-btn span{display:none}}
 @media(prefers-reduced-motion:reduce){.announcement-track{animation-duration:55s}}
+
+.product-main-video{width:100%;max-height:650px;aspect-ratio:4/3;object-fit:contain;background:#101820;border-radius:22px}
+.thumbnail.video-thumbnail{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:#13233a;color:#fff;min-width:75px;min-height:70px;border:2px solid transparent;border-radius:12px}
+.thumbnail.video-thumbnail span{font-size:22px}.thumbnail.video-thumbnail small{font-size:10px;font-weight:800}
