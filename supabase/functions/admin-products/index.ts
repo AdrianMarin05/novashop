@@ -86,6 +86,51 @@ Deno.serve(async (req: Request) => {
 
     if (action === "whoami") return json({ok:true,isAdmin:true,userId:user.id,email:user.email || null,role},200,origin);
 
+    if (action === "list-orders") {
+      if (!canManageUsers) return json({error:"Solo propietario y administrador pueden consultar pedidos."},403,origin);
+      const allowedStatuses = new Set(["pending_payment","paid","preparing","shipped","delivered","cancelled","payment_failed","refunded"]);
+      const requestedStatus = clean(body.status,40);
+      const limit = Math.max(1,Math.min(100,Math.trunc(Number(body.limit)||40)));
+      const offset = Math.max(0,Math.min(100000,Math.trunc(Number(body.offset)||0)));
+      if (requestedStatus && requestedStatus !== "all" && !allowedStatuses.has(requestedStatus)) {
+        return json({error:"Filtro de estado no válido."},400,origin);
+      }
+      let query = admin.from("orders").select(
+        "id,order_number,user_id,status,payment_status,currency,subtotal_cop,delivery_type,customer_first_name,customer_last_name,customer_email,customer_phone,address,neighborhood,city,department,postal_code,delivery_reference,preferred_payment_method,customer_note,created_at,updated_at,latitude,longitude,order_items(id,product_id,product_name,quantity,unit_price_cop,line_total_cop,delivery_type)"
+      ).order("created_at",{ascending:false}).range(offset,offset+limit-1);
+      if (requestedStatus && requestedStatus !== "all") query = query.eq("status",requestedStatus);
+      const {data,error} = await query;
+      if (error) throw error;
+      const rows = data || [];
+      return json({ok:true,orders:rows,offset,limit,hasMore:rows.length===limit},200,origin);
+    }
+
+    if (action === "update-order-status") {
+      if (!canManageUsers) return json({error:"Solo propietario y administrador pueden actualizar pedidos."},403,origin);
+      const orderId = clean(body.order_id,50);
+      const nextStatus = clean(body.status,40);
+      const allowedStatuses = new Set(["pending_payment","paid","preparing","shipped","delivered","cancelled","payment_failed","refunded"]);
+      if (!/^[0-9a-f-]{36}$/i.test(orderId)) return json({error:"Identificador de pedido no válido."},400,origin);
+      if (!allowedStatuses.has(nextStatus)) return json({error:"Selecciona un estado válido."},400,origin);
+      const {data:currentOrder,error:lookupError} = await admin.from("orders")
+        .select("id,status,payment_status,order_number").eq("id",orderId).maybeSingle();
+      if (lookupError) throw lookupError;
+      if (!currentOrder) return json({error:"No encontramos ese pedido."},404,origin);
+      if (nextStatus === "pending_payment" && ["approved","refunded"].includes(currentOrder.payment_status)) {
+        return json({error:"Este pedido ya tiene un pago aprobado o reembolsado y no puede volver a pendiente de pago."},409,origin);
+      }
+      const update:any = {status:nextStatus,updated_at:new Date().toISOString()};
+      if (["paid","preparing","shipped","delivered"].includes(nextStatus)) update.payment_status = "approved";
+      else if (nextStatus === "payment_failed") update.payment_status = "rejected";
+      else if (nextStatus === "refunded") update.payment_status = "refunded";
+      else if (nextStatus === "cancelled" && currentOrder.payment_status !== "approved") update.payment_status = "cancelled";
+      else if (nextStatus === "pending_payment") update.payment_status = "pending";
+      const {data:updated,error:updateError} = await admin.from("orders").update(update)
+        .eq("id",orderId).select("id,order_number,status,payment_status,updated_at").single();
+      if (updateError) throw updateError;
+      return json({ok:true,order:updated,message:"Estado del pedido actualizado."},200,origin);
+    }
+
     if (action === "list-users") {
       if (!canManageUsers) return json({error:"Solo owner/admin pueden administrar usuarios y roles."},403,origin);
       const allUsers:any[] = [];
@@ -186,7 +231,9 @@ Deno.serve(async (req: Request) => {
       const password = typeof body.password === "string" ? body.password : "";
       if (!/^[0-9a-f-]{36}$/i.test(targetId)) return json({error:"Identificador de usuario no válido."},400,origin);
       if (targetId === user.id) return json({error:"Por seguridad, esta herramienta es solo para restablecer la contraseña de otro usuario."},409,origin);
-      if (password.length < 12 || password.length > 128 || !password.trim()) return json({error:"La contraseña temporal debe tener entre 12 y 128 caracteres."},400,origin);
+      if (password.length < 12 || password.length > 128 || !password.trim()) {
+        return json({error:"La contraseña temporal debe tener entre 12 y 128 caracteres."},400,origin);
+      }
       const [targetRoleResult,targetLegacyResult] = await Promise.all([
         admin.from("store_user_roles").select("role").eq("user_id",targetId).maybeSingle(),
         admin.from("store_admins").select("user_id").eq("user_id",targetId).maybeSingle()
