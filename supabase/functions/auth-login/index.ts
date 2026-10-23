@@ -24,10 +24,14 @@ Deno.serve(async(req:Request)=>{
    const email=identity.toLowerCase();
    if(email.length>120||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return generic();
    lookup=admin.from("profiles").select("id").eq("email",email).maybeSingle();
-  }else{
+  }else if(/^[+\d\s().-]+$/.test(identity) && /\d/.test(identity)){
    const phone=e164(identity);
    if(!/^\+[1-9]\d{7,14}$/.test(phone))return generic();
    lookup=admin.from("profiles").select("id").eq("phone",phone).maybeSingle();
+  }else{
+   const username=identity.trim().replace(/^@/,"");
+   if(!/^[a-zA-Z0-9_.-]{3,40}$/.test(username))return generic();
+   lookup=admin.from("profiles").select("id").ilike("username",username).maybeSingle();
   }
   const {data:profile,error:lookupError}=await lookup;
   if(lookupError||!profile?.id)return generic();
