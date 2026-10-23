@@ -54,8 +54,21 @@
 
  async function loginWithIdentifier(identifier,password){
   if(!client)throw new Error("Supabase no está conectado.");
+  const value=String(identifier||"").trim();
+  const isEmail=value.includes("@");
+  const normalizedPhone=(()=>{
+   let n=value.replace(/[^0-9+]/g,"");
+   if(n.startsWith("+"))return n;
+   if(n.startsWith("00"))return "+"+n.slice(2);
+   n=n.replace(/\D/g,"");
+   if(n.startsWith("57")&&n.length>=12)return "+"+n;
+   return "+57"+n;
+  })();
+  // First try the native Auth identifier; only use the server alias lookup if the customer uses the other saved contact.
+  const direct=await client.auth.signInWithPassword(isEmail?{email:value.toLowerCase(),password}:{phone:normalizedPhone,password});
+  if(!direct.error)return direct.data;
   const url=cfg.url.replace(/\/$/,"")+"/functions/v1/auth-login";
-  const response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","apikey":key,"Authorization":"Bearer "+key},body:JSON.stringify({identifier,password})});
+  const response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","apikey":key,"Authorization":"Bearer "+key},body:JSON.stringify({identifier:value,password})});
   const result=await response.json().catch(()=>({}));
   if(!response.ok||!result?.session)throw new Error(result?.error||"Correo/teléfono o contraseña incorrectos.");
   const {data,error}=await client.auth.setSession({access_token:result.session.access_token,refresh_token:result.session.refresh_token});
