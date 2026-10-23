@@ -88,7 +88,7 @@ function renderCart(){
 
 function openCart(){ $('#cartDrawer').classList.add('open'); $('#drawerOverlay').classList.add('show'); document.body.style.overflow='hidden'; }
 function closeCart(){ $('#cartDrawer').classList.remove('open'); $('#drawerOverlay').classList.remove('show'); document.body.style.overflow=''; }
-function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(window.__toast); window.__toast=setTimeout(()=>t.classList.remove('show'),1800); }
+function toast(msg,duration=1800){ const t=$('#toast'); if(!t)return; t.textContent=msg; t.classList.add('show'); clearTimeout(window.__toast); window.__toast=setTimeout(()=>t.classList.remove('show'),duration); }
 
 function checkoutWhatsApp(){
   if(!cart.length){ toast('Añade al menos un producto'); return; }
@@ -97,7 +97,6 @@ function checkoutWhatsApp(){
   const deliveryFields=$('#cartDeliveryFields');if(deliveryFields)deliveryFields.hidden=digitalOnly;
   openCheckoutModal();
   window.NovaShopDB?.prefillCheckout?.($('#checkoutForm')).catch(err=>console.warn('Perfil no precargado:',err));
-  window.NovaShopDeliveryMaps?.invalidate('checkoutDeliveryMap');
 }
 
 function renderCheckoutSummary(){
@@ -255,6 +254,10 @@ window.openModal=function(type){
 window.closeModal=function(){ $('#infoModal').classList.remove('show'); $('#infoModal').setAttribute('aria-hidden','true'); }
 
 document.addEventListener('DOMContentLoaded',()=>{
+  const registrationNotice=new URLSearchParams(window.location.search).get('registro');
+  if(registrationNotice==='creado')toast('¡Cuenta creada correctamente! Ya puedes comprar en NovaShop.',5000);
+  else if(registrationNotice==='acceso')toast('¡Listo! Guardamos tus datos y ya puedes comprar en NovaShop.',5000);
+  if(registrationNotice)history.replaceState(null,'',window.location.pathname+window.location.hash);
   const streamingPage = document.body.dataset.page === 'streaming';
   const pageCategories = [...new Set(products.filter(p=>streamingPage ? p.category==='Streaming' : p.category!=='Streaming').map(p=>p.category))];
   $('#categoryFilter').innerHTML='<option value="all">'+(streamingPage?'Todas las plataformas':'Todas las categorías')+'</option>'+pageCategories.map(c=>`<option>${c}</option>`).join('');
