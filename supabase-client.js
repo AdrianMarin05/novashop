@@ -17,7 +17,7 @@
  }
  async function syncCatalog(localProducts){
   if(!client||!Array.isArray(localProducts))return localProducts;
-  const {data,error}=await client.from("products").select("*").eq("is_active",true).order("sort_order");
+  const {data,error}=await client.from("products").select("id,name,category,price_cop,delivery_type,is_active,updated_at,old_price_cop,description,images,video_url,features,rating,reviews,tag,shipping,sort_order").eq("is_active",true).order("sort_order");
   if(error||!data)return localProducts;
   for(const row of data){
    let local=localProducts.find(p=>Number(p.id)===Number(row.id));
