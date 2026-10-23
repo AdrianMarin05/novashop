@@ -212,7 +212,7 @@ function init(){
    button.setAttribute("aria-pressed",String(reveal));
  }));
  $("#registerNext").addEventListener("click",continueToAddress);
- $("#registerBack").addEventListener("click",()=>{setVisible("register");msg("");});
+ $("#registerBack")?.addEventListener("click",()=>{setVisible("register");msg("");});
  $("#registerForm").addEventListener("submit",submitSignup);
  $("#loginForm").addEventListener("submit",async e=>{
   e.preventDefault();const f=e.currentTarget;if(!f.reportValidity())return;
