@@ -63,3 +63,12 @@ Replace the example text with your own verified account UUID. Never give this ro
 ## Current payment status
 
 Orders are persisted in Supabase and start as `pending_payment`. The store currently continues to WhatsApp after creating the order. It does **not** yet create a Mercado Pago checkout or mark payments approved automatically. Confirm payment independently before fulfilling an order until a payment-provider webhook has been implemented and tested.
+
+
+## Admin panel de productos
+
+- Panel: `admin.html`
+- Función segura: `supabase/functions/admin-products/index.ts`
+- El servidor comprueba que el usuario autenticado esté en `public.store_admins`.
+- Para conceder acceso, crea primero la cuenta de usuario y ejecuta un `INSERT INTO public.store_admins (user_id)` usando el UUID de esa cuenta desde el SQL Editor privado de Supabase. No abras permisos de escritura directos en la tabla a usuarios normales.
+- El panel permite cargar hasta 8 fotos (12 MB cada una) y un video (máximo 50 MB) al bucket `products-media`, editar nombre, descripción, categoría, precio y ocultar productos.
