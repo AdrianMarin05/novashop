@@ -9,7 +9,23 @@ const $=s=>document.querySelector(s), db=window.NovaShopDB, client=db?.client;
 const money=v=>new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(Number(v)||0);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const msg=(txt,kind="info")=>{const n=$("#message");if(!n)return;n.textContent=txt;n.className="account-message "+kind;n.hidden=!txt;};
-let mapState={},session=null;
+let mapState={},session=null,adminRouteUserId=null,adminRoutePromise=null;
+async function routeAuthorizedAdmin(user){
+ if(!user?.id||!db?.adminCall)return false;
+ if(adminRouteUserId!==user.id){
+  adminRouteUserId=user.id;
+  adminRoutePromise=(async()=>{
+   try{return await db.adminCall({action:"whoami"});}
+   catch(_){return null;}
+  })();
+ }
+ const who=await adminRoutePromise;
+ if(!who||!["owner","admin","catalog_manager","analyst"].includes(who.role))return false;
+ const {data:{session:latest}}=await client.auth.getSession();
+ if(latest?.user?.id!==user.id)return false;
+ location.replace("admin.html");
+ return true;
+}
 const signupKey="novashop-pending-signup";
 function e164(value){let n=String(value||"").replace(/[^0-9+]/g,"");if(n.startsWith("+"))return n;if(n.startsWith("00"))return "+"+n.slice(2);n=n.replace(/\D/g,"");if(n.startsWith("57")&&n.length>=12)return "+"+n;return "+57"+n;}
 function setVisible(which){
@@ -149,7 +165,10 @@ async function submitSignup(event){
 }
 function pendingSignupStorage(value){sessionStorage.setItem(signupKey,JSON.stringify(value));}
 async function showDashboard(user){
- session={user};setVisible("dashboard");
+ session={user};
+ // Usuarios con rol administrativo van directo a la interfaz de gestión; no necesitan dirección de entrega.
+ if(await routeAuthorizedAdmin(user))return;
+ setVisible("dashboard");
  $("#welcome").textContent="Hola, "+(user.user_metadata?.full_name||user.email?.split("@")[0]||user.phone||"cliente");
  $("#userEmail").textContent=user.email||user.phone||"Cuenta verificada";
  const {data:profile,error}=await client.from("profiles").select("*").eq("id",user.id).maybeSingle();
