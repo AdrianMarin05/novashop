@@ -22,10 +22,10 @@
       <nav class="main-nav" aria-label="Navegación principal">
         <a href="#inicio">Inicio</a>
         <a href="#categorias">Categorías</a>
-        <a href="#productos">Productos</a>
+        <a href="#productos">Productos</a><a href="streaming.html">Streaming</a>
         <a href="#beneficios">Beneficios</a>
       </nav>
-      <div class="header-actions">
+      <div class="header-actions"><a class="account-btn" href="cuenta.html" aria-label="Mi cuenta">👤 Mi cuenta</a>
         <button class="icon-btn" id="searchToggle" aria-label="Buscar">⌕</button>
         <button class="cart-btn" id="cartToggle" aria-label="Abrir carrito">
           🛒 <span>Carrito</span><b id="cartCount">0</b>
@@ -123,7 +123,7 @@
   <footer class="site-footer">
     <div class="container footer-grid">
       <div><a class="brand footer-brand" href="#inicio"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a><p>Tienda online demo lista para personalizar y publicar en GitHub Pages.</p></div>
-      <div><h4>Tienda</h4><a href="#productos">Productos</a><a href="#categorias">Categorías</a><a href="#beneficios">Beneficios</a></div>
+      <div><h4>Tienda</h4><a href="#productos">Productos</a><a href="#categorias">Categorías</a><a href="streaming.html">Streaming</a><a href="cuenta.html">Mi cuenta</a><a href="#beneficios">Beneficios</a></div>
       <div><h4>Ayuda</h4><a href="#" onclick="openModal('shipping');return false;">Envíos</a><a href="#" onclick="openModal('returns');return false;">Cambios y devoluciones</a><a href="#" onclick="openModal('privacy');return false;">Privacidad</a></div>
       <div><h4>Contacto</h4><p>WhatsApp: +57 300 335 8382</p><p>hola@novashop.co</p></div>
     </div>
@@ -240,7 +240,10 @@
   </div>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="products.js"></script>
-  <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js?v=13"></script>
+  <script src="supabase-client.js?v=13"></script>
+  <script src="products.js?v=13"></script>
+  <script src="script.js?v=13"></script>
 </body>
 </html>
