@@ -273,3 +273,8 @@ grant insert (id,full_name,phone,email,address,neighborhood,city,department,post
 grant update (full_name,phone,email,address,neighborhood,city,department,postal_code,delivery_reference,latitude,longitude,marketing_opt_in,updated_at)
   on public.profiles to authenticated;
 
+
+-- Inventory support. Existing products remain unconfigured until the owner enters real counts.
+alter table public.products
+  add column if not exists stock_quantity integer null
+  check (stock_quantity is null or stock_quantity >= 0);
