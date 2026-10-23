@@ -2,7 +2,7 @@
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Administración de catálogo NovaShop"><title>Administrar productos — NovaShop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=19">
+<link rel="stylesheet" href="styles.css?v=22">
 <style>
 .admin-page-wrap{max-width:1180px;margin:32px auto 70px;padding:0 20px}
 .admin-title{display:flex;justify-content:space-between;align-items:end;gap:18px;flex-wrap:wrap;margin-bottom:22px}.admin-title h1{margin:6px 0;font-size:34px;letter-spacing:-.05em}.admin-title p{margin:0;color:#697783;font-size:13px}
@@ -15,6 +15,9 @@
 .admin-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.admin-metric{background:#fff;border:1px solid #e1e7ec;border-radius:15px;padding:17px;min-width:0}.admin-metric span{display:block;color:#6a7782;font-size:11px;font-weight:750}.admin-metric strong{display:block;font-size:clamp(18px,2vw,25px);letter-spacing:-.04em;margin-top:8px;color:#172a3e;overflow-wrap:anywhere}
 .admin-insight-grid{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(340px,1.15fr);gap:12px;margin-top:12px}.admin-insight{background:#fff;border:1px solid #e1e7ec;border-radius:15px;padding:17px;min-width:0}.admin-insight h3{font-size:14px;margin:0 0 12px}.admin-inventory-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.admin-inventory-stat{padding:11px;background:#f6f8fa;border-radius:10px}.admin-inventory-stat span{display:block;font-size:10px;color:#6c7882}.admin-inventory-stat strong{display:block;font-size:18px;margin-top:5px}.admin-sales-row{display:grid;grid-template-columns:minmax(100px,1fr) minmax(80px,1.2fr) 40px;gap:8px;align-items:center;margin:12px 0;font-size:11px}.admin-sales-row .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}.admin-sales-bar{height:8px;background:#edf1f4;border-radius:20px;overflow:hidden}.admin-sales-bar span{display:block;height:100%;background:#ff6847;border-radius:20px;max-width:100%}.admin-sales-pct{text-align:right;font-weight:800}.admin-metrics-note{font-size:11px;color:#7b6b41;line-height:1.5;background:#fff9e9;border-radius:10px;padding:10px 12px;margin-top:12px}
 @media(max-width:900px){.admin-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-insight-grid{grid-template-columns:1fr}}@media(max-width:440px){.admin-metric{padding:12px}.admin-sales-row{grid-template-columns:minmax(80px,1fr) minmax(50px,.8fr) 38px}}
+
+.admin-users-wrap{margin:0 0 24px}.admin-users-heading{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:13px}.admin-users-heading h2{margin:0;font-size:20px;letter-spacing:-.03em}.admin-users-heading p{margin:5px 0 0;color:#697783;font-size:12px;line-height:1.5}.admin-users-grid{display:grid;grid-template-columns:minmax(260px,.7fr) minmax(360px,1.3fr);gap:14px;align-items:start}.admin-users-grid h3{margin:0 0 6px;font-size:16px}.admin-users-list-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.admin-users-list{display:grid;gap:10px;max-height:700px;overflow:auto}.admin-user{border:1px solid #e5ebef;border-radius:12px;padding:12px;display:grid;gap:9px}.admin-user-top{display:flex;align-items:start;justify-content:space-between;gap:10px}.admin-user-name{font-size:13px;font-weight:800;color:#1e2e3b;overflow-wrap:anywhere}.admin-user-email{font-size:11px;color:#64727e;overflow-wrap:anywhere}.admin-user-meta{display:flex;gap:6px;flex-wrap:wrap;font-size:10px;color:#77838c}.admin-user-controls{display:grid;grid-template-columns:minmax(140px,1fr) auto;gap:8px;align-items:end}.admin-user-controls label{display:grid;gap:5px;font-size:10px;font-weight:800;color:#52616e}.admin-user-controls select{width:100%;height:38px;border:1px solid #dce3e9;border-radius:9px;padding:0 9px;background:white;font:inherit;font-size:12px}.admin-user-controls button{border:1px solid #dce3e9;background:white;border-radius:9px;padding:10px 12px;font-size:11px;font-weight:800;cursor:pointer}.admin-user-controls button:hover{border-color:#ff5a36}.admin-user-controls button:disabled{opacity:.45;cursor:not-allowed}.admin-role-help{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:12px}.admin-role-help p{font-size:10px;line-height:1.5;color:#5e6b75;background:#f5f7f9;border-radius:10px;padding:10px;margin:0}.admin-role-help strong{display:block;color:#223649;margin-bottom:3px}.admin-users-grid .admin-status{margin:0 0 10px}
+@media(max-width:900px){.admin-users-grid{grid-template-columns:1fr}.admin-role-help{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.admin-role-help{grid-template-columns:1fr}.admin-user-controls{grid-template-columns:1fr}.admin-user-controls button{width:100%}}
 </style></head><body>
 <div class="announcement" role="region" aria-label="Administración NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🔐 Panel de administración</span><b>•</b><span>Gestiona tu catálogo</span><b>•</b><span>Solo usuarios autorizados</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🔐 Panel de administración</span><b>•</b><span>Gestiona tu catálogo</span><b>•</b><span>Solo usuarios autorizados</span><b>•</b></div></div></div></div>
 <header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a><nav class="main-nav"><a href="index.html">Tienda</a><a href="streaming.html">Streaming</a></nav><div class="header-actions account-actions"><a class="account-btn auth-nav-link" data-auth-nav="login" href="cuenta.html?tab=login">Iniciar sesión</a><a class="account-btn auth-nav-link" data-auth-nav="register" href="cuenta.html?tab=register">Crear cuenta</a><a class="account-btn auth-nav-link" data-auth-nav="account" href="cuenta.html" hidden>Mi cuenta</a></div></div></header>
@@ -30,6 +33,43 @@
   </div>
   <p class="admin-metrics-note">Nota: mientras los pedidos se gestionen por WhatsApp sin confirmación automática de pago, las ventas pagadas no se registrarán solas. Integraremos el proveedor de pagos para automatizarlo.</p>
 </section>
+
+<section id="adminUsersWrap" class="admin-users-wrap" hidden>
+  <div class="admin-users-heading">
+    <div><h2>Usuarios y roles</h2><p>Invita usuarios por correo y decide qué pueden administrar. Solo el propietario y los administradores pueden entrar aquí.</p></div>
+    <button type="button" class="btn btn-ghost" id="refreshAdminUsers">Actualizar usuarios</button>
+  </div>
+  <div class="admin-users-grid">
+    <form id="adminInviteForm" class="admin-card admin-form">
+      <h3>Invitar usuario</h3>
+      <label>Nombre completo *<input name="full_name" required maxlength="100" placeholder="Nombre y apellidos"></label>
+      <label>Correo electrónico *<input name="email" required type="email" maxlength="120" placeholder="persona@correo.com"></label>
+      <label>Rol inicial *
+        <select name="role" required>
+          <option value="customer">Cliente (solo compra)</option>
+          <option value="catalog_manager">Gestor de catálogo e inventario</option>
+          <option value="analyst">Analista (métricas, solo lectura)</option>
+          <option value="admin">Administrador (gestiona la tienda y usuarios)</option>
+        </select>
+      </label>
+      <button class="btn btn-primary wide" type="submit">Enviar invitación por correo</button>
+      <p class="admin-help">Supabase enviará una invitación para que la persona termine de activar su acceso. El correo debe estar configurado en Authentication.</p>
+    </form>
+    <section class="admin-card">
+      <div class="admin-users-list-heading"><h3>Usuarios registrados</h3><span id="adminUsersCount" class="admin-pill">—</span></div>
+      <div id="adminUsersStatus" class="admin-status" role="status">Cargando usuarios autorizados…</div>
+      <div id="adminUsersList" class="admin-users-list"></div>
+    </section>
+  </div>
+  <div class="admin-role-help">
+    <p><strong>Propietario:</strong> control total, protegido contra cambios de rol desde el panel.</p>
+    <p><strong>Administrador:</strong> catálogo, stock, métricas y gestión de usuarios. Solo el propietario puede otorgar este rol.</p>
+    <p><strong>Gestor de catálogo:</strong> crea y edita productos, medios y existencias; no puede ver métricas ni administrar usuarios.</p>
+    <p><strong>Analista:</strong> consulta métricas de ventas e inventario; no puede editar productos ni usuarios.</p>
+    <p><strong>Cliente:</strong> compra en NovaShop, sin acceso al panel privado.</p>
+  </div>
+</section>
+
 <div class="admin-grid">
 <section class="admin-card"><h2 id="adminFormTitle">Añadir nuevo producto</h2>
 <form id="adminProductForm" class="admin-form">
@@ -51,5 +91,5 @@
 </div>
 <p class="admin-help" style="margin-top:18px">Las fotos y videos se guardan en el bucket público de medios para que los clientes puedan verlos. Solo un administrador autorizado puede subir o editar archivos. Nunca introduzcas claves secretas de Supabase en esta página.</p>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=19"></script><script src="supabase-client.js?v=20"></script><script src="auth-nav.js?v=19"></script><script src="admin.js?v=19"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=22"></script><script src="supabase-client.js?v=22"></script><script src="auth-nav.js?v=22"></script><script src="admin.js?v=22"></script>
 </body></html>
