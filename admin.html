@@ -20,18 +20,80 @@
 @media(max-width:900px){.admin-users-grid{grid-template-columns:1fr}.admin-role-help{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.admin-role-help{grid-template-columns:1fr}.admin-user-controls{grid-template-columns:1fr}.admin-user-controls button{width:100%}}
 
 /* Hide administrative data until the server confirms the authenticated role. */
-body:not(.admin-authorized) .admin-metrics-wrap,body:not(.admin-authorized) .admin-grid{display:none!important}
-.admin-password-reset{border-top:1px solid #edf0f3;padding-top:10px;display:grid;gap:10px}.admin-password-toggle{justify-self:start;border:1px solid #f2c9bf;background:#fff7f4;color:#bd4327;border-radius:9px;padding:9px 11px;font-size:11px;font-weight:800;cursor:pointer}.admin-password-form{display:grid;gap:9px;background:#f8fafb;border:1px solid #e5ebef;border-radius:11px;padding:12px}.admin-password-form[hidden]{display:none!important}.admin-password-form label{display:grid;gap:5px;color:#40505d;font-size:11px;font-weight:800}.admin-password-form input{width:100%;height:39px;border:1px solid #dce3e9;border-radius:9px;padding:8px 10px;background:#fff;font:inherit;font-size:12px}.admin-password-actions{display:flex;gap:7px;flex-wrap:wrap}.admin-password-actions button{border:1px solid #dce3e9;background:#fff;border-radius:8px;padding:8px 10px;font-size:10px;font-weight:800;cursor:pointer}.admin-password-actions button[type=submit]{background:#ff5a36;border-color:#ff5a36;color:#fff}@media(max-width:520px){.admin-password-actions button{flex:1}}</style></head><body>
+body:not(.admin-authorized) .admin-orders-wrap,body:not(.admin-authorized) .admin-metrics-wrap,body:not(.admin-authorized) .admin-grid{display:none!important}
+.admin-password-reset{border-top:1px solid #edf0f3;padding-top:10px;display:grid;gap:10px}.admin-password-toggle{justify-self:start;border:1px solid #f2c9bf;background:#fff7f4;color:#bd4327;border-radius:9px;padding:9px 11px;font-size:11px;font-weight:800;cursor:pointer}.admin-password-form{display:grid;gap:9px;background:#f8fafb;border:1px solid #e5ebef;border-radius:11px;padding:12px}.admin-password-form[hidden]{display:none!important}.admin-password-form label{display:grid;gap:5px;color:#40505d;font-size:11px;font-weight:800}.admin-password-form input{width:100%;height:39px;border:1px solid #dce3e9;border-radius:9px;padding:8px 10px;background:#fff;font:inherit;font-size:12px}.admin-password-actions{display:flex;gap:7px;flex-wrap:wrap}.admin-password-actions button{border:1px solid #dce3e9;background:#fff;border-radius:8px;padding:8px 10px;font-size:10px;font-weight:800;cursor:pointer}.admin-password-actions button[type=submit]{background:#ff5a36;border-color:#ff5a36;color:#fff}@media(max-width:520px){.admin-password-actions button{flex:1}}
+.admin-orders-wrap{margin:0 0 24px;padding:20px;background:#fff;border:1px solid #e1e7ec;border-radius:18px;box-shadow:0 14px 36px #15283d0a}
+.admin-orders-heading{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.admin-orders-heading h2{font-size:21px;letter-spacing:-.035em;margin:0}
+.admin-orders-heading p{font-size:12px;line-height:1.55;color:#697783;margin:5px 0 0}
+.admin-orders-tools{display:grid;grid-template-columns:minmax(180px,1.2fr) minmax(165px,.8fr) auto;gap:9px;margin-bottom:13px}
+.admin-orders-tools input,.admin-orders-tools select{height:42px;min-width:0;width:100%;border:1px solid #dce3e9;border-radius:10px;padding:0 11px;background:#fff;color:#172332;font:inherit;font-size:12px}
+.admin-orders-list{display:grid;gap:12px}
+.admin-order-card{border:1px solid #e2e8ed;border-radius:14px;padding:15px;min-width:0}
+.admin-order-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid #edf0f3}
+.admin-order-id{font-size:14px;font-weight:850;letter-spacing:-.02em;color:#172a3e}
+.admin-order-date{font-size:10px;color:#7e8a94;margin-top:4px}
+.admin-order-badges{display:flex;gap:6px;flex-wrap:wrap}
+.admin-order-badge{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:5px 8px;background:#f2f5f7;color:#586772;font-size:10px;font-weight:800}
+.admin-order-badge.pending{background:#fff5dc;color:#8b6412}.admin-order-badge.paid{background:#e9f8ee;color:#247347}.admin-order-badge.cancelled{background:#fff0ee;color:#a63b28}
+.admin-order-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:15px;padding:14px 0}
+.admin-order-label{font-size:9px;text-transform:uppercase;letter-spacing:.1em;font-weight:850;color:#8a959e;margin-bottom:6px}
+.admin-order-customer{font-size:12px;font-weight:800;color:#213342;margin-bottom:4px;overflow-wrap:anywhere}
+.admin-order-meta{font-size:11px;line-height:1.65;color:#5e6c77;overflow-wrap:anywhere}
+.admin-order-meta a{color:#c94729;font-weight:750;text-decoration:underline;text-underline-offset:2px}
+.admin-order-lines{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.admin-order-lines li{display:flex;justify-content:space-between;align-items:start;gap:12px;font-size:11px;color:#4f5f6b;line-height:1.5}
+.admin-order-lines li strong{white-space:nowrap;color:#243849}
+.admin-order-total{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:9px;margin-top:9px;border-top:1px solid #edf0f3;font-size:11px;color:#697783}
+.admin-order-total strong{font-size:18px;letter-spacing:-.035em;color:#152d42}
+.admin-order-foot{display:flex;align-items:end;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:12px;border-top:1px solid #edf0f3}
+.admin-order-update{display:flex;align-items:end;gap:8px;flex-wrap:wrap}
+.admin-order-update label{display:grid;gap:5px;font-size:10px;font-weight:800;color:#52616e}
+.admin-order-update select{height:37px;min-width:165px;border:1px solid #dce3e9;border-radius:9px;padding:0 9px;background:#fff;font:inherit;font-size:11px}
+.admin-order-update button,.admin-order-open-link{border:1px solid #dce3e9;background:#fff;border-radius:9px;padding:9px 12px;font-size:11px;font-weight:800;cursor:pointer;text-decoration:none;color:#314658}
+.admin-order-update button:hover,.admin-order-open-link:hover{border-color:#ff5a36}
+.admin-order-update button:disabled{opacity:.5;cursor:wait}
+.admin-orders-empty{padding:38px 15px;text-align:center;background:#f8fafb;border:1px dashed #dce3e9;border-radius:12px;color:#687681;font-size:12px;line-height:1.7}
+.admin-orders-loadmore{display:block;margin:14px auto 0}
+.admin-stock-alerts{display:grid;gap:7px;margin-top:10px}
+.admin-stock-alert{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-radius:10px;padding:10px 11px;background:#fff7e7;color:#805d16;font-size:11px;line-height:1.5}
+.admin-stock-alert.critical{background:#fff0ee;color:#a33324}
+.admin-stock-alert.neutral{background:#f2f6fa;color:#566775}
+.admin-stock-alert strong{display:block;color:inherit;font-size:11px;margin-bottom:2px}
+.admin-stock-alert-list{display:grid;gap:6px;margin-top:7px}
+.admin-stock-alert-item{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.admin-stock-alert-item button{border:1px solid currentColor;background:transparent;border-radius:7px;padding:4px 7px;color:inherit;font:inherit;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap}
+.admin-stock-alert-item button:hover{background:#ffffffad}
+@media(max-width:760px){.admin-orders-tools{grid-template-columns:1fr 1fr}.admin-orders-tools input{grid-column:1/-1}.admin-orders-grid{grid-template-columns:1fr}.admin-order-grid{grid-template-columns:1fr}.admin-order-update{width:100%}.admin-order-update label{flex:1}.admin-order-update select{width:100%;min-width:0}.admin-order-update button{min-height:37px}}
+@media(max-width:520px){.admin-orders-wrap{padding:13px}.admin-order-card{padding:12px}.admin-orders-tools{grid-template-columns:1fr}.admin-orders-tools input{grid-column:auto}.admin-order-foot{align-items:stretch}.admin-order-update{display:grid;grid-template-columns:1fr auto}.admin-order-update label{grid-column:1/-1}.admin-order-open-link{text-align:center}}
+</style></head><body>
 <div class="announcement" role="region" aria-label="Administración NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🔐 Panel de administración</span><b>•</b><span>Gestiona tu catálogo</span><b>•</b><span>Solo usuarios autorizados</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🔐 Panel de administración</span><b>•</b><span>Gestiona tu catálogo</span><b>•</b><span>Solo usuarios autorizados</span><b>•</b></div></div></div></div>
 <header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a><nav class="main-nav"><a href="index.html">Tienda</a><a href="streaming.html">Streaming</a></nav><div class="header-actions account-actions"><a class="account-btn auth-nav-link" data-auth-nav="login" href="cuenta.html?tab=login">Iniciar sesión</a><a class="account-btn auth-nav-link" data-auth-nav="register" href="cuenta.html?tab=register">Crear cuenta</a><a class="account-btn auth-nav-link" data-auth-nav="account" href="cuenta.html" hidden>Mi cuenta</a></div></div></header>
 <main class="admin-page-wrap">
 <div class="admin-title"><div><span class="eyebrow">GESTIÓN DE CATÁLOGO</span><h1>Administrar productos</h1><p>Sube imágenes, fotos adicionales y video. Guarda precios y descripción en Supabase.</p></div><a href="index.html" class="btn btn-ghost">← Volver a la tienda</a></div>
 <div id="adminStatus" class="admin-status" role="status">Comprobando sesión y permisos…</div>
+<section id="adminOrdersWrap" class="admin-orders-wrap" hidden>
+ <div class="admin-orders-heading">
+  <div><h2>Pedidos y compradores</h2><p>Consulta compras registradas, datos de entrega y actualiza cada estado. Solo propietario y administradores pueden ver datos de clientes.</p></div>
+  <button type="button" class="btn btn-ghost" id="refreshAdminOrders">Actualizar pedidos</button>
+ </div>
+ <div class="admin-orders-tools">
+  <input id="adminOrderSearch" type="search" aria-label="Buscar pedidos" placeholder="Buscar número, cliente, correo o teléfono…">
+  <select id="adminOrderStatusFilter" aria-label="Filtrar pedidos por estado">
+   <option value="all">Todos los estados</option><option value="pending_payment">Pendiente de pago</option><option value="paid">Pago confirmado</option><option value="preparing">En preparación</option><option value="shipped">Enviado</option><option value="delivered">Entregado</option><option value="cancelled">Cancelado</option><option value="payment_failed">Pago rechazado</option><option value="refunded">Reembolsado</option>
+  </select>
+  <button type="button" class="btn btn-primary" id="filterAdminOrders">Aplicar filtro</button>
+ </div>
+ <div id="adminOrdersStatus" class="admin-status" role="status">Los pedidos aparecerán aquí cuando se registren compras.</div>
+ <div id="adminOrdersList" class="admin-orders-list"><div class="admin-orders-empty">Inicia sesión como administrador para consultar pedidos.</div></div>
+ <button type="button" class="btn btn-ghost admin-orders-loadmore" id="loadMoreOrders" hidden>Cargar más pedidos</button>
+</section>
+
 <section class="admin-metrics-wrap">
   <div class="admin-metrics-heading"><div><h2>Ventas e inventario</h2><p>Solo se muestran aquí. Las ventas cuentan únicamente pedidos con pago confirmado.</p></div><button type="button" class="btn btn-ghost" id="refreshAdminMetrics">Actualizar métricas</button></div>
   <div id="adminMetrics" class="admin-metrics"><div class="admin-metric"><span>Ventas confirmadas</span><strong>—</strong></div><div class="admin-metric"><span>Pedidos pagados</span><strong>—</strong></div><div class="admin-metric"><span>Unidades vendidas</span><strong>—</strong></div><div class="admin-metric"><span>Pedidos pendientes</span><strong>—</strong></div></div>
   <div class="admin-insight-grid">
-    <div class="admin-insight"><h3>Estado del inventario</h3><div id="adminInventoryMetrics" class="admin-inventory-stats">Cargando…</div></div>
+    <div class="admin-insight"><h3>Estado del inventario</h3><div id="adminInventoryMetrics" class="admin-inventory-stats">Cargando…</div><div id="adminInventoryAlerts" class="admin-stock-alerts" aria-live="polite"></div></div>
     <div class="admin-insight"><h3>Porcentaje de ventas por producto</h3><p class="admin-help">Participación sobre las unidades vendidas en pedidos pagados.</p><div id="adminSalesMix" class="admin-sales-mix"><span class="admin-help">Cargando…</span></div></div>
   </div>
   <p class="admin-metrics-note">Nota: mientras los pedidos se gestionen por WhatsApp sin confirmación automática de pago, las ventas pagadas no se registrarán solas. Integraremos el proveedor de pagos para automatizarlo.</p>
@@ -94,5 +156,5 @@ body:not(.admin-authorized) .admin-metrics-wrap,body:not(.admin-authorized) .adm
 </div>
 <p class="admin-help" style="margin-top:18px">Las fotos y videos se guardan en el bucket público de medios para que los clientes puedan verlos. Solo un administrador autorizado puede subir o editar archivos. Nunca introduzcas claves secretas de Supabase en esta página.</p>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=25"></script><script src="supabase-client.js?v=25"></script><script src="auth-nav.js?v=22"></script><script src="admin.js?v=27"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=25"></script><script src="supabase-client.js?v=25"></script><script src="auth-nav.js?v=22"></script><script src="admin.js?v=28"></script>
 </body></html>
