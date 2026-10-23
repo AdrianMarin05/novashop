@@ -84,6 +84,7 @@ function checkoutWhatsApp(){
   if(!cart.length){ toast('Añade al menos un producto'); return; }
   renderCheckoutSummary();
   openCheckoutModal();
+  window.NovaShopDB?.prefillCheckout?.($('#checkoutForm')).catch(err=>console.warn('Perfil no precargado:',err));
 }
 
 function renderCheckoutSummary(){
@@ -168,7 +169,8 @@ function buildWhatsAppMessage(data, orderNumber=''){
          `${I.house} Dirección: ${data.address}`, `Barrio: ${data.neighborhood}`,
          `Ciudad / Municipio: ${data.city}`, `Departamento: ${data.department}`,
          data.postalCode ? `Código postal: ${data.postalCode}` : null,
-         data.reference ? `${I.note} Referencia: ${data.reference}` : null, '']),
+         data.reference ? `${I.note} Referencia: ${data.reference}` : null,
+    data.latitude && data.longitude ? `📍 Ubicación: https://maps.google.com/?q=${data.latitude},${data.longitude}` : null, '']),
     '━━━━━━━━━━━━━━━━━━━━',
     `${I.card} *MÉTODO DE PAGO*`,
     '━━━━━━━━━━━━━━━━━━━━',
@@ -197,7 +199,9 @@ async function submitCheckoutForm(event){
     address:cleanField(raw.get('address')), neighborhood:cleanField(raw.get('neighborhood')),
     city:cleanField(raw.get('city')), department:cleanField(raw.get('department')),
     postalCode:cleanField(raw.get('postalCode')), reference:cleanField(raw.get('reference')),
-    paymentMethod:cleanField(raw.get('paymentMethod'))
+    paymentMethod:cleanField(raw.get('paymentMethod')),
+    latitude:cleanField(raw.get('latitude')),
+    longitude:cleanField(raw.get('longitude'))
   };
   const needsAddress = cart.some(item => product(item.id)?.deliveryType !== 'digital');
   if(needsAddress && (!data.address || !data.neighborhood || !data.city || !data.department)){
