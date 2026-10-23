@@ -2,7 +2,7 @@
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Área privada de gestión de NovaShop"><meta name="robots" content="noindex,nofollow"><title>Administrar productos — NovaShop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=25">
+<link rel="stylesheet" href="styles.css?v=27">
 <style>
 .admin-page-wrap{max-width:1180px;margin:32px auto 70px;padding:0 20px}
 .admin-title{display:flex;justify-content:space-between;align-items:end;gap:18px;flex-wrap:wrap;margin-bottom:22px}.admin-title h1{margin:6px 0;font-size:34px;letter-spacing:-.05em}.admin-title p{margin:0;color:#697783;font-size:13px}
@@ -21,7 +21,7 @@
 
 /* Hide administrative data until the server confirms the authenticated role. */
 body:not(.admin-authorized) .admin-metrics-wrap,body:not(.admin-authorized) .admin-grid{display:none!important}
-</style></head><body>
+.admin-password-reset{border-top:1px solid #edf0f3;padding-top:10px;display:grid;gap:10px}.admin-password-toggle{justify-self:start;border:1px solid #f2c9bf;background:#fff7f4;color:#bd4327;border-radius:9px;padding:9px 11px;font-size:11px;font-weight:800;cursor:pointer}.admin-password-form{display:grid;gap:9px;background:#f8fafb;border:1px solid #e5ebef;border-radius:11px;padding:12px}.admin-password-form[hidden]{display:none!important}.admin-password-form label{display:grid;gap:5px;color:#40505d;font-size:11px;font-weight:800}.admin-password-form input{width:100%;height:39px;border:1px solid #dce3e9;border-radius:9px;padding:8px 10px;background:#fff;font:inherit;font-size:12px}.admin-password-actions{display:flex;gap:7px;flex-wrap:wrap}.admin-password-actions button{border:1px solid #dce3e9;background:#fff;border-radius:8px;padding:8px 10px;font-size:10px;font-weight:800;cursor:pointer}.admin-password-actions button[type=submit]{background:#ff5a36;border-color:#ff5a36;color:#fff}@media(max-width:520px){.admin-password-actions button{flex:1}}</style></head><body>
 <div class="announcement" role="region" aria-label="Administración NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🔐 Panel de administración</span><b>•</b><span>Gestiona tu catálogo</span><b>•</b><span>Solo usuarios autorizados</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🔐 Panel de administración</span><b>•</b><span>Gestiona tu catálogo</span><b>•</b><span>Solo usuarios autorizados</span><b>•</b></div></div></div></div>
 <header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a><nav class="main-nav"><a href="index.html">Tienda</a><a href="streaming.html">Streaming</a></nav><div class="header-actions account-actions"><a class="account-btn auth-nav-link" data-auth-nav="login" href="cuenta.html?tab=login">Iniciar sesión</a><a class="account-btn auth-nav-link" data-auth-nav="register" href="cuenta.html?tab=register">Crear cuenta</a><a class="account-btn auth-nav-link" data-auth-nav="account" href="cuenta.html" hidden>Mi cuenta</a></div></div></header>
 <main class="admin-page-wrap">
@@ -39,7 +39,7 @@ body:not(.admin-authorized) .admin-metrics-wrap,body:not(.admin-authorized) .adm
 
 <section id="adminUsersWrap" class="admin-users-wrap" hidden>
   <div class="admin-users-heading">
-    <div><h2>Usuarios y roles</h2><p>Invita usuarios por correo y decide qué pueden administrar. Solo el propietario y los administradores pueden entrar aquí.</p></div>
+    <div><h2>Usuarios y roles</h2><p>Administra permisos y, como propietario, establece contraseñas temporales cuando un cliente contacte por WhatsApp.</p></div>
     <button type="button" class="btn btn-ghost" id="refreshAdminUsers">Actualizar usuarios</button>
   </div>
   <div class="admin-users-grid">
@@ -60,7 +60,7 @@ body:not(.admin-authorized) .admin-metrics-wrap,body:not(.admin-authorized) .adm
     </form>
     <section class="admin-card">
       <div class="admin-users-list-heading"><h3>Usuarios registrados</h3><span id="adminUsersCount" class="admin-pill">—</span></div>
-      <div id="adminUsersStatus" class="admin-status" role="status">Cargando usuarios autorizados…</div>
+      <div id="adminUsersStatus" class="admin-status" role="status">Cargando usuarios autorizados…</div><p class="admin-help" style="margin:0 0 12px">La herramienta de contraseñas solo aparece para el propietario. Usa una clave temporal de al menos 12 caracteres y compártela en privado con el titular.</p>
       <div id="adminUsersList" class="admin-users-list"></div>
     </section>
   </div>
@@ -94,5 +94,5 @@ body:not(.admin-authorized) .admin-metrics-wrap,body:not(.admin-authorized) .adm
 </div>
 <p class="admin-help" style="margin-top:18px">Las fotos y videos se guardan en el bucket público de medios para que los clientes puedan verlos. Solo un administrador autorizado puede subir o editar archivos. Nunca introduzcas claves secretas de Supabase en esta página.</p>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=25"></script><script src="supabase-client.js?v=25"></script><script src="auth-nav.js?v=22"></script><script src="admin.js?v=25"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=25"></script><script src="supabase-client.js?v=25"></script><script src="auth-nav.js?v=22"></script><script src="admin.js?v=27"></script>
 </body></html>
