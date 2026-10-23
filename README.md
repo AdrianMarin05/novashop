@@ -128,4 +128,4 @@ El panel administrativo está protegido por roles validados en el servidor. No g
 
 
 ## Recuperación de contraseña
-La recuperación está separada en `restablecer.html`. Añade `https://adrianmarin05.github.io/novashop/restablecer.html` a Authentication → URL Configuration → Redirect URLs. No se guardan contraseñas ni credenciales administrativas en este repositorio.
+`restablecer.html` orienta al cliente a contactar el WhatsApp de NovaShop (+57 300 335 8382); la página no solicita ni envía enlaces de recuperación. Después de verificar al cliente, el propietario puede establecer una contraseña temporal desde **admin.html → Usuarios registrados**. El backend comprueba el rol `owner`, rechaza cambios a la cuenta propietaria y solo cambia la contraseña mediante la API administrativa de Supabase del lado del servidor. No publiques claves de servicio ni compartas contraseñas temporalmente fuera de un chat privado.
