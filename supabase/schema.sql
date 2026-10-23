@@ -283,3 +283,18 @@ grant update (full_name,phone,email,address,neighborhood,city,department,postal_
 alter table public.products
   add column if not exists stock_quantity integer null
   check (stock_quantity is null or stock_quantity >= 0);
+
+
+
+-- Private staff/customer role assignments and login alias.
+alter table public.profiles add column if not exists username text;
+create unique index if not exists profiles_username_ci_unique on public.profiles(lower(username)) where username is not null and btrim(username) <> '';
+create table if not exists public.store_user_roles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  role text not null default 'customer' check (role in ('owner','admin','catalog_manager','analyst','customer')),
+  granted_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.store_user_roles enable row level security;
+revoke all on public.store_user_roles from public, anon, authenticated;
