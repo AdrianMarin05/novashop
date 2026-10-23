@@ -54,7 +54,7 @@
 
  async function loginWithIdentifier(identifier,password){
   if(!client)throw new Error("Supabase no está conectado.");
-  const url=cfg.url.replace(/\\/$/,"")+"/functions/v1/auth-login";
+  const url=cfg.url.replace(/\/$/,"")+"/functions/v1/auth-login";
   const response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","apikey":key,"Authorization":"Bearer "+key},body:JSON.stringify({identifier,password})});
   const result=await response.json().catch(()=>({}));
   if(!response.ok||!result?.session)throw new Error(result?.error||"Correo/teléfono o contraseña incorrectos.");
