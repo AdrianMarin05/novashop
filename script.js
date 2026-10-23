@@ -8,7 +8,7 @@ function cartTotal(){ return cart.reduce((sum,i)=>sum+i.price*i.qty,0); }
 function product(id){ return products.find(p=>p.id===id); }
 
 function renderCategories(){
-  const visibleCategories = categoryMeta.filter(c => document.body.dataset.page === 'streaming' ? c.name === 'Streaming' : c.name !== 'Streaming');
+  const visibleCategories = categoryMeta.filter(c => document.body.dataset.page === 'streaming' ? c.name === 'Streaming' : true);
   $('#categoryGrid').innerHTML = visibleCategories.map(c=>`<button class="category-card" data-cat="${c.name}" aria-label="Ver ${c.name}"><img src="${c.image}" alt="${c.name}" loading="lazy"><div class="category-info"><h3>${c.name}</h3><span>${c.count}</span></div></button>`).join('');
   document.querySelectorAll('.category-card').forEach(btn=>btn.addEventListener('click',()=>{ if(btn.dataset.cat==='Streaming'){ location.href='streaming.html'; return; } $('#categoryFilter').value=btn.dataset.cat; renderProducts(); document.querySelector('#productos').scrollIntoView({behavior:'smooth'}); }));
 }
