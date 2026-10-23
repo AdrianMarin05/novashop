@@ -3,7 +3,7 @@
 const $=s=>document.querySelector(s), db=window.NovaShopDB;
 const money=n=>new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(Number(n)||0);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let products=[], editingImages=[], editingVideo=null, metrics=null, currentRole=null, adminUsers=[], adminOrders=[], ordersOffset=0, ordersHasMore=false, ordersLoading=false;
+let products=[], editingImages=[], editingVideo=null, metrics=null, currentRole=null, adminUsers=[], adminOrders=[], ordersOffset=0, ordersHasMore=false, ordersLoading=false, productEditorReturnFocus=null;
 function status(text,kind="info"){const el=$("#adminStatus");el.textContent=text;el.className="admin-status "+kind;}
 function formData(){const f=$("#adminProductForm"),v=new FormData(f);return {id:v.get("id")?Number(v.get("id")):null,name:String(v.get("name")||"").trim(),category:String(v.get("category")||""),delivery_type:v.get("delivery_type"),price_cop:Number(v.get("price_cop")),old_price_cop:v.get("old_price_cop")?Number(v.get("old_price_cop")):null,stock_quantity:v.get("stock_quantity")===""?null:Number(v.get("stock_quantity")),description:String(v.get("description")||"").trim(),features:String(v.get("features")||"").split("\n").map(s=>s.trim()).filter(Boolean),images:editingImages.slice(),video_url:editingVideo,tag:String(v.get("tag")||"").trim(),shipping:String(v.get("shipping")||"").trim(),is_active:!!f.elements.is_active.checked,sort_order:v.get("sort_order")?Number(v.get("sort_order")):(v.get("id")?Number(v.get("id")):100)};}
 async function call(body){if(!db?.isConfigured?.())throw new Error("Supabase no está conectado.");return db.adminCall(body);}
@@ -95,7 +95,7 @@ async function inviteUser(event){
 }
 function configureRolePanels(){
  document.body.classList.add("admin-authorized");
- const users=$("#adminUsersWrap"),ordersWrap=$("#adminOrdersWrap"),editor=document.querySelector(".admin-grid > section:first-child"),catalog=document.querySelector(".admin-grid > section:nth-child(2)"),metricsWrap=document.querySelector(".admin-metrics-wrap");
+ const users=$("#adminUsersWrap"),ordersWrap=$("#adminOrdersWrap"),editor=document.querySelector(".admin-grid > section:first-of-type"),catalog=document.querySelector(".admin-grid > section:nth-of-type(2)"),metricsWrap=document.querySelector(".admin-metrics-wrap");
  const canManage=["owner","admin"].includes(currentRole),canEdit=["owner","admin","catalog_manager"].includes(currentRole),canAnalyze=["owner","admin","analyst"].includes(currentRole);
  if(users)users.hidden=!canManage;
  if(ordersWrap)ordersWrap.hidden=!canManage;
@@ -258,16 +258,90 @@ function renderProducts(){
  box.querySelectorAll("[data-edit]").forEach(b=>b.addEventListener("click",()=>editProduct(Number(b.dataset.edit))));
  box.querySelectorAll("[data-off]").forEach(b=>b.addEventListener("click",()=>deactivate(Number(b.dataset.off))));
 }
+function renderCurrentMedia(){
+ const form=$("#adminProductForm");
+ const imageBox=$("#adminCurrentImages");
+ const videoBox=$("#adminCurrentVideo");
+ if(imageBox){
+  imageBox.hidden=!editingImages.length;
+  imageBox.innerHTML=editingImages.map((url,index)=>'<div class="admin-current-image"><img src="'+esc(url)+'" alt="Imagen actual '+(index+1)+'" loading="lazy"><small>Imagen '+(index+1)+' de '+editingImages.length+'</small><button type="button" data-remove-current-image="'+index+'" aria-label="Quitar imagen '+(index+1)+'">Quitar</button></div>').join("");
+  imageBox.querySelectorAll("[data-remove-current-image]").forEach(button=>button.addEventListener("click",()=>{
+   const index=Number(button.dataset.removeCurrentImage);
+   if(!Number.isInteger(index)||index<0||index>=editingImages.length)return;
+   editingImages.splice(index,1);
+   if(form)form.dataset.dirty="1";
+   renderCurrentMedia();
+  }));
+ }
+ if(videoBox){
+  const picked=form?.elements.video?.files?.[0]||null;
+  const current=editingVideo?'<video controls preload="metadata" src="'+esc(editingVideo)+'"></video><div class="admin-current-video-meta"><span>Video guardado en el producto</span><button type="button" id="removeCurrentVideo">Quitar video actual</button></div>':"";
+  const pending=picked?'<div class="admin-current-video-meta"><span>Nuevo video seleccionado: '+esc(picked.name)+' ('+(picked.size/1024/1024).toFixed(1)+' MB). Reemplazará el video actual al guardar.</span><button type="button" id="clearSelectedVideo">Deshacer selección</button></div>':"";
+  videoBox.innerHTML=current+pending;
+  videoBox.hidden=!current&&!pending;
+  $("#removeCurrentVideo")?.addEventListener("click",()=>{
+   editingVideo=null;
+   if(form)form.dataset.dirty="1";
+   renderCurrentMedia();
+  });
+  $("#clearSelectedVideo")?.addEventListener("click",()=>{
+   if(form?.elements.video)form.elements.video.value="";
+   if(form)form.dataset.dirty="1";
+   renderCurrentMedia();
+  });
+ }
+}
+function openProductEditor(productId){
+ const modal=$("#productEditorModal"),slot=$("#productEditorModalSlot");
+ const editor=$("#adminFormTitle")?.closest(".admin-card");
+ const placeholder=$("#productEditorPlaceholder");
+ if(!modal||!slot||!editor||!placeholder){status("No pudimos abrir el editor. Recarga el panel e inténtalo otra vez.","error");return;}
+ productEditorReturnFocus=document.activeElement;
+ if(editor.parentNode!==slot){
+  if(placeholder.parentNode!==editor.parentNode)editor.parentNode.insertBefore(placeholder,editor);
+  slot.appendChild(editor);
+ }
+ $("#productEditorModalTitle").textContent="Editar producto #"+productId;
+ modal.hidden=false;modal.setAttribute("aria-hidden","false");
+ document.body.classList.add("product-editor-open");
+ $("#closeProductEditor")?.focus();
+}
+function closeProductEditor(force=false){
+ const modal=$("#productEditorModal");
+ if(!modal||modal.hidden)return;
+ const form=$("#adminProductForm");
+ if(!force&&form?.dataset.dirty==="1"&&!confirm("Tienes cambios sin guardar. ¿Cerrar el editor sin guardarlos?"))return;
+ const editor=$("#adminFormTitle")?.closest(".admin-card");
+ const placeholder=$("#productEditorPlaceholder");
+ if(editor&&placeholder?.parentNode){
+  placeholder.parentNode.insertBefore(editor,placeholder.nextSibling);
+  placeholder.remove();
+ }
+ modal.hidden=true;modal.setAttribute("aria-hidden","true");
+ document.body.classList.remove("product-editor-open");
+ if(productEditorReturnFocus?.isConnected)productEditorReturnFocus.focus();
+ else $("#adminProductList")?.focus?.();
+ productEditorReturnFocus=null;
+}
 function editProduct(id){
  const p=products.find(x=>x.id===id);if(!p)return;const f=$("#adminProductForm");
  f.elements.id.value=p.id;f.elements.name.value=p.name;f.elements.category.value=p.category;f.elements.delivery_type.value=p.delivery_type;
- f.elements.price_cop.value=p.price_cop;f.elements.old_price_cop.value=p.old_price_cop||"";f.elements.stock_quantity.value=p.stock_quantity==null?"":p.stock_quantity;f.elements.sort_order.value=p.sort_order??100;
+ f.elements.price_cop.value=p.price_cop;f.elements.old_price_cop.value=p.old_price_cop??"";f.elements.stock_quantity.value=p.stock_quantity==null?"":p.stock_quantity;f.elements.sort_order.value=p.sort_order??100;
  f.elements.description.value=p.description||"";f.elements.features.value=(p.features||[]).join("\n");
  f.elements.tag.value=p.tag||"";f.elements.shipping.value=p.shipping||"";f.elements.is_active.checked=!!p.is_active;
- editingImages=(p.images||[]).slice();editingVideo=p.video_url||null;f.elements.images.value="";f.elements.video.value="";
- $("#adminFormTitle").textContent="Editar producto #"+p.id;window.scrollTo({top:0,behavior:"smooth"});
+ editingImages=(p.images||[]).filter(Boolean).slice();editingVideo=p.video_url||null;f.elements.images.value="";f.elements.video.value="";
+ f.dataset.dirty="0";
+ $("#adminFormTitle").textContent="Editar producto #"+p.id;
+ renderCurrentMedia();
+ openProductEditor(p.id);
 }
-function resetForm(){ $("#adminProductForm").reset();$("#adminProductForm").elements.id.value="";$("#adminProductForm").elements.stock_quantity.value="";$("#adminProductForm").elements.sort_order.value="100";$("#adminProductForm").elements.is_active.checked=true;editingImages=[];editingVideo=null;$("#adminFormTitle").textContent="Añadir nuevo producto";}
+function resetForm(){
+ const form=$("#adminProductForm");
+ form.reset();form.elements.id.value="";form.elements.stock_quantity.value="";form.elements.sort_order.value="100";form.elements.is_active.checked=true;
+ form.dataset.dirty="0";editingImages=[];editingVideo=null;
+ $("#adminFormTitle").textContent="Añadir nuevo producto";
+ renderCurrentMedia();
+}
 async function save(e){
  e.preventDefault();const f=e.currentTarget;if(!f.reportValidity())return;
  const submit=f.querySelector('[type="submit"]');submit.disabled=true;submit.textContent="Subiendo y guardando…";
@@ -282,13 +356,25 @@ async function save(e){
   const payload=formData();payload.images=editingImages;payload.video_url=editingVideo;
   const result=await call({action:"save",...payload});
   if(result.product){status("Producto guardado: "+result.product.name+". El catálogo de la tienda se actualizará al recargar.", "success");}
-  resetForm();await loadProducts();
+  const wasEditing=!!f.elements.id.value;
+  resetForm();
+  if(wasEditing)closeProductEditor(true);
+  await loadProducts();
  }catch(err){status(err.message||"No se pudo guardar el producto.","error");}
  finally{submit.disabled=false;submit.textContent="Guardar producto";}
 }
 async function deactivate(id){if(!confirm("¿Ocultar este producto de la tienda? El historial de pedidos se conservará."))return;try{await call({action:"deactivate",id});status("Producto ocultado de la tienda.","success");await loadProducts();}catch(e){status(e.message||"No se pudo ocultar el producto.","error");}}
 async function init(){
- $("#adminProductForm").addEventListener("submit",save);$("#resetAdminForm").addEventListener("click",resetForm);$("#refreshAdminProducts").addEventListener("click",loadProducts);$("#refreshAdminMetrics")?.addEventListener("click",loadProducts);
+ const productForm=$("#adminProductForm");
+ productForm.addEventListener("submit",save);
+ productForm.addEventListener("input",()=>{if(productForm.elements.id.value)productForm.dataset.dirty="1";});
+ productForm.addEventListener("change",event=>{
+  if(productForm.elements.id.value)productForm.dataset.dirty="1";
+  if(event.target===productForm.elements.video)renderCurrentMedia();
+ });
+ $("#closeProductEditor")?.addEventListener("click",()=>closeProductEditor());
+ $("#productEditorModal")?.addEventListener("click",event=>{if(event.target.id==="productEditorModal")closeProductEditor();});
+ document.addEventListener("keydown",event=>{if(event.key==="Escape")closeProductEditor();});$("#resetAdminForm").addEventListener("click",resetForm);$("#refreshAdminProducts").addEventListener("click",loadProducts);$("#refreshAdminMetrics")?.addEventListener("click",loadProducts);
  $("#refreshAdminOrders")?.addEventListener("click",()=>loadAdminOrders(true));
  $("#filterAdminOrders")?.addEventListener("click",()=>loadAdminOrders(true));
  $("#adminOrderStatusFilter")?.addEventListener("change",()=>loadAdminOrders(true));
