@@ -149,11 +149,174 @@ const products = [
     features: ['Formato compacto', 'Organización de accesorios', 'Diseño minimalista', 'Ideal para escritorio'],
     shipping: 'Envíos a todo Colombia. Confirma cobertura y tiempo de entrega por WhatsApp.'
   }
+,
+  {
+    id: 9, name: "Apple TV Cuenta Completa", category: 'Streaming', price: 18900, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Apple TV Cuenta Completa: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 10, name: "Canva Pro 1 Mes", category: 'Streaming', price: 9900, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Canva Pro 1 Mes: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 11, name: "Canva Pro 3 Meses", category: 'Streaming', price: 21900, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Canva Pro 3 Meses: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 12, name: "Crunchyroll Pantalla", category: 'Streaming', price: 9900, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Crunchyroll Pantalla: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 13, name: "Disney Premium Genérico", category: 'Streaming', price: 12900, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Disney Premium Genérico: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 14, name: "Disney Premium Original", category: 'Streaming', price: 21900, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Disney Premium Original: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 15, name: "HBO Max Pantalla", category: 'Streaming', price: 9900, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "HBO Max Pantalla: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 16, name: "Jellyfin Pantalla", category: 'Streaming', price: 8500, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Jellyfin Pantalla: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 17, name: "Netflix Original 12 Días", category: 'Streaming', price: 10000, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Netflix Original 12 Días: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 18, name: "Netflix Original 30 Días", category: 'Streaming', price: 16000, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Netflix Original 30 Días: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 19, name: "Office 365", category: 'Streaming', price: 28000, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Office 365: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 20, name: "Paramount Pantalla", category: 'Streaming', price: 9900, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Paramount Pantalla: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 21, name: "Membresía Deluxe", category: 'Streaming', price: 55000, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Membresía Deluxe: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 22, name: "Membresía Extra", category: 'Streaming', price: 45000, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Membresía Extra: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 23, name: "Plex 1 Pantalla", category: 'Streaming', price: 9900, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Plex 1 Pantalla: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 24, name: "Prime Video Pantalla", category: 'Streaming', price: 9900, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Prime Video Pantalla: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 25, name: "Universal", category: 'Streaming', price: 9900, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Universal: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 26, name: "ViX Premium", category: 'Streaming', price: 9900, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "ViX Premium: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 27, name: "Xbox Game Pass", category: 'Streaming', price: 75000, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "Xbox Game Pass: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  },
+  {
+    id: 28, name: "YouTube 1 Mes", category: 'Streaming', price: 15900, oldPrice: null,
+    rating: null, reviews: 0, tag: 'DIGITAL', images: ["https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80"],
+    description: "YouTube 1 Mes: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.",
+    features: ['Producto digital; no requiere envío físico', 'Disponibilidad y condiciones por confirmar', 'Entrega o activación coordinada después de confirmar la compra'],
+    shipping: 'Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',
+    deliveryType: 'digital'
+  }
 ];
 
 const categoryMeta = [
   {name:'Tecnología',count:'2 productos',image:'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=80'},
   {name:'Moda',count:'2 productos',image:'https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?auto=format&fit=crop&w=900&q=80'},
   {name:'Hogar',count:'2 productos',image:'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80'},
-  {name:'Accesorios',count:'1 producto',image:'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80'}
+  {name:'Accesorios',count:'1 producto',image:'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80'},
+  {name:'Oficina',count:'1 producto',image:'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80'},
+  {name:'Streaming',count:'20 servicios digitales',image:'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80'}
 ];
