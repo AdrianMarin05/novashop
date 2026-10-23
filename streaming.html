@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=14"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body data-page="streaming">
   <div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>💳 Opciones de pago</span><b>•</b><span>🔒 Protección de datos</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>💳 Opciones de pago</span><b>•</b><span>🔒 Protección de datos</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
@@ -150,7 +150,7 @@
       </div>
 
       <div class="checkout-account-hint">✨ ¿Quieres consultar tus compras más adelante? <a href="cuenta.html" target="_blank" rel="noopener">Crea una cuenta gratis</a>. También puedes comprar como invitado.</div>
-      <form id="checkoutForm" class="checkout-form"><input type="hidden" name="latitude"><input type="hidden" name="longitude"><input type="hidden" name="latitude"><input type="hidden" name="longitude">
+      <form id="checkoutForm" class="checkout-form"><input type="hidden" id="checkoutLat" name="latitude"><input type="hidden" id="checkoutLng" name="longitude"><input type="hidden" name="latitude"><input type="hidden" name="longitude">
         <div class="form-section-title">👤 Información personal</div>
         <div class="form-grid two-cols">
           <label>
@@ -171,7 +171,7 @@
           </label>
         </div>
 
-        <div class="form-section-title">📍 Dirección de entrega</div>
+        <div id="cartDeliveryFields"><div class="form-section-title">📍 Dirección de entrega</div>
         <div class="form-grid two-cols">
           <label class="full">
             <span>Dirección completa *</span>
@@ -209,6 +209,8 @@
           </label>
         </div>
 
+        <div class="map-card checkout-location-card"><div class="map-toolbar"><small>📍 Marca la ubicación de entrega</small><button class="btn btn-ghost" id="useCheckoutLocation" type="button">Usar mi ubicación</button></div><div id="checkoutDeliveryMap" class="delivery-map"></div><div class="map-toolbar"><small id="checkoutMapStatus">Toca el mapa para colocar el pin.</small><small id="checkoutCoords" class="map-coordinates">Coordenadas opcionales</small></div></div>
+        </div>
         <div class="form-section-title">💳 Pago y confirmación</div>
         <div class="form-grid two-cols">
           <label class="full">
@@ -237,7 +239,7 @@
 
   <div class="toast" id="toast" role="status"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=14"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="delivery-map.js?v=14"></script><script src="supabase-config.js?v=14"></script>
   <script src="supabase-client.js?v=14"></script><script src="auth-nav.js?v=14"></script>
   <script src="products.js?v=14"></script>
   <script src="script.js?v=14"></script>
