@@ -160,7 +160,8 @@ async function submitProductCheckout(event) {
     address:cleanField(raw.get('address')),neighborhood:cleanField(raw.get('neighborhood')),
     city:cleanField(raw.get('city')),department:cleanField(raw.get('department')),
     postalCode:cleanField(raw.get('postalCode')),reference:cleanField(raw.get('reference')),
-    paymentMethod:cleanField(raw.get('paymentMethod'))
+    paymentMethod:cleanField(raw.get('paymentMethod')),
+    latitude:cleanField(raw.get('latitude')),longitude:cleanField(raw.get('longitude'))
   };
   if(currentProduct.deliveryType!=='digital' && (!data.address || !data.neighborhood || !data.city || !data.department)){
     showToast('Para productos físicos, completa dirección, barrio, ciudad y departamento.');
