@@ -124,17 +124,13 @@ function buildProductWhatsAppMessage(data, orderNumber='') {
     `Nombre: ${data.firstName} ${data.lastName}`,
     `${I.phone} Teléfono / WhatsApp: ${data.phone}`,
     data.email ? `${I.email} Correo: ${data.email}` : null,
-    '',
-    '━━━━━━━━━━━━━━━━━━━━',
-    `${I.pin} *DIRECCIÓN DE ENTREGA*`,
-    '━━━━━━━━━━━━━━━━━━━━',
-    `${I.house} Dirección: ${data.address}`,
-    `Barrio: ${data.neighborhood}`,
-    `Ciudad / Municipio: ${data.city}`,
-    `Departamento: ${data.department}`,
-    data.postalCode ? `Código postal: ${data.postalCode}` : null,
-    data.reference ? `${I.note} Referencia: ${data.reference}` : null,
-    '',
+    ...(currentProduct.deliveryType==='digital'
+      ? ['', '━━━━━━━━━━━━━━━━━━━━', '📩 *ENTREGA DIGITAL*', 'No requiere dirección física.', '']
+      : ['', '━━━━━━━━━━━━━━━━━━━━', `${I.pin} *DIRECCIÓN DE ENTREGA*`, '━━━━━━━━━━━━━━━━━━━━',
+         `${I.house} Dirección: ${data.address}`, `Barrio: ${data.neighborhood}`,
+         `Ciudad / Municipio: ${data.city}`, `Departamento: ${data.department}`,
+         data.postalCode ? `Código postal: ${data.postalCode}` : null,
+         data.reference ? `${I.note} Referencia: ${data.reference}` : null, '']),
     '━━━━━━━━━━━━━━━━━━━━',
     `${I.card} *MÉTODO DE PAGO*`,
     '━━━━━━━━━━━━━━━━━━━━',
@@ -164,6 +160,10 @@ async function submitProductCheckout(event) {
     postalCode:cleanField(raw.get('postalCode')),reference:cleanField(raw.get('reference')),
     paymentMethod:cleanField(raw.get('paymentMethod'))
   };
+  if(currentProduct.deliveryType!=='digital' && (!data.address || !data.neighborhood || !data.city || !data.department)){
+    showToast('Para productos físicos, completa dirección, barrio, ciudad y departamento.');
+    return;
+  }
   let savedOrder=null;
   if(window.NovaShopDB?.isConfigured?.()){
     const button=form.querySelector('button[type="submit"]');
@@ -187,12 +187,15 @@ function renderProduct() {
 
   $('#breadcrumbCategory').textContent = currentProduct.category;
   $('#breadcrumbProduct').textContent = currentProduct.name;
-  $('#breadcrumbCategory').href = 'index.html#productos';
+  $('#breadcrumbCategory').href = currentProduct.category === 'Streaming' ? 'streaming.html' : `index.html?category=${encodeURIComponent(currentProduct.category)}#productos`;
 
   $('#productCategory').textContent = currentProduct.category.toUpperCase();
   $('#productName').textContent = currentProduct.name;
-  $('#productRating').textContent = currentProduct.rating.toFixed(1);
-  $('#productReviews').textContent = `(${currentProduct.reviews} reseñas)`;
+  const hasRatings = Number.isFinite(currentProduct.rating) && Number(currentProduct.reviews) > 0;
+  const ratingRow = document.querySelector('.rating-row');
+  if(ratingRow) ratingRow.hidden = !hasRatings;
+  $('#productRating').textContent = hasRatings ? Number(currentProduct.rating).toFixed(1) : '';
+  $('#productReviews').textContent = hasRatings ? `(${currentProduct.reviews} reseñas)` : '';
   $('#productPrice').textContent = money(currentProduct.price);
   $('#productOldPrice').textContent = currentProduct.oldPrice ? money(currentProduct.oldPrice) : '';
   $('#productDiscount').textContent = currentProduct.oldPrice ? currentProduct.tag : '';
