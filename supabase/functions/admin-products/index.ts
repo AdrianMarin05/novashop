@@ -1,124 +1,153 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const headers = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Content-Type": "application/json; charset=utf-8",
+const BUCKET = "products-media";
+const MIME_EXT: Record<string, string> = {
+  "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp",
+  "image/avif": "avif", "image/gif": "gif", "video/mp4": "mp4",
+  "video/webm": "webm", "video/quicktime": "mov"
 };
-const respond = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers });
-const clean = (v: unknown, max = 300) => String(v ?? "").trim().slice(0, max);
-const defaultKey = (raw: string | undefined) => {
+const IMAGE_TYPES = new Set(["image/jpeg","image/png","image/webp","image/avif","image/gif"]);
+const VIDEO_TYPES = new Set(["video/mp4","video/webm","video/quicktime"]);
+const json = (body: unknown, status = 200, origin = "*") =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Access-Control-Allow-Origin": origin,
+      "Vary": "Origin",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-api-version",
+      "Access-Control-Allow-Methods": "POST, OPTIONS"
+    }
+  });
+const clean = (v: unknown, max = 3000) => String(v ?? "").trim().slice(0,max);
+function parseKey(raw: string | undefined): string | undefined {
   if (!raw) return undefined;
   try { const x = JSON.parse(raw); return typeof x.default === "string" ? x.default : undefined; }
   catch { return undefined; }
-};
-const allowedMedia = new Set(["image/jpeg","image/png","image/webp","image/avif","image/gif","video/mp4","video/webm","video/quicktime"]);
-const validPublicMedia = (u: unknown) => {
-  if (!u) return true;
+}
+function safeMediaUrl(value: unknown, supabaseUrl: string, allowExternalImage = false): boolean {
   try {
-    const url = new URL(String(u));
-    return url.protocol === "https:" && (
-      url.hostname.endsWith(".supabase.co") && url.pathname.includes("/storage/v1/object/public/products-media/")
-      || url.hostname === "images.unsplash.com"
-    );
+    const u = new URL(String(value));
+    if (u.protocol !== "https:") return false;
+    const local = u.origin === supabaseUrl && u.pathname.startsWith("/storage/v1/object/public/" + BUCKET + "/");
+    const unsplash = allowExternalImage && u.hostname === "images.unsplash.com";
+    return local || unsplash;
   } catch { return false; }
-};
+}
+function slug(name: string) {
+  return name.normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase()
+    .replace(/[^a-z0-9._-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,90) || "media";
+}
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers });
-  if (req.method !== "POST") return respond({ error: "Método no permitido." }, 405);
-  try {
-    const url = Deno.env.get("SUPABASE_URL");
-    const publishable = defaultKey(Deno.env.get("SUPABASE_PUBLISHABLE_KEYS")) || Deno.env.get("SUPABASE_ANON_KEY");
-    const secret = defaultKey(Deno.env.get("SUPABASE_SECRET_KEYS")) || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!url || !publishable || !secret) return respond({ error: "La función administrativa no está configurada." }, 500);
-    const bearer = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-    if (!bearer || bearer === publishable || bearer === Deno.env.get("SUPABASE_ANON_KEY")) {
-      return respond({ error: "Inicia sesión con tu cuenta administrativa." }, 401);
+  const origin = req.headers.get("Origin") || "*";
+  if (req.method === "OPTIONS") return new Response("ok", {
+    headers: {
+      "Access-Control-Allow-Origin": origin, "Vary": "Origin",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-api-version",
+      "Access-Control-Allow-Methods": "POST, OPTIONS"
     }
-    const authClient = createClient(url, publishable, { auth: { persistSession: false, autoRefreshToken: false } });
-    const { data: authData, error: authError } = await authClient.auth.getUser(bearer);
-    if (authError || !authData.user) return respond({ error: "La sesión no es válida." }, 401);
+  });
+  if (req.method !== "POST") return json({error:"Método no permitido."},405,origin);
 
-    const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
-    const { data: adminRow, error: adminError } = await admin.from("store_admins")
-      .select("user_id").eq("user_id", authData.user.id).maybeSingle();
-    if (adminError) throw adminError;
-    if (!adminRow) return respond({ error: "Tu cuenta aún no tiene permisos de administrador. El propietario de NovaShop debe asignarlos desde Supabase." }, 403);
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const publishable = parseKey(Deno.env.get("SUPABASE_PUBLISHABLE_KEYS")) || Deno.env.get("SUPABASE_ANON_KEY");
+    const secret = parseKey(Deno.env.get("SUPABASE_SECRET_KEYS")) || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !publishable || !secret) {
+      console.error("admin-products: required Supabase environment variables are missing");
+      return json({error:"El servidor administrativo no está configurado."},500,origin);
+    }
+    const auth = req.headers.get("Authorization") || "";
+    const token = auth.replace(/^Bearer\s+/i,"");
+    if (!token || token === publishable || token.split(".").length !== 3) {
+      return json({error:"Inicia sesión para acceder al panel de administración."},401,origin);
+    }
+    const admin = createClient(supabaseUrl, secret, {auth:{persistSession:false,autoRefreshToken:false}});
+    const {data:userResult,error:userError} = await admin.auth.getUser(token);
+    if (userError || !userResult.user) return json({error:"Tu sesión no es válida. Inicia sesión de nuevo."},401,origin);
+    const user = userResult.user;
+    const {data:grant,error:grantError} = await admin.from("store_admins").select("user_id").eq("user_id",user.id).maybeSingle();
+    if (grantError) throw grantError;
+    if (!grant) return json({error:"Esta cuenta todavía no tiene permisos de administración."},403,origin);
 
     const raw = await req.text();
-    if (raw.length > 150000) return respond({ error: "La solicitud excede el tamaño permitido." }, 413);
+    if (raw.length > 1_500_000) return json({error:"La solicitud excede el tamaño permitido."},413,origin);
     let body: any;
-    try { body = JSON.parse(raw); } catch { return respond({ error: "El formato de la solicitud no es válido." }, 400); }
-    const action = clean(body.action, 40);
+    try { body = JSON.parse(raw); } catch { return json({error:"Solicitud JSON no válida."},400,origin); }
+    const action = String(body?.action || "");
+
+    if (action === "whoami") return json({ok:true,isAdmin:true,userId:user.id,email:user.email || null},200,origin);
 
     if (action === "list") {
-      const { data, error } = await admin.from("products").select("*").order("sort_order").order("id");
+      const {data,error} = await admin.from("products").select("*").order("sort_order",{ascending:true}).order("id",{ascending:true});
       if (error) throw error;
-      return respond({ ok: true, products: data || [] });
+      return json({ok:true,products:data || []},200,origin);
     }
 
     if (action === "upload-url") {
-      const filename = clean(body.filename, 130).replace(/[^a-zA-Z0-9._-]/g, "_");
-      const contentType = clean(body.contentType, 80);
+      const filename = clean(body.filename,180);
+      const type = clean(body.contentType,100).toLowerCase();
       const size = Number(body.size);
-      if (!filename || !allowedMedia.has(contentType)) return respond({ error: "Tipo de archivo no permitido. Usa JPG, PNG, WEBP, GIF, AVIF, MP4, WEBM o MOV." }, 400);
-      const limit = contentType.startsWith("video/") ? 50 * 1024 * 1024 : 12 * 1024 * 1024;
-      if (!Number.isFinite(size) || size <= 0 || size > limit) return respond({ error: contentType.startsWith("video/") ? "Cada video debe pesar máximo 50 MB." : "Cada imagen debe pesar máximo 12 MB." }, 400);
-      const ext = filename.includes(".") ? filename.split(".").pop() : "bin";
-      const path = "products/" + authData.user.id + "/" + crypto.randomUUID() + "." + ext;
-      const { data, error } = await admin.storage.from("products-media").createSignedUploadUrl(path);
+      if (!MIME_EXT[type]) return json({error:"Tipo de archivo no permitido."},400,origin);
+      if (!Number.isFinite(size) || size <= 0 || size > 50*1024*1024) return json({error:"El archivo no puede superar 50 MB."},413,origin);
+      if (IMAGE_TYPES.has(type) && size > 12*1024*1024) return json({error:"Las imágenes no pueden superar 12 MB."},413,origin);
+      if (VIDEO_TYPES.has(type) && size > 50*1024*1024) return json({error:"El video no puede superar 50 MB."},413,origin);
+      const path = user.id + "/" + Date.now() + "-" + crypto.randomUUID() + "-" + slug(filename) + "." + MIME_EXT[type];
+      const {data,error} = await admin.storage.from(BUCKET).createSignedUploadUrl(path,{upsert:false});
       if (error) throw error;
-      const publicUrl = admin.storage.from("products-media").getPublicUrl(path).data.publicUrl;
-      return respond({ ok: true, path, token: data.token, publicUrl });
+      const publicUrl = admin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+      return json({ok:true,path:data.path || path,token:data.token,publicUrl},200,origin);
     }
 
     if (action === "save") {
-      const id = body.id ? Number(body.id) : null;
-      const name = clean(body.name, 140);
-      const category = clean(body.category, 70);
+      const id = body.id == null || body.id === "" ? null : Number(body.id);
+      const name = clean(body.name,140);
+      const category = clean(body.category,80);
+      const delivery = clean(body.delivery_type,20);
       const price = Number(body.price_cop);
-      const oldPrice = body.old_price_cop === "" || body.old_price_cop == null ? null : Number(body.old_price_cop);
-      const delivery = category === "Streaming" ? "digital" : (body.delivery_type === "digital" ? "digital" : "physical");
-      const description = clean(body.description, 4000);
-      const features = Array.isArray(body.features) ? body.features.map((v: unknown) => clean(v, 160)).filter(Boolean).slice(0, 20) : [];
-      const images = Array.isArray(body.images) ? body.images.map((v: unknown) => clean(v, 700)).filter(validPublicMedia).slice(0, 8) : [];
-      const video = clean(body.video_url, 700) || null;
+      const oldPrice = body.old_price_cop == null || body.old_price_cop === "" ? null : Number(body.old_price_cop);
+      const description = clean(body.description,4000);
+      const features = Array.isArray(body.features) ? body.features.map((v: unknown)=>clean(v,180)).filter(Boolean).slice(0,30) : [];
+      const images = Array.isArray(body.images) ? body.images.map((v: unknown)=>clean(v,1000)).filter(Boolean).slice(0,8) : [];
+      const video = body.video_url == null || body.video_url === "" ? null : clean(body.video_url,1000);
+      const tag = clean(body.tag,30);
+      const shipping = clean(body.shipping,500);
       const active = body.is_active !== false;
-      if (id !== null && (!Number.isSafeInteger(id) || id < 1)) return respond({ error: "El ID del producto no es válido." }, 400);
-      if (name.length < 2 || !category || !Number.isSafeInteger(price) || price < 1 || price > 100000000) return respond({ error: "Revisa nombre, categoría y precio del producto." }, 400);
-      if (oldPrice !== null && (!Number.isSafeInteger(oldPrice) || oldPrice <= price || oldPrice > 100000000)) return respond({ error: "El precio anterior debe ser mayor que el precio actual." }, 400);
-      if (images.length < 1) return respond({ error: "Sube al menos una imagen para el producto." }, 400);
-      if (images.some(u => !validPublicMedia(u)) || (video && !validPublicMedia(video))) return respond({ error: "Las fotos y videos deben proceder del almacenamiento aprobado de NovaShop." }, 400);
-      const row = {
-        name, category, price_cop: price, old_price_cop: category === "Streaming" ? null : oldPrice,
-        delivery_type: delivery, description, features, images, video_url: video,
-        rating: body.rating == null || body.rating === "" ? null : Math.min(5, Math.max(0, Number(body.rating))),
-        reviews: Math.min(1000000, Math.max(0, Math.trunc(Number(body.reviews) || 0))),
-        tag: category === "Streaming" ? "DIGITAL" : (oldPrice ? clean(body.tag || "OFERTA", 30) : clean(body.tag || "NUEVO", 30)),
-        shipping: clean(body.shipping, 500), sort_order: Math.trunc(Number(body.sort_order) || 100),
-        is_active: active, updated_at: new Date().toISOString()
+      const sortOrder = Number.isFinite(Number(body.sort_order)) ? Math.trunc(Number(body.sort_order)) : 100;
+      if (!name || !category || !description) return json({error:"Completa nombre, categoría y descripción."},400,origin);
+      if (!Number.isSafeInteger(price) || price <= 0 || price > 100_000_000) return json({error:"El precio no es válido."},400,origin);
+      if (oldPrice !== null && (!Number.isSafeInteger(oldPrice) || oldPrice < price || oldPrice > 100_000_000)) return json({error:"El precio anterior debe ser mayor o igual al precio actual."},400,origin);
+      if (!["physical","digital"].includes(delivery)) return json({error:"El tipo de entrega no es válido."},400,origin);
+      if (images.length < 1 || images.some((v: string)=>!safeMediaUrl(v,supabaseUrl,true))) return json({error:"Añade al menos una imagen válida de Supabase Storage o Unsplash."},400,origin);
+      if (video && !safeMediaUrl(video,supabaseUrl,false)) return json({error:"El video debe estar alojado en el bucket de medios de NovaShop."},400,origin);
+      if (id !== null && (!Number.isInteger(id) || id <= 0)) return json({error:"Identificador de producto no válido."},400,origin);
+
+      const payload = {
+        name,category,delivery_type:delivery,price_cop:price,old_price_cop:oldPrice,
+        description,features,images,video_url:video,tag,shipping,is_active:active,sort_order:sortOrder,updated_at:new Date().toISOString()
       };
-      const query = id !== null
-        ? admin.from("products").update(row).eq("id", id).select("*").single()
-        : admin.from("products").insert(row).select("*").single();
-      const { data, error } = await query;
+      const query = id === null
+        ? admin.from("products").insert(payload).select("*").single()
+        : admin.from("products").update(payload).eq("id",id).select("*").single();
+      const {data,error} = await query;
       if (error) throw error;
-      return respond({ ok: true, product: data }, 200);
+      if (!data) return json({error:"No encontramos el producto que intentabas editar."},404,origin);
+      return json({ok:true,product:data},200,origin);
     }
 
     if (action === "deactivate") {
       const id = Number(body.id);
-      if (!Number.isSafeInteger(id) || id < 1) return respond({ error: "ID no válido." }, 400);
-      const { data, error } = await admin.from("products").update({ is_active: false, updated_at: new Date().toISOString() }).eq("id", id).select("id,name,is_active").single();
+      if (!Number.isInteger(id) || id <= 0) return json({error:"Identificador de producto no válido."},400,origin);
+      const {data,error} = await admin.from("products").update({is_active:false,updated_at:new Date().toISOString()}).eq("id",id).select("id,name,is_active").maybeSingle();
       if (error) throw error;
-      return respond({ ok: true, product: data });
+      if (!data) return json({error:"No encontramos ese producto."},404,origin);
+      return json({ok:true,product:data},200,origin);
     }
-    return respond({ error: "Acción no reconocida." }, 400);
-  } catch (error) {
-    console.error("admin-products error:", error);
-    return respond({ error: "No se pudo completar la operación administrativa." }, 500);
+
+    return json({error:"Acción no reconocida."},400,origin);
+  } catch (e) {
+    console.error("admin-products error:",e);
+    return json({error:"No pudimos completar la operación administrativa. Revisa la configuración y vuelve a intentarlo."},500,origin);
   }
 });
