@@ -253,3 +253,23 @@ create policy "Only NovaShop admins delete product media" on storage.objects for
 using (bucket_id='products-media' and (select private.is_novashop_admin()));
 
 -- Never set a product to paid from the browser; payment status must be verified by the server.
+
+
+
+-- Signup enhancements: optional marketing opt-in and unique login identifiers.
+alter table public.profiles
+  add column if not exists marketing_opt_in boolean not null default false;
+
+create unique index if not exists profiles_phone_unique_idx
+  on public.profiles (phone)
+  where phone is not null and phone <> '';
+
+create unique index if not exists profiles_email_lower_unique_idx
+  on public.profiles (lower(email))
+  where email is not null and email <> '';
+
+grant insert (id,full_name,phone,email,address,neighborhood,city,department,postal_code,delivery_reference,latitude,longitude,marketing_opt_in,updated_at)
+  on public.profiles to authenticated;
+grant update (full_name,phone,email,address,neighborhood,city,department,postal_code,delivery_reference,latitude,longitude,marketing_opt_in,updated_at)
+  on public.profiles to authenticated;
+
