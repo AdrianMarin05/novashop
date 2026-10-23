@@ -57,6 +57,12 @@ Deno.serve(async (req: Request) => {
     const postalCode = clean(c.postalCode, 16);
     const reference = clean(c.reference, 220);
     const paymentMethod = clean(c.paymentMethod, 80);
+    const latitude = c.latitude == null || c.latitude === "" ? null : Number(c.latitude);
+    const longitude = c.longitude == null || c.longitude === "" ? null : Number(c.longitude);
+    const coordsProvided = latitude !== null || longitude !== null;
+    if (coordsProvided && (latitude === null || longitude === null || !Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180)) {
+      return json({ error: "Las coordenadas de entrega no son válidas. Selecciona de nuevo el punto en el mapa." }, 400);
+    }
     const itemsInput = body?.items;
 
     if (!firstName || !lastName || phone.length < 7 || !emailOk(email)) {
@@ -148,6 +154,8 @@ Deno.serve(async (req: Request) => {
       customer_last_name: lastName,
       customer_email: email || null,
       customer_phone: phone,
+      latitude,
+      longitude,
       address: address || null,
       neighborhood: neighborhood || null,
       city: city || null,
