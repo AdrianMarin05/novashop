@@ -4,7 +4,7 @@
 <meta name="description" content="Crea una cuenta gratuita en NovaShop o compra como invitado.">
 <title>Mi cuenta — NovaShop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=28">
+<link rel="stylesheet" href="styles.css?v=29">\n<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>
 /* Los formularios con atributo hidden deben seguir ocultos aunque .account-form use display:grid. */
 [hidden], .account-form[hidden], #registerForm[hidden], #loginForm[hidden], #dashboard[hidden], .register-step[hidden]{display:none!important}
@@ -77,6 +77,16 @@
       <label><span>Código postal</span><input name="postalCode" maxlength="12" autocomplete="postal-code" placeholder="Opcional"></label>
     </div>
     <label><span>Referencia adicional</span><textarea name="deliveryReference" rows="2" maxlength="240" placeholder="Color de la casa, portería, indicaciones..."></textarea></label>
+    <div class="map-card" style="margin-top:4px">
+      <div class="map-toolbar">
+        <div><strong>Ubicación de entrega en el mapa</strong><br><small>Marca el punto aproximado de tu casa para facilitar la entrega. También puedes usar tu ubicación actual.</small></div>
+        <button type="button" class="btn" id="useRegisterLocation" style="padding:9px 12px;font-size:12px">Usar mi ubicación</button>
+      </div>
+      <div id="registerMap" class="delivery-map" role="application" aria-label="Mapa para marcar la ubicación de entrega"></div>
+      <div class="map-toolbar"><small id="registerMapStatus">Toca el mapa para colocar un pin. Es opcional.</small><span id="registerMapCoordinates" class="map-coordinates">Sin pin seleccionado</span></div>
+    </div>
+    <input type="hidden" name="latitude" id="registerLatitude">
+    <input type="hidden" name="longitude" id="registerLongitude">
     <label class="consent-checkbox"><input type="checkbox" name="consent" required><span>Acepto el uso de mis datos para crear la cuenta y gestionar pedidos. *</span></label>
     <div class="register-step-actions"><button class="btn btn-primary wide" id="registerSubmit" type="submit">Crear mi cuenta y entrar</button></div>
   </fieldset>
@@ -105,5 +115,5 @@
 
 </section></main>
 <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Cuenta gratuita y opcional</span></div></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=28"></script><script src="supabase-client.js?v=29"></script><script src="auth-nav.js?v=27"></script><script src="account.js?v=33"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=29"></script><script src="supabase-client.js?v=30"></script><script src="auth-nav.js?v=28"></script><script src="account.js?v=34"></script>
 </body></html>
