@@ -3,7 +3,7 @@
 <meta name="description" content="Crea una cuenta gratuita en NovaShop o compra como invitado.">
 <title>Mi cuenta — NovaShop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=26"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="styles.css?v=26">
 <style>
 .account-wrap{max-width:1160px;margin:36px auto 65px;padding:0 22px;display:grid;grid-template-columns:minmax(270px,.85fr) minmax(360px,1.15fr);gap:25px;align-items:start}
 .account-story{background:linear-gradient(135deg,#112239,#2b3f5d);color:#fff;border-radius:24px;padding:32px;min-height:430px;position:relative;overflow:hidden}.account-story:after{content:"";position:absolute;width:250px;height:250px;border-radius:50%;background:#ff5a3628;right:-90px;bottom:-90px}
@@ -65,7 +65,7 @@
 
   <fieldset id="registerAddressStep" class="register-step" hidden>
     <h2>¿Dónde entregamos tus pedidos?</h2>
-    <p>Paso 2 de 2 · Escribe la dirección tal como aparece en Maps y marca el punto de entrada en el mapa.</p>
+    <p>Paso 2 de 2 · Completa tu dirección para que podamos coordinar la entrega.</p>
     <label><span>Dirección exacta *</span><input name="address" required maxlength="180" autocomplete="street-address" placeholder="Calle/carrera, número, torre, piso y apartamento"></label>
     <div class="form-grid two-cols">
       <label><span>Barrio / Vereda *</span><input name="neighborhood" required maxlength="80" placeholder="Barrio o vereda"></label>
@@ -76,17 +76,14 @@
       <label><span>Código postal</span><input name="postalCode" maxlength="12" autocomplete="postal-code" placeholder="Opcional"></label>
     </div>
     <label><span>Referencia adicional</span><textarea name="deliveryReference" rows="2" maxlength="240" placeholder="Color de la casa, portería, indicaciones..."></textarea></label>
-    <input type="hidden" id="registerLat" name="latitude"><input type="hidden" id="registerLng" name="longitude">
-    <div class="map-card"><div class="map-toolbar"><small>📍 Marca el punto exacto de entrega</small><button class="btn btn-ghost" id="useLocationRegister" type="button">Usar mi ubicación</button></div><div id="registerMap" class="delivery-map" aria-label="Mapa para seleccionar ubicación"></div><div class="map-toolbar"><small id="registerMapStatus">Toca el mapa para colocar el pin.</small><small id="registerCoords" class="map-coordinates">Sin coordenadas</small></div></div>
-    <p class="account-help">Las coordenadas ayudan al repartidor a encontrar la entrada correcta. La dirección escrita sigue siendo necesaria.</p>
+    <p class="account-help">Usaremos la dirección que escribiste para gestionar la entrega. El equipo de NovaShop podrá abrir su ubicación desde el panel administrativo.</p>
     <label class="consent-checkbox"><input type="checkbox" name="consent" required><span>Acepto el uso de mis datos para crear la cuenta y gestionar pedidos. *</span></label>
-    <div class="register-step-actions"><button class="btn btn-ghost" id="registerBack" type="button">← Volver</button><button class="btn btn-primary" id="registerSubmit" type="submit">Crear cuenta y entrar</button></div>
+    <div class="register-step-actions"><button class="btn btn-ghost" id="registerBack" type="button">← Volver</button><button class="btn btn-primary" id="registerSubmit" type="submit">Crear mi cuenta y entrar</button></div>
   </fieldset>
 </form>
 
 <form id="loginForm" class="account-form" hidden>
-  <h2>Bienvenido de nuevo</h2>
-  
+    
   <label><span>Correo o teléfono móvil *</span><input name="identity" type="text" required autocomplete="username" placeholder="tu@correo.com o +57 300 123 4567"></label>
   <label>
     <div class="password-label-row"><span>Contraseña *</span><a href="restablecer.html" target="_blank" rel="noopener noreferrer">¿Olvidaste tu contraseña?</a></div>
@@ -99,8 +96,7 @@
 <form id="profileForm" class="account-form"><h3>Mis datos de entrega</h3>
 <div class="form-grid two-cols"><label><span>Nombres y apellidos *</span><input name="fullName" required maxlength="120"></label><label><span>Teléfono *</span><input name="phone" required maxlength="24"></label><label class="full"><span>Correo electrónico</span><input name="email" type="email" maxlength="120"></label>
 <label class="full"><span>Dirección exacta *</span><input name="address" required maxlength="180"></label><label><span>Barrio *</span><input name="neighborhood" required maxlength="80"></label><label><span>Ciudad / Municipio *</span><input name="city" required maxlength="80"></label><label><span>Departamento *</span><input name="department" required maxlength="80"></label><label><span>Código postal</span><input name="postalCode" maxlength="12"></label><label class="full"><span>Referencia</span><textarea name="deliveryReference" rows="2" maxlength="240"></textarea></label></div>
-<input type="hidden" id="profileLat" name="latitude"><input type="hidden" id="profileLng" name="longitude">
-<div class="map-card"><div class="map-toolbar"><small>📍 Ubicación guardada para entregas</small><button class="btn btn-ghost" id="useLocationProfile" type="button">Usar mi ubicación</button></div><div id="profileMap" class="delivery-map"></div><div class="map-toolbar"><small id="profileMapStatus">Marca el pin si necesitas corregirlo.</small><small id="profileCoords" class="map-coordinates">Sin coordenadas</small></div></div>
+<p class="account-help">La dirección guardada se utilizará para coordinar tus entregas.</p>
 <button class="btn btn-primary wide" type="submit">Guardar datos de entrega</button></form>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:25px"><h2>Mis pedidos</h2><button type="button" id="refreshOrders" class="account-ghost">Actualizar ↻</button></div><div id="ordersList"><p class="account-help">Tus pedidos aparecerán aquí.</p></div>
 <div style="display:flex;gap:15px;flex-wrap:wrap;margin-top:18px"><button type="button" id="signOut" class="account-ghost">Cerrar sesión</button></div>
@@ -109,5 +105,5 @@
 
 </section></main>
 <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Cuenta gratuita y opcional</span></div></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="supabase-config.js?v=26"></script><script src="supabase-client.js?v=26"></script><script src="auth-nav.js?v=25"></script><script src="account.js?v=29"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=26"></script><script src="supabase-client.js?v=27"></script><script src="auth-nav.js?v=25"></script><script src="account.js?v=29"></script>
 </body></html>
