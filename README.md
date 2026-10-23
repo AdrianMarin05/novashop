@@ -125,3 +125,7 @@ La opción de verificación por WhatsApp está inactiva hasta conectar Twilio/Tw
 ## Seguridad administrativa
 
 El panel administrativo está protegido por roles validados en el servidor. No guardes credenciales ni contraseñas en este repositorio. El acceso y la asignación de roles se realizan desde Supabase y el panel privado.
+
+
+## Recuperación de contraseña
+La recuperación está separada en `restablecer.html`. Añade `https://adrianmarin05.github.io/novashop/restablecer.html` a Authentication → URL Configuration → Redirect URLs. No se guardan contraseñas ni credenciales administrativas en este repositorio.
