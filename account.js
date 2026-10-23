@@ -231,7 +231,9 @@ function init(){
  $("#profileForm").addEventListener("submit",saveProfileHandler);
  $("#refreshOrders").addEventListener("click",loadOrders);
  $("#signOut").addEventListener("click",async()=>{await client.auth.signOut();session=null;setVisible("login");msg("Has cerrado sesión.","success");});
- // El mapa se inicializa aquí y actualiza su tamaño cuando se muestra el paso de dirección.\n createMap("registerMap","registerLatitude","registerLongitude","registerMapStatus","registerMapCoordinates","useRegisterLocation");\n if(!client||!db?.isConfigured?.()){msg("Supabase no está conectado. Revisa la URL y la clave publicable.","error");return;}
+ // El mapa se inicializa aquí y actualiza su tamaño cuando se muestra el paso de dirección.
+ createMap("registerMap","registerLatitude","registerLongitude","registerMapStatus","registerMapCoordinates","useRegisterLocation");
+ if(!client||!db?.isConfigured?.()){msg("Supabase no está conectado. Revisa la URL y la clave publicable.","error");return;}
  client.auth.onAuthStateChange((event,s)=>{
   if(s?.user){session={user:s.user};if(!authActionInProgress)showDashboard(s.user);}else{session=null;}
  });
