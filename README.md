@@ -82,3 +82,12 @@ Orders are persisted in Supabase and start as `pending_payment`. The store curre
 - `auth-login`: Edge Function permite iniciar sesión con correo o teléfono y contraseña. Supabase Auth valida la contraseña y la función solo devuelve tokens con credenciales correctas.
 - `profiles.marketing_opt_in`: consentimiento opcional independiente para recibir ofertas por correo.
 - El envío por correo utiliza el proveedor de correo de Supabase. El envío por SMS necesita proveedor de SMS; WhatsApp requiere configurar Twilio/Twilio Verify con canal WhatsApp y credenciales. No se simula un envío WhatsApp mientras no esté configurado.
+
+
+## Administración de stock y ventas
+
+- El panel privado calcula ingresos y porcentajes solo a partir de pedidos con pago confirmado.
+- `products.stock_quantity`: entero no negativo; `NULL` significa inventario aún no configurado y `0` significa agotado.
+- Los productos existentes quedan con stock sin configurar porque no se proporcionó una cantidad real para ellos.
+- Los pedidos pendientes por WhatsApp no se consideran ventas pagadas. Hace falta integrar una pasarela con webhook de pago para registrar las ventas automáticamente.
+- El acceso a métricas y administración se comprueba en la Edge Function `admin-products` contra `public.store_admins`.
