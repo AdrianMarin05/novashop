@@ -97,13 +97,40 @@ function profilePayload(user,values){
   phone:values.phone||"",email:String(values.email||user.email||"").trim().toLowerCase(),
   address:values.address||"",neighborhood:values.neighborhood||"",city:values.city||"",
   department:values.department||"",postal_code:values.postalCode||"",delivery_reference:values.deliveryReference||"",
-  latitude:values.latitude?Number(values.latitude):null,longitude:values.longitude?Number(values.longitude):null,updated_at:new Date().toISOString()};
+  updated_at:new Date().toISOString()};
+ // Do not erase map coordinates when the customer edits profile fields on a form without a map.
+ if(Object.prototype.hasOwnProperty.call(values,"latitude"))data.latitude=values.latitude?Number(values.latitude):null;
+ if(Object.prototype.hasOwnProperty.call(values,"longitude"))data.longitude=values.longitude?Number(values.longitude):null;
  if(Object.prototype.hasOwnProperty.call(values,"marketingOptIn"))data.marketing_opt_in=!!values.marketingOptIn;
  return data;
 }
 async function saveProfile(user,values){
  const {error}=await client.from("profiles").upsert(profilePayload(user,values),{onConflict:"id"});
  if(error)throw error;
+}
+async function updateCustomerMetadata(user,values){
+ const previous=user?.user_metadata||{};
+ const fullName=String(values.fullName||[values.firstName,values.lastName].filter(Boolean).join(" ")||previous.full_name||"").trim();
+ const parts=fullName.split(/\s+/).filter(Boolean);
+ const metadata={
+  ...previous,
+  full_name:fullName,
+  first_name:values.firstName??previous.first_name??parts[0]??"",
+  last_name:values.lastName??previous.last_name??parts.slice(1).join(" "),
+  phone:values.phone??previous.phone??"",
+  email:String(values.email||user?.email||previous.email||"").trim().toLowerCase(),
+  address:values.address??previous.address??"",
+  neighborhood:values.neighborhood??previous.neighborhood??"",
+  city:values.city??previous.city??"",
+  department:values.department??previous.department??"",
+  postal_code:values.postalCode??previous.postal_code??"",
+  delivery_reference:values.deliveryReference??previous.delivery_reference??""
+ };
+ if(Object.prototype.hasOwnProperty.call(values,"latitude"))metadata.latitude=values.latitude?Number(values.latitude):null;
+ if(Object.prototype.hasOwnProperty.call(values,"longitude"))metadata.longitude=values.longitude?Number(values.longitude):null;
+ if(Object.prototype.hasOwnProperty.call(values,"marketingOptIn"))metadata.marketing_opt_in=!!values.marketingOptIn;
+ const {error}=await client.auth.updateUser({data:metadata});
+ if(error)console.warn("No se pudo sincronizar la copia de respaldo del perfil:",error.message);
 }
 async function continueToAddress(){
  const step=$("#registerContactStep");
@@ -129,7 +156,14 @@ async function submitSignup(event){
  button.disabled=true;button.textContent="Creando cuenta…";
  let createdUser=null;
  try{
-  const metadata={full_name:values.fullName,phone:values.phone,email:values.email,marketing_opt_in:values.marketingOptIn};
+  const metadata={
+   full_name:values.fullName,first_name:values.firstName,last_name:values.lastName,
+   phone:values.phone,email:values.email,address:values.address,neighborhood:values.neighborhood,
+   city:values.city,department:values.department,postal_code:values.postalCode,
+   delivery_reference:values.deliveryReference,
+   latitude:values.latitude?Number(values.latitude):null,longitude:values.longitude?Number(values.longitude):null,
+   marketing_opt_in:values.marketingOptIn
+  };
   authActionInProgress=true;
   const result=await client.auth.signUp({email:values.email,password,options:{data:metadata}});
   if(result.error)throw result.error;
@@ -153,7 +187,9 @@ async function submitSignup(event){
    signedUser=existing.data.user;
   }
   createdUser=signedUser;
+  // Guardar primero en la tabla del perfil; los metadatos sirven como respaldo para precargar perfil/checkout.
   await saveProfile(signedUser,values);
+  await updateCustomerMetadata(signedUser,values);
   location.replace("index.html?registro="+(justCreated?"creado":"acceso"));
  }catch(e){
   const text=String(e?.message||"");
@@ -178,11 +214,25 @@ async function showDashboard(user){
  $("#welcome").textContent="Hola, "+(user.user_metadata?.full_name||user.email?.split("@")[0]||user.phone||"cliente");
  $("#userEmail").textContent=user.email||user.phone||"Cuenta verificada";
  const {data:profile,error}=await client.from("profiles").select("*").eq("id",user.id).maybeSingle();
- if(!error&&profile){
-  const form=$("#profileForm");
-  for(const [key,name] of [["full_name","fullName"],["phone","phone"],["email","email"],["address","address"],["neighborhood","neighborhood"],["city","city"],["department","department"],["postal_code","postalCode"],["delivery_reference","deliveryReference"],["latitude","latitude"],["longitude","longitude"]])if(form.elements[name])form.elements[name].value=profile[key]??"";
-  $("#userEmail").textContent=profile.email||user.email||user.phone||"Cuenta verificada";
+ const form=$("#profileForm"),metadata=user.user_metadata||{};
+ if(error)console.warn("No se pudo leer el perfil guardado:",error.message);
+ const fields=[
+  ["full_name","fullName",metadata.full_name],
+  ["phone","phone",metadata.phone||user.phone],
+  ["email","email",user.email||metadata.email],
+  ["address","address",metadata.address],
+  ["neighborhood","neighborhood",metadata.neighborhood],
+  ["city","city",metadata.city],
+  ["department","department",metadata.department],
+  ["postal_code","postalCode",metadata.postal_code],
+  ["delivery_reference","deliveryReference",metadata.delivery_reference]
+ ];
+ for(const [key,name,fallback] of fields){
+  const el=form.elements[name];if(!el)continue;
+  const saved=profile?.[key];
+  el.value=String(saved!=null&&String(saved).trim()!==""?saved:(fallback??""));
  }
+ $("#userEmail").textContent=profile?.email||user.email||user.phone||metadata.email||"Cuenta verificada";
  await loadOrders();
  if(new URLSearchParams(location.search).get("registered")==="1")msg("¡Tu cuenta ya está verificada! Guarda tus datos y consulta aquí tus pedidos.","success");
 }
@@ -197,8 +247,14 @@ async function loadOrders(){
 }
 async function saveProfileHandler(event){
  event.preventDefault();if(!session?.user)return;const f=event.currentTarget;if(!f.reportValidity())return;
- const values={fullName:f.elements.fullName.value.trim(),phone:e164(f.elements.phone.value),email:f.elements.email.value.trim().toLowerCase(),address:f.elements.address.value.trim(),neighborhood:f.elements.neighborhood.value.trim(),city:f.elements.city.value.trim(),department:f.elements.department.value.trim(),postalCode:f.elements.postalCode.value.trim(),deliveryReference:f.elements.deliveryReference.value.trim(),latitude:"",longitude:""};
- try{await saveProfile(session.user,values);msg("Tus datos de entrega se guardaron correctamente.","success");}catch(e){msg("No pudimos guardar el perfil: "+e.message,"error");}
+ const values={fullName:f.elements.fullName.value.trim(),phone:e164(f.elements.phone.value),email:f.elements.email.value.trim().toLowerCase(),address:f.elements.address.value.trim(),neighborhood:f.elements.neighborhood.value.trim(),city:f.elements.city.value.trim(),department:f.elements.department.value.trim(),postalCode:f.elements.postalCode.value.trim(),deliveryReference:f.elements.deliveryReference.value.trim()};
+ try{
+  await saveProfile(session.user,values);
+  await updateCustomerMetadata(session.user,values);
+  // Actualizar también la sesión local para que el checkout use de inmediato los datos guardados.
+  const {data}=await client.auth.getUser();if(data?.user)session={user:data.user};
+  msg("Tus datos de entrega se guardaron correctamente y se usarán al comprar.","success");
+ }catch(e){msg("No pudimos guardar el perfil: "+e.message,"error");}
 }
 function init(){
  const params=new URLSearchParams(location.search);
