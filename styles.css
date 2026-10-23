@@ -34,3 +34,23 @@ body[data-page="streaming"] .hero .eyebrow{color:#ffb49f}
 @media(max-width:600px){.account-btn{padding:9px 10px;font-size:11px}.nav-wrap{gap:8px}.main-nav a{font-size:11px}}
 
 .checkout-account-hint{margin:0 0 16px;padding:12px 14px;border:1px solid #f6d4cb;border-radius:12px;background:#fff7f4;color:#5b514e;font-size:12px;line-height:1.55}.checkout-account-hint a{color:#cb4528;font-weight:800;text-decoration:underline;text-underline-offset:2px}
+
+/* v14: seamless animated benefit banner and clickable featured product */
+.announcement{overflow:hidden;padding:0;white-space:nowrap;min-height:36px;display:flex;align-items:center}
+.announcement-viewport{width:100%;overflow:hidden}
+.announcement-track{display:flex;width:max-content;will-change:transform;animation:novaShopMarquee 26s linear infinite}
+.announcement-group{display:flex;align-items:center;gap:22px;padding-right:22px;flex-shrink:0}
+.announcement-group span{font-size:12px;font-weight:650;line-height:36px;color:#fff}
+.announcement-group b{color:#90a8bf;font-size:12px}
+@keyframes novaShopMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.announcement:hover .announcement-track{animation-play-state:running}
+.featured-product-link{display:block;color:inherit;text-decoration:none;cursor:pointer;transition:transform .22s,box-shadow .22s}
+.featured-product-link:hover{transform:translateY(-3px);box-shadow:0 26px 70px rgba(18,38,58,.2)}
+.featured-product-link:focus-visible{outline:3px solid var(--accent);outline-offset:5px}
+.hero-visual .float-card{pointer-events:none;z-index:3}
+.account-btn[hidden]{display:none!important}
+.account-actions{display:flex;gap:7px;align-items:center}
+.auth-nav-link{font-size:11px;padding:9px 10px}
+.checkout-account-hint{margin:0 0 16px;padding:12px 14px;border:1px solid #f6d4cb;border-radius:12px;background:#fff7f4;color:#5b514e;font-size:12px;line-height:1.55}.checkout-account-hint a{color:#cb4528;font-weight:800;text-decoration:underline;text-underline-offset:2px}
+@media(max-width:600px){.announcement-track{animation-duration:19s}.announcement-group{gap:15px;padding-right:15px}.announcement-group span{font-size:11px}.account-actions{gap:4px}.auth-nav-link{font-size:9px;padding:8px 6px}.account-actions .cart-btn span{display:none}}
+@media(prefers-reduced-motion:reduce){.announcement-track{animation-duration:55s}}
