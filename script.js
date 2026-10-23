@@ -83,8 +83,11 @@ function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('sh
 function checkoutWhatsApp(){
   if(!cart.length){ toast('Añade al menos un producto'); return; }
   renderCheckoutSummary();
+  const digitalOnly=cart.every(item=>product(item.id)?.deliveryType==='digital');
+  const deliveryFields=$('#cartDeliveryFields');if(deliveryFields)deliveryFields.hidden=digitalOnly;
   openCheckoutModal();
   window.NovaShopDB?.prefillCheckout?.($('#checkoutForm')).catch(err=>console.warn('Perfil no precargado:',err));
+  window.NovaShopDeliveryMaps?.invalidate('checkoutDeliveryMap');
 }
 
 function renderCheckoutSummary(){
