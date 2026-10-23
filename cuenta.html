@@ -3,7 +3,7 @@
 <meta name="description" content="Crea una cuenta gratuita en NovaShop o compra como invitado.">
 <title>Mi cuenta — NovaShop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=14"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="styles.css?v=15"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <style>
 .account-wrap{max-width:1160px;margin:36px auto 65px;padding:0 22px;display:grid;grid-template-columns:minmax(270px,.85fr) minmax(360px,1.15fr);gap:25px;align-items:start}
 .account-story{background:linear-gradient(135deg,#112239,#2b3f5d);color:#fff;border-radius:24px;padding:32px;min-height:430px;position:relative;overflow:hidden}.account-story:after{content:"";position:absolute;width:250px;height:250px;border-radius:50%;background:#ff5a3628;right:-90px;bottom:-90px}
@@ -17,7 +17,7 @@
 @media(max-width:620px){.verification-choices{grid-template-columns:1fr}.delivery-map{height:220px}.header-actions{gap:5px}.auth-nav-link{font-size:10px;padding:8px 7px}.account-actions .cart-btn span{display:none}}
 </style></head>
 <body class="account-page">
-<div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>💳 Opciones de pago</span><b>•</b><span>🔒 Protección de datos</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>💳 Opciones de pago</span><b>•</b><span>🔒 Protección de datos</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
+<div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
 <header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a>
 <nav class="main-nav"><a href="index.html">Inicio</a><a href="streaming.html">Streaming</a><a href="index.html#categorias">Categorías</a></nav>
 <div class="header-actions account-actions"><a class="account-btn auth-nav-link" data-auth-nav="login" href="cuenta.html?tab=login">Iniciar sesión</a><a class="account-btn auth-nav-link" data-auth-nav="register" href="cuenta.html?tab=register">Crear cuenta</a><a class="account-btn auth-nav-link" data-auth-nav="account" href="cuenta.html" hidden>Mi cuenta</a></div></div></header>
@@ -61,6 +61,7 @@
 <form id="verifyLoginForm" class="account-form" hidden><h2>Verifica tu inicio</h2><p id="verifyLoginInfo">Introduce el código enviado.</p><label><span>Código de acceso *</span><input name="token" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required></label><button class="btn btn-primary wide" type="submit">Verificar e iniciar sesión</button><button type="button" id="resendLoginCode" class="account-ghost">Reenviar código</button><button type="button" data-back-login class="account-ghost">Volver</button></form>
 </div>
 <div id="dashboard" hidden class="account-dashboard"><h2 id="welcome">Mi cuenta</h2><p id="userEmail" class="account-help"></p>
+<a id="adminAccessLink" class="btn btn-ghost wide" href="admin.html" hidden style="margin:12px 0 20px">🛠️ Administrar tienda</a>
 <form id="profileForm" class="account-form"><h3>Mis datos de entrega</h3>
 <div class="form-grid two-cols"><label><span>Nombres y apellidos *</span><input name="fullName" required maxlength="120"></label><label><span>Teléfono *</span><input name="phone" required maxlength="24"></label><label class="full"><span>Correo electrónico</span><input name="email" type="email" maxlength="120"></label>
 <label class="full"><span>Dirección exacta *</span><input name="address" required maxlength="180"></label><label><span>Barrio *</span><input name="neighborhood" required maxlength="80"></label><label><span>Ciudad / Municipio *</span><input name="city" required maxlength="80"></label><label><span>Departamento *</span><input name="department" required maxlength="80"></label><label><span>Código postal</span><input name="postalCode" maxlength="12"></label><label class="full"><span>Referencia</span><textarea name="deliveryReference" rows="2" maxlength="240"></textarea></label></div>
@@ -74,5 +75,5 @@
 <p class="account-guest" id="guestHint">¿Prefieres no registrarte? <a href="index.html">Seguir comprando como invitado →</a></p>
 </section></main>
 <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Cuenta gratuita y opcional</span></div></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="supabase-config.js?v=14"></script><script src="supabase-client.js?v=14"></script><script src="auth-nav.js?v=14"></script><script src="account.js?v=14"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="supabase-config.js?v=15"></script><script src="supabase-client.js?v=15"></script><script src="auth-nav.js?v=15"></script><script src="account.js?v=15"></script>
 </body></html>
