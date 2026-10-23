@@ -130,3 +130,7 @@ La opción de verificación por WhatsApp está inactiva hasta conectar Twilio/Tw
 - Solo owner/admin pueden administrar cuentas; solo owner puede otorgar el rol admin. El propietario está protegido contra cambios de rol desde la UI.
 - `public.store_user_roles` queda sin permisos directos para `anon`/ `authenticated`; las operaciones de roles pasan por la Edge Function con sesión validada.
 - Para recibir un código OTP de correo, configurar Authentication → Email Templates → Confirm signup con `{{ .Token }}`. La URL del código se fuerza a GitHub Pages para evitar enlaces `localhost`.
+
+
+### Cuenta administrativa inicial
+El usuario de inicio `ADMIN` es un alias del usuario propietario existente (`adrianmarinnn05@gmail.com`) con rol `owner`. Por seguridad, la contraseña de esa cuenta no se cambió automáticamente al texto débil compartido en el chat: debe seguir usándose la contraseña actual o restablecerse mediante el correo de recuperación. No publiques la contraseña del panel.
