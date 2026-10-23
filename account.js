@@ -9,7 +9,7 @@ const $=s=>document.querySelector(s), db=window.NovaShopDB, client=db?.client;
 const money=v=>new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(Number(v)||0);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const msg=(txt,kind="info")=>{const n=$("#message");if(!n)return;n.textContent=txt;n.className="account-message "+kind;n.hidden=!txt;};
-let mapState={},session=null,adminRouteUserId=null,adminRoutePromise=null;
+let mapState={},session=null,adminRouteUserId=null,adminRoutePromise=null,authActionInProgress=false;
 async function routeAuthorizedAdmin(user){
  if(!user?.id||!db?.adminCall)return false;
  if(adminRouteUserId!==user.id){
@@ -20,7 +20,7 @@ async function routeAuthorizedAdmin(user){
   })();
  }
  const who=await adminRoutePromise;
- if(!who||!["owner","admin","catalog_manager","analyst"].includes(who.role))return false;
+ if(who?.isAdmin!==true||!["owner","admin","catalog_manager","analyst"].includes(who.role))return false;
  const {data:{session:latest}}=await client.auth.getSession();
  if(latest?.user?.id!==user.id)return false;
  location.replace("admin.html");
@@ -135,6 +135,7 @@ async function submitSignup(event){
  let createdUser=null;
  try{
   const metadata={full_name:values.fullName,phone:values.phone,email:values.email,marketing_opt_in:values.marketingOptIn};
+  authActionInProgress=true;
   const result=await client.auth.signUp({email:values.email,password,options:{data:metadata}});
   if(result.error)throw result.error;
   if(!result.data?.user)throw new Error("Supabase no devolvió una cuenta. Inténtalo de nuevo.");
@@ -147,10 +148,8 @@ async function submitSignup(event){
    return;
   }
   await saveProfile(result.data.user,values);
-  form.reset();
-  setVisible("dashboard");
-  await showDashboard(result.data.user);
-  msg("¡Cuenta creada! Ya puedes comprar y consultar tus pedidos. Para cambiar la contraseña, solicita ayuda por WhatsApp.", "success");
+  msg("¡Cuenta creada correctamente! Te llevamos a la tienda para que puedas ver los productos.", "success");
+  location.replace("index.html");
  }catch(e){
   const text=String(e?.message||"");
   if(createdUser){
@@ -161,6 +160,7 @@ async function submitSignup(event){
     :text||"No pudimos crear la cuenta. Inténtalo de nuevo.","error");
   }
  }finally{
+  authActionInProgress=false;
   button.disabled=false;button.textContent="Crear cuenta y entrar";
  }
 }
@@ -180,8 +180,6 @@ async function showDashboard(user){
   $("#userEmail").textContent=profile.email||user.email||user.phone||"Cuenta verificada";
  }
  await loadOrders();
- const adminLink=$("#adminAccessLink");
- if(adminLink){adminLink.hidden=true;try{await db.adminCall({action:"whoami"});adminLink.hidden=false;}catch(_){adminLink.hidden=true;}}
  if(new URLSearchParams(location.search).get("registered")==="1")msg("¡Tu cuenta ya está verificada! Guarda tus datos y consulta aquí tus pedidos.","success");
 }
 async function loadOrders(){
@@ -220,19 +218,21 @@ function init(){
   if(!db?.isConfigured?.()){msg("Supabase no está conectado.","error");return;}
   const btn=f.querySelector('[type="submit"]');btn.disabled=true;btn.textContent="Iniciando sesión…";
   try{
+   authActionInProgress=true;
    await db.loginWithIdentifier(f.elements.identity.value.trim(),f.elements.password.value);
    f.reset();const {data}=await client.auth.getSession();
-   if(data.session?.user)await showDashboard(data.session.user);
-   msg("Sesión iniciada correctamente.","success");
+   if(data.session?.user){
+    if(!await routeAuthorizedAdmin(data.session.user))location.replace("index.html");
+   }else throw new Error("La sesión no se pudo iniciar. Inténtalo de nuevo.");
   }catch(err){msg(/invalid|incorrect|credentials|not found|contraseña/i.test(err?.message||"")?"Correo/teléfono o contraseña incorrectos.":err?.message||"No pudimos iniciar sesión.","error");}
-  finally{btn.disabled=false;btn.textContent="Iniciar sesión";}
+  finally{authActionInProgress=false;btn.disabled=false;btn.textContent="Iniciar sesión";}
  });
  $("#profileForm").addEventListener("submit",saveProfileHandler);
  $("#refreshOrders").addEventListener("click",loadOrders);
  $("#signOut").addEventListener("click",async()=>{await client.auth.signOut();session=null;setVisible("login");msg("Has cerrado sesión.","success");});
  if(!client||!db?.isConfigured?.()){msg("Supabase no está conectado. Revisa la URL y la clave publicable.","error");return;}
  client.auth.onAuthStateChange((event,s)=>{
-  if(s?.user){session={user:s.user};showDashboard(s.user);}else{session=null;}
+  if(s?.user){session={user:s.user};if(!authActionInProgress)showDashboard(s.user);}else{session=null;}
  });
  client.auth.getSession().then(({data})=>{if(data.session?.user)showDashboard(data.session.user);});
 }
