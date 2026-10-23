@@ -46,28 +46,21 @@ Deno.serve(async (req: Request) => {
     try { body = JSON.parse(rawBody); } catch { return json({ error: "El formato del pedido no es válido." }, 400); }
 
     const c = body?.customer ?? {};
-    const firstName = clean(c.firstName, 60);
-    const lastName = clean(c.lastName, 60);
-    const email = clean(c.email, 120).toLowerCase();
-    const phone = clean(c.phone, 24);
-    const address = clean(c.address, 160);
-    const neighborhood = clean(c.neighborhood, 80);
-    const city = clean(c.city, 80);
-    const department = clean(c.department, 80);
-    const postalCode = clean(c.postalCode, 16);
-    const reference = clean(c.reference, 220);
+    let firstName = clean(c.firstName, 60);
+    let lastName = clean(c.lastName, 60);
+    let email = clean(c.email, 120).toLowerCase();
+    let phone = clean(c.phone, 24);
+    let address = clean(c.address, 160);
+    let neighborhood = clean(c.neighborhood, 80);
+    let city = clean(c.city, 80);
+    let department = clean(c.department, 80);
+    let postalCode = clean(c.postalCode, 16);
+    let reference = clean(c.reference, 220);
     const paymentMethod = clean(c.paymentMethod, 80);
     const latitude = c.latitude == null || c.latitude === "" ? null : Number(c.latitude);
     const longitude = c.longitude == null || c.longitude === "" ? null : Number(c.longitude);
-    const coordsProvided = latitude !== null || longitude !== null;
-    if (coordsProvided && (latitude === null || longitude === null || !Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180)) {
-      return json({ error: "Las coordenadas de entrega no son válidas. Selecciona de nuevo el punto en el mapa." }, 400);
-    }
     const itemsInput = body?.items;
 
-    if (!firstName || !lastName || phone.length < 7 || !emailOk(email)) {
-      return json({ error: "Revisa nombres, apellidos, teléfono y correo." }, 400);
-    }
     if (!Array.isArray(itemsInput) || itemsInput.length < 1 || itemsInput.length > 25) {
       return json({ error: "El pedido debe contener entre 1 y 25 productos distintos." }, 400);
     }
@@ -89,6 +82,7 @@ Deno.serve(async (req: Request) => {
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
     let userId: string | null = null;
+    let authenticatedUser: any = null;
     let customerEmailVerified = false;
     let customerPhoneVerified = false;
     if (token && token !== publicKey && token !== Deno.env.get("SUPABASE_ANON_KEY")) {
@@ -101,6 +95,7 @@ Deno.serve(async (req: Request) => {
         return json({ error: "Tu sesión no es válida. Inicia sesión de nuevo o continúa como invitado." }, 401);
       }
       userId = userData.user.id;
+      authenticatedUser = userData.user;
       customerEmailVerified = !!userData.user.email_confirmed_at;
       customerPhoneVerified = !!userData.user.phone_confirmed_at;
     }
@@ -108,6 +103,37 @@ Deno.serve(async (req: Request) => {
     const admin = createClient(supabaseUrl, secretKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
+
+    // For a signed-in customer, use the saved profile whenever checkout fields are blank.
+    // Fields explicitly entered at checkout stay in place in case the customer is delivering to another address.
+    if (userId) {
+      const { data: profile, error: profileError } = await admin.from("profiles")
+        .select("full_name,phone,email,address,neighborhood,city,department,postal_code,delivery_reference")
+        .eq("id", userId).maybeSingle();
+      if (profileError) throw profileError;
+      const savedName = clean(profile?.full_name || authenticatedUser?.user_metadata?.full_name, 120);
+      const split = savedName.indexOf(" ");
+      const fallbackFirst = split < 0 ? savedName : savedName.slice(0, split);
+      const fallbackLast = split < 0 ? "" : savedName.slice(split + 1);
+      if (!firstName) firstName = fallbackFirst;
+      if (!lastName) lastName = fallbackLast;
+      phone = phone || clean(profile?.phone || authenticatedUser?.phone || authenticatedUser?.user_metadata?.phone, 24);
+      email = (email || clean(profile?.email || authenticatedUser?.email, 120)).toLowerCase();
+      address = address || clean(profile?.address, 160);
+      neighborhood = neighborhood || clean(profile?.neighborhood, 80);
+      city = city || clean(profile?.city, 80);
+      department = department || clean(profile?.department, 80);
+      postalCode = postalCode || clean(profile?.postal_code, 16);
+      reference = reference || clean(profile?.delivery_reference, 220);
+    }
+
+    if (!firstName || !lastName || phone.length < 7 || !emailOk(email)) {
+      return json({ error: "Revisa nombres, apellidos, teléfono y correo." }, 400);
+    }
+    const coordsProvided = latitude !== null || longitude !== null;
+    if (coordsProvided && (latitude === null || longitude === null || !Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180)) {
+      return json({ error: "Las coordenadas de entrega no son válidas." }, 400);
+    }
 
     // Mild anti-duplicate protection per email. It does not replace payment-provider fraud controls.
     if (email) {
