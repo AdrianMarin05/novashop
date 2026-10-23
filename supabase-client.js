@@ -43,12 +43,17 @@
  async function prefillCheckout(form){
   if(!client||!form)return;
   const {data:{session}}=await client.auth.getSession();if(!session?.user)return;
-  const {data:p}=await client.from("profiles").select("*").eq("id",session.user.id).maybeSingle();if(!p)return;
+  const {data:p}=await client.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
+  const metadata=session.user.user_metadata||{};
   const put=(name,value)=>{const el=form.elements[name];if(el&&value!=null&&value!==""&&!el.value)el.value=value;};
-  const names=String(p.full_name||"").trim().split(/\s+/);put("firstName",names.shift()||"");put("lastName",names.join(" "));put("fullName",p.full_name);
-  for(const [name,value] of [["phone",p.phone],["email",p.email||session.user.email],["address",p.address],["neighborhood",p.neighborhood],
-   ["city",p.city],["department",p.department],["postalCode",p.postal_code],["reference",p.delivery_reference],["deliveryReference",p.delivery_reference],
-   ["latitude",p.latitude],["longitude",p.longitude]])put(name,value);
+  const fullName=String(p?.full_name||metadata.full_name||"").trim();
+  const splitAt=fullName.indexOf(" ");
+  put("firstName",splitAt<0?fullName:fullName.slice(0,splitAt));
+  put("lastName",splitAt<0?"":fullName.slice(splitAt+1));
+  put("fullName",fullName);
+  for(const [name,value] of [["phone",p?.phone||session.user.phone||metadata.phone],["email",p?.email||session.user.email||metadata.email],["address",p?.address],
+   ["neighborhood",p?.neighborhood],["city",p?.city],["department",p?.department],["postalCode",p?.postal_code],["reference",p?.delivery_reference],
+   ["deliveryReference",p?.delivery_reference],["latitude",p?.latitude],["longitude",p?.longitude]])put(name,value);
   form.dispatchEvent(new Event("novashop:profile-prefilled"));
  }
 
