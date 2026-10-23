@@ -129,3 +129,10 @@ El panel administrativo está protegido por roles validados en el servidor. No g
 
 ## Recuperación de contraseña
 `restablecer.html` orienta al cliente a contactar el WhatsApp de NovaShop (+57 300 335 8382); la página no solicita ni envía enlaces de recuperación. Después de verificar al cliente, el propietario puede establecer una contraseña temporal desde **admin.html → Usuarios registrados**. El backend comprueba el rol `owner`, rechaza cambios a la cuenta propietaria y solo cambia la contraseña mediante la API administrativa de Supabase del lado del servidor. No publiques claves de servicio ni compartas contraseñas temporalmente fuera de un chat privado.
+
+## Pedidos e inventario — Fase 1
+- El panel `admin.html` incluye un módulo privado para listar los pedidos registrados en Supabase, buscar por número/datos del cliente, filtrar por estado y cargar páginas adicionales.
+- Propietario y administradores pueden actualizar el estado. Pasar a pago confirmado, preparación, envío o entrega marca el pago como aprobado; el panel exige confirmación explícita al administrador y el servidor valida el rol y el estado.
+- Cada pedido muestra los productos, cantidades, total, contacto, dirección y ubicación si está disponible. El acceso a los datos de compradores está restringido a los roles `owner` y `admin`.
+- El inventario muestra alertas de productos agotados, con stock bajo y sin cantidad configurada; desde la alerta se puede abrir directamente la edición del producto.
+- Los pedidos se muestran en orden cronológico descendente. No se crean pedidos ficticios para pruebas; si no hay compras reales, el panel muestra un estado vacío.
