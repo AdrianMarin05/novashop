@@ -67,9 +67,16 @@ Deno.serve(async (req: Request) => {
     const {data:userResult,error:userError} = await admin.auth.getUser(token);
     if (userError || !userResult.user) return json({error:"Tu sesión no es válida. Inicia sesión de nuevo."},401,origin);
     const user = userResult.user;
-    const {data:grant,error:grantError} = await admin.from("store_admins").select("user_id").eq("user_id",user.id).maybeSingle();
+    const {data:roleRecord,error:roleError} = await admin.from("store_user_roles").select("role").eq("user_id",user.id).maybeSingle();
+    if (roleError) throw roleError;
+    const {data:legacyGrant,error:grantError} = await admin.from("store_admins").select("user_id").eq("user_id",user.id).maybeSingle();
     if (grantError) throw grantError;
-    if (!grant) return json({error:"Esta cuenta todavía no tiene permisos de administración."},403,origin);
+    const role = roleRecord?.role || (legacyGrant ? "owner" : null);
+    if (!role || role === "customer") return json({error:"Esta cuenta no tiene permisos para el panel administrativo."},403,origin);
+    const isOwner = role === "owner";
+    const canManageUsers = isOwner || role === "admin";
+    const canEditCatalog = isOwner || role === "admin" || role === "catalog_manager";
+    const canSeeMetrics = isOwner || role === "admin" || role === "analyst";
 
     const raw = await req.text();
     if (raw.length > 1_500_000) return json({error:"La solicitud excede el tamaño permitido."},413,origin);
@@ -77,15 +84,111 @@ Deno.serve(async (req: Request) => {
     try { body = JSON.parse(raw); } catch { return json({error:"Solicitud JSON no válida."},400,origin); }
     const action = String(body?.action || "");
 
-    if (action === "whoami") return json({ok:true,isAdmin:true,userId:user.id,email:user.email || null},200,origin);
+    if (action === "whoami") return json({ok:true,isAdmin:true,userId:user.id,email:user.email || null,role},200,origin);
+
+    if (action === "list-users") {
+      if (!canManageUsers) return json({error:"Solo owner/admin pueden administrar usuarios y roles."},403,origin);
+      const allUsers:any[] = [];
+      for (let page = 1; page <= 10; page++) {
+        const {data,error} = await admin.auth.admin.listUsers({page,perPage:200});
+        if (error) throw error;
+        const batch = data?.users || [];
+        allUsers.push(...batch);
+        if (batch.length < 200) break;
+      }
+      const ids = allUsers.map((u:any)=>u.id);
+      if (!ids.length) return json({ok:true,users:[]},200,origin);
+      const [rolesResult,profilesResult,legacyResult] = await Promise.all([
+        admin.from("store_user_roles").select("user_id,role,created_at").in("user_id",ids),
+        admin.from("profiles").select("id,full_name,username,phone").in("id",ids),
+        admin.from("store_admins").select("user_id").in("user_id",ids)
+      ]);
+      if (rolesResult.error) throw rolesResult.error;
+      if (profilesResult.error) throw profilesResult.error;
+      if (legacyResult.error) throw legacyResult.error;
+      const roleMap = new Map((rolesResult.data||[]).map((x:any)=>[x.user_id,x.role]));
+      const profileMap = new Map((profilesResult.data||[]).map((x:any)=>[x.id,x]));
+      const legacy = new Set((legacyResult.data||[]).map((x:any)=>x.user_id));
+      const users = allUsers.map((u:any)=>{
+        const p:any = profileMap.get(u.id) || {};
+        return {id:u.id,email:u.email || null,phone:u.phone || p.phone || null,
+          full_name:p.full_name || u.user_metadata?.full_name || "",
+          username:p.username || "",role:roleMap.get(u.id) || (legacy.has(u.id)?"owner":"customer"),
+          created_at:u.created_at,last_sign_in_at:u.last_sign_in_at || null,
+          email_confirmed:!!u.email_confirmed_at,phone_confirmed:!!u.phone_confirmed_at};
+      });
+      return json({ok:true,users},200,origin);
+    }
+
+    if (action === "invite-user") {
+      if (!canManageUsers) return json({error:"Solo owner/admin pueden crear usuarios."},403,origin);
+      const email = clean(body.email,120).toLowerCase();
+      const fullName = clean(body.full_name,100);
+      const wantedRole = clean(body.role,30);
+      if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return json({error:"Introduce un correo válido."},400,origin);
+      if (!fullName) return json({error:"Introduce el nombre del usuario."},400,origin);
+      if (!["admin","catalog_manager","analyst","customer"].includes(wantedRole)) return json({error:"Selecciona un rol válido."},400,origin);
+      if (wantedRole === "admin" && !isOwner) return json({error:"Solo el propietario puede conceder el rol admin."},403,origin);
+      const {data:inviteData,error:inviteError} = await admin.auth.admin.inviteUserByEmail(email,{
+        data:{full_name:fullName},
+        redirectTo:"https://adrianmarin05.github.io/novashop/cuenta.html"
+      });
+      if (inviteError) throw inviteError;
+      const newUser = inviteData?.user;
+      if (!newUser?.id) return json({error:"Supabase no devolvió el usuario invitado."},500,origin);
+      const {error:profileError} = await admin.from("profiles").upsert({
+        id:newUser.id,full_name:fullName,email,username:null,updated_at:new Date().toISOString()
+      },{onConflict:"id"});
+      if (profileError) throw profileError;
+      const {error:roleSaveError} = await admin.from("store_user_roles").upsert({
+        user_id:newUser.id,role:wantedRole,granted_by:user.id,updated_at:new Date().toISOString()
+      },{onConflict:"user_id"});
+      if (roleSaveError) throw roleSaveError;
+      if (wantedRole === "customer") await admin.from("store_admins").delete().eq("user_id",newUser.id);
+      else {
+        const {error:legacySaveError} = await admin.from("store_admins").upsert({user_id:newUser.id,granted_by:user.id},{onConflict:"user_id"});
+        if (legacySaveError) throw legacySaveError;
+      }
+      return json({ok:true,user:{id:newUser.id,email:newUser.email,full_name:fullName,role:wantedRole},message:"Invitación creada. El usuario deberá abrir el correo y completar el acceso."},201,origin);
+    }
+
+    if (action === "set-role") {
+      if (!canManageUsers) return json({error:"Solo owner/admin pueden asignar roles."},403,origin);
+      const targetId = clean(body.user_id,50);
+      const wantedRole = clean(body.role,30);
+      if (!/^[0-9a-f-]{36}$/i.test(targetId)) return json({error:"Identificador de usuario no válido."},400,origin);
+      if (!["admin","catalog_manager","analyst","customer"].includes(wantedRole)) return json({error:"Selecciona un rol válido."},400,origin);
+      if (wantedRole === "admin" && !isOwner) return json({error:"Solo el propietario puede conceder el rol admin."},403,origin);
+      if (targetId === user.id) return json({error:"No puedes cambiar tu propio rol desde esta pantalla."},409,origin);
+      const {data:targetRole,error:targetRoleError} = await admin.from("store_user_roles").select("role").eq("user_id",targetId).maybeSingle();
+      if (targetRoleError) throw targetRoleError;
+      const {data:targetLegacy,error:targetLegacyError} = await admin.from("store_admins").select("user_id").eq("user_id",targetId).maybeSingle();
+      if (targetLegacyError) throw targetLegacyError;
+      const oldRole = targetRole?.role || (targetLegacy ? "owner" : "customer");
+      if (oldRole === "owner") return json({error:"El propietario está protegido; no se puede cambiar su rol desde el panel."},409,origin);
+      const {error:saveError} = await admin.from("store_user_roles").upsert({
+        user_id:targetId,role:wantedRole,granted_by:user.id,updated_at:new Date().toISOString()
+      },{onConflict:"user_id"});
+      if (saveError) throw saveError;
+      if (wantedRole === "customer") {
+        const {error:deleteError} = await admin.from("store_admins").delete().eq("user_id",targetId);
+        if (deleteError) throw deleteError;
+      } else {
+        const {error:grantSaveError} = await admin.from("store_admins").upsert({user_id:targetId,granted_by:user.id},{onConflict:"user_id"});
+        if (grantSaveError) throw grantSaveError;
+      }
+      return json({ok:true,user_id:targetId,role:wantedRole},200,origin);
+    }
 
     if (action === "list") {
+      if (!canEditCatalog && role !== "analyst") return json({error:"No tienes permiso para ver el catálogo administrativo."},403,origin);
       const {data,error} = await admin.from("products").select("*").order("sort_order",{ascending:true}).order("id",{ascending:true});
       if (error) throw error;
       return json({ok:true,products:data || []},200,origin);
     }
 
     if (action === "metrics") {
+      if (!canSeeMetrics) return json({error:"No tienes permiso para consultar métricas de ventas."},403,origin);
       const [ordersResult, itemsResult, productsResult] = await Promise.all([
         admin.from("orders").select("id,status,payment_status,subtotal_cop,created_at").order("created_at",{ascending:false}).limit(10000),
         admin.from("order_items").select("order_id,product_id,product_name,quantity,unit_price_cop,line_total_cop").limit(50000),
@@ -135,6 +238,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "upload-url") {
+      if (!canEditCatalog) return json({error:"No tienes permiso para subir medios de productos."},403,origin);
       const filename = clean(body.filename,180);
       const type = clean(body.contentType,100).toLowerCase();
       const size = Number(body.size);
@@ -150,6 +254,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "save") {
+      if (!canEditCatalog) return json({error:"No tienes permiso para editar productos."},403,origin);
       const id = body.id == null || body.id === "" ? null : Number(body.id);
       const name = clean(body.name,140);
       const category = clean(body.category,80);
@@ -190,6 +295,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "deactivate") {
+      if (!canEditCatalog) return json({error:"No tienes permiso para ocultar productos."},403,origin);
       const id = Number(body.id);
       if (!Number.isInteger(id) || id <= 0) return json({error:"Identificador de producto no válido."},400,origin);
       const {data,error} = await admin.from("products").update({is_active:false,updated_at:new Date().toISOString()}).eq("id",id).select("id,name,is_active").maybeSingle();
