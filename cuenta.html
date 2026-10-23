@@ -53,7 +53,7 @@
 <button class="btn btn-primary wide" type="submit">Enviar código de verificación</button><div class="account-help">Registro gratuito. También puedes seguir comprando como invitado.</div>
 </form>
 <form id="verifySignupForm" class="account-form" hidden><h2>Confirma tu contacto</h2><p id="verifySignupInfo">Escribe el código de seis dígitos que acabamos de enviar.</p><label><span>Código de verificación *</span><input name="token" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required placeholder="123456"></label><button class="btn btn-primary wide" type="submit">Verificar y crear cuenta</button><button type="button" id="resendSignupCode" class="account-ghost">Reenviar código</button><button type="button" data-back-register class="account-ghost">Volver y corregir mis datos</button></form>
-<form id="loginForm" class="account-form" hidden><h2>Iniciar sesión</h2><p>Te enviaremos un código de acceso de un solo uso.</p>
+<form id="loginForm" class="account-form" hidden><h2>Iniciar sesión</h2><p>Te enviaremos un código de acceso de un solo uso. Selecciona el mismo medio que verificaste al crear tu cuenta.</p>
 <div class="form-section-title">Recibir código en</div><div class="verification-choices">
 <label class="verification-choice"><input type="radio" name="loginVia" value="email" checked><span><strong>📧 Correo</strong><small>Requiere correo OTP habilitado.</small></span></label>
 <label class="verification-choice"><input type="radio" name="loginVia" value="sms"><span><strong>📱 SMS</strong><small>Requiere proveedor SMS habilitado.</small></span></label></div>
