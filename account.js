@@ -1,7 +1,7 @@
 /* NovaShop account flow:
    - registration step 1: contact and password
    - registration step 2: delivery address and exact map pin
-   - one OTP in verificar.html
+   - instant account activation; password support via WhatsApp
    - email or phone + password login
 */
 (() => {
@@ -26,7 +26,6 @@ async function routeAuthorizedAdmin(user){
  location.replace("admin.html");
  return true;
 }
-const signupKey="novashop-pending-signup";
 function e164(value){let n=String(value||"").replace(/[^0-9+]/g,"");if(n.startsWith("+"))return n;if(n.startsWith("00"))return "+"+n.slice(2);n=n.replace(/\D/g,"");if(n.startsWith("57")&&n.length>=12)return "+"+n;return "+57"+n;}
 function setVisible(which){
  const register=["register","registerAddress"].includes(which);
@@ -130,40 +129,42 @@ async function submitSignup(event){
   msg("Marca el punto exacto de entrega en el mapa antes de continuar.","error");return;
  }
  values.latitude=String(lat);values.longitude=String(lng);
- const channel=new FormData(form).get("verifyVia")||"email";
  const password=form.elements.password.value;
- const button=$("#registerSubmit");button.disabled=true;button.textContent="Enviando código…";
+ const button=$("#registerSubmit");
+ button.disabled=true;button.textContent="Creando cuenta…";
+ let createdUser=null;
  try{
   const metadata={full_name:values.fullName,phone:values.phone,email:values.email,marketing_opt_in:values.marketingOptIn};
-  // Always redirect production confirmation links to the published site, even when registration was started from localhost.
-  const redirectTo="https://adrianmarin05.github.io/novashop/verificar.html";
-  const result=channel==="email"
-   ? await client.auth.signUp({email:values.email,password,options:{data:metadata,emailRedirectTo:redirectTo}})
-   : await client.auth.signUp({phone:values.phone,password,options:{data:metadata}});
+  const result=await client.auth.signUp({email:values.email,password,options:{data:metadata}});
   if(result.error)throw result.error;
-  if(!result.data?.user)throw new Error("Supabase no devolvió una cuenta. Verifica la configuración de Auth.");
+  if(!result.data?.user)throw new Error("Supabase no devolvió una cuenta. Inténtalo de nuevo.");
   if(Array.isArray(result.data.user.identities)&&result.data.user.identities.length===0){
-    throw new Error("Este correo ya tiene una cuenta. Por eso Supabase no envió otro código. Ve a Iniciar sesión o usa ¿Olvidaste tu contraseña? si no recuerdas la clave.");
+   throw new Error("Ese correo ya tiene una cuenta. Ve a Iniciar sesión o contacta por WhatsApp si necesitas recuperar el acceso.");
   }
-  // Never keep the password in browser storage. The Auth server already holds the hashed credential.
-  const pendingValues={...values};
-  pendingSignupStorage({channel,identity:channel==="email"?values.email:values.phone,values:pendingValues});
-  if(result.data.session){
-    await saveProfile(result.data.user,values);
-    sessionStorage.removeItem(signupKey);
-    form.reset();
-    setVisible("dashboard");
-    await showDashboard(result.data.user);
-    msg("Cuenta creada. El proyecto no solicitó otro código porque su configuración permitió el acceso inmediato.","success");
-  }else{
-    location.href="verificar.html";
+  createdUser=result.data.user;
+  if(!result.data.session){
+   msg("Supabase todavía exige confirmar el correo. Para activar el registro inmediato, desactiva «Confirm email» en Supabase: Authentication → Providers → Email. No vuelvas a registrar este mismo correo; puede haber quedado pendiente.", "error");
+   return;
   }
+  await saveProfile(result.data.user,values);
+  form.reset();
+  setVisible("dashboard");
+  await showDashboard(result.data.user);
+  msg("¡Cuenta creada! Ya puedes comprar y consultar tus pedidos. Para cambiar la contraseña, solicita ayuda por WhatsApp.", "success");
  }catch(e){
   const text=String(e?.message||"");
-  msg(/already registered|already been registered|user already/i.test(text)?"Ese correo o teléfono ya tiene una cuenta. Inicia sesión o revisa que no haya un registro pendiente.":text||"No pudimos iniciar el registro. Inténtalo de nuevo.","error");
- }finally{button.disabled=false;button.textContent="Enviar código y continuar";}
+  if(createdUser){
+   msg("La cuenta se inició correctamente, pero no pudimos guardar los datos de entrega: "+text,"error");
+  }else{
+   msg(/already registered|already been registered|user already/i.test(text)
+    ?"Ese correo ya tiene una cuenta. Inicia sesión o contacta por WhatsApp para recuperar el acceso."
+    :text||"No pudimos crear la cuenta. Inténtalo de nuevo.","error");
+  }
+ }finally{
+  button.disabled=false;button.textContent="Crear cuenta y entrar";
+ }
 }
-function pendingSignupStorage(value){sessionStorage.setItem(signupKey,JSON.stringify(value));}
+
 async function showDashboard(user){
  session={user};
  // Usuarios con rol administrativo van directo a la interfaz de gestión; no necesitan dirección de entrega.
