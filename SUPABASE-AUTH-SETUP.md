@@ -25,3 +25,9 @@ Guarda la plantilla y vuelve a intentar con un correo que no esté registrado pr
 
 ## 3. WhatsApp
 La opción de verificación por WhatsApp está inactiva hasta conectar Twilio/Twilio Verify con canal WhatsApp. La autenticación por correo no necesita esa integración. No actives el canal WhatsApp hasta que las credenciales del proveedor estén configuradas.
+
+
+## Por qué no llega otro correo al mismo usuario
+Los registros de Auth mostraron `user_repeated_signup` para el correo que ya estaba verificado. Supabase no genera un segundo código al intentar registrar otra vez un correo ya existente/confirmado. Para probar un registro nuevo, usa un correo nuevo; para esa cuenta, inicia sesión o usa la recuperación de contraseña.
+
+La solicitud anterior se inició desde `http://localhost:3000`. El código actual ahora fija la redirección a la página publicada de GitHub Pages, pero el correo solo se convertirá en código numérico después de guardar la plantilla de **Confirm signup** con `{{ .Token }}`.
