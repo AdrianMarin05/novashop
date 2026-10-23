@@ -34,9 +34,16 @@ function renderFeaturedProduct(){
 }
 
 function renderCategories(){
-  const visibleCategories = categoryMeta.filter(c => document.body.dataset.page === 'streaming' ? c.name === 'Streaming' : true);
-  $('#categoryGrid').innerHTML = visibleCategories.map(c=>`<button class="category-card" data-cat="${c.name}" aria-label="Ver ${c.name}"><img src="${c.image}" alt="${c.name}" loading="lazy"><div class="category-info"><h3>${c.name}</h3><span>${c.count}</span></div></button>`).join('');
-  document.querySelectorAll('.category-card').forEach(btn=>btn.addEventListener('click',()=>{ if(btn.dataset.cat==='Streaming'){ location.href='streaming.html'; return; } $('#categoryFilter').value=btn.dataset.cat; renderProducts(); document.querySelector('#productos').scrollIntoView({behavior:'smooth'}); }));
+  const streamingPage=document.body.dataset.page==='streaming';
+  const metaByName=new Map(categoryMeta.map(item=>[item.name,item]));
+  const names=streamingPage?['Streaming']:[...new Set([...categoryMeta.map(item=>item.name),...products.map(item=>item.category)])];
+  const visibleCategories=names.map(name=>{
+    const meta=metaByName.get(name)||{};
+    const count=products.filter(item=>item.category===name).length;
+    return {name,image:meta.image||'images/streaming-placeholder.svg',count:name==='Streaming'?count+' servicios digitales':count+' '+(count===1?'producto':'productos')};
+  });
+  $('#categoryGrid').innerHTML=visibleCategories.map(c=>`<button class="category-card" data-cat="${c.name}" aria-label="Ver ${c.name}"><img src="${c.image}" alt="${c.name}" loading="lazy"><div class="category-info"><h3>${c.name}</h3><span>${c.count}</span></div></button>`).join('');
+  document.querySelectorAll('.category-card').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.cat==='Streaming'){location.href='streaming.html';return;}$('#categoryFilter').value=btn.dataset.cat;renderProducts();document.querySelector('#productos').scrollIntoView({behavior:'smooth'});}));
 }
 
 function renderProducts(){
