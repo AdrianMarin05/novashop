@@ -22,9 +22,9 @@
       <nav class="main-nav" aria-label="Navegación principal">
         <a href="index.html">Inicio</a>
         <a href="index.html#categorias">Categorías</a>
-        <a href="index.html#productos">Productos</a>
+        <a href="index.html#productos">Productos</a><a href="streaming.html">Streaming</a>
       </nav>
-      <div class="header-actions">
+      <div class="header-actions"><a class="account-btn" href="cuenta.html" aria-label="Mi cuenta">👤 Mi cuenta</a>
         <a class="cart-btn product-cart-link" href="index.html#carrito" aria-label="Ver carrito">
           🛒 <span>Carrito</span><b id="productCartCount">0</b>
         </a>
@@ -207,7 +207,10 @@
 
   <div class="toast" id="productToast" role="status"></div>
 
-  <script src="products.js"></script>
-  <script src="product.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js?v=13"></script>
+  <script src="supabase-client.js?v=13"></script>
+  <script src="products.js?v=13"></script>
+  <script src="product.js?v=13"></script>
 </body>
 </html>
