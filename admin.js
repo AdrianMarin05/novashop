@@ -3,31 +3,52 @@
 const $=s=>document.querySelector(s), db=window.NovaShopDB;
 const money=n=>new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(Number(n)||0);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let products=[], editingImages=[], editingVideo=null;
+let products=[], editingImages=[], editingVideo=null, metrics=null;
 function status(text,kind="info"){const el=$("#adminStatus");el.textContent=text;el.className="admin-status "+kind;}
-function formData(){const f=$("#adminProductForm"),v=new FormData(f);return {id:v.get("id")?Number(v.get("id")):null,name:String(v.get("name")||"").trim(),category:String(v.get("category")||""),delivery_type:v.get("delivery_type"),price_cop:Number(v.get("price_cop")),old_price_cop:v.get("old_price_cop")?Number(v.get("old_price_cop")):null,description:String(v.get("description")||"").trim(),features:String(v.get("features")||"").split("\n").map(s=>s.trim()).filter(Boolean),images:editingImages.slice(),video_url:editingVideo,tag:String(v.get("tag")||"").trim(),shipping:String(v.get("shipping")||"").trim(),is_active:!!f.elements.is_active.checked,sort_order:v.get("id")?Number(v.get("id")):100};}
+function formData(){const f=$("#adminProductForm"),v=new FormData(f);return {id:v.get("id")?Number(v.get("id")):null,name:String(v.get("name")||"").trim(),category:String(v.get("category")||""),delivery_type:v.get("delivery_type"),price_cop:Number(v.get("price_cop")),old_price_cop:v.get("old_price_cop")?Number(v.get("old_price_cop")):null,stock_quantity:v.get("stock_quantity")===""?null:Number(v.get("stock_quantity")),description:String(v.get("description")||"").trim(),features:String(v.get("features")||"").split("\n").map(s=>s.trim()).filter(Boolean),images:editingImages.slice(),video_url:editingVideo,tag:String(v.get("tag")||"").trim(),shipping:String(v.get("shipping")||"").trim(),is_active:!!f.elements.is_active.checked,sort_order:v.get("sort_order")?Number(v.get("sort_order")):(v.get("id")?Number(v.get("id")):100)};}
 async function call(body){if(!db?.isConfigured?.())throw new Error("Supabase no está conectado.");return db.adminCall(body);}
 async function upload(file){const signed=await call({action:"upload-url",filename:file.name,contentType:file.type,size:file.size});const {error}=await db.client.storage.from("products-media").uploadToSignedUrl(signed.path,signed.token,file,{contentType:file.type,upsert:false});if(error)throw error;return signed.publicUrl;}
 async function loadProducts(){
- try{const r=await call({action:"list"});products=r.products||[];renderProducts();status("Sesión lista. El servidor confirmó permisos administrativos.","success");}
- catch(e){products=[];renderProducts();status(e.message||"No se pudo cargar el catálogo.", "error");}
+ try{
+  const r=await call({action:"list"});products=r.products||[];renderProducts();
+  try{const m=await call({action:"metrics"});metrics=m.metrics||null;renderMetrics(metrics);}
+  catch(e){status("Catálogo cargado, pero las métricas no están disponibles: "+(e.message||""),"error");}
+  if(!metrics)renderMetrics(null);
+  else status("Sesión lista. El servidor confirmó permisos administrativos.","success");
+ }catch(e){products=[];renderProducts();renderMetrics(null);status(e.message||"No se pudo cargar el catálogo.","error");}
+}
+function renderMetrics(m){
+ const box=$("#adminMetrics");if(!box)return;
+ if(!m){box.innerHTML='<div class="admin-metric"><span>Ventas confirmadas</span><strong>—</strong></div><div class="admin-metric"><span>Pedidos pagados</span><strong>—</strong></div><div class="admin-metric"><span>Unidades vendidas</span><strong>—</strong></div><div class="admin-metric"><span>Pedidos pendientes</span><strong>—</strong></div>';$("#adminInventoryMetrics").textContent="No se pudieron cargar las métricas.";$("#adminSalesMix").textContent="No se pudieron cargar las ventas.";return;}
+ box.innerHTML='<div class="admin-metric"><span>Ventas confirmadas</span><strong>'+money(m.revenueCop)+'</strong></div><div class="admin-metric"><span>Pedidos pagados</span><strong>'+Number(m.paidOrders||0)+'</strong></div><div class="admin-metric"><span>Unidades vendidas</span><strong>'+Number(m.unitsSold||0)+'</strong></div><div class="admin-metric"><span>Pedidos pendientes</span><strong>'+Number(m.pendingOrders||0)+'</strong></div>';
+ const inv=m.inventory||{};
+ $("#adminInventoryMetrics").innerHTML=[
+  ["Productos activos",inv.activeProducts||0],
+  ["Stock configurado",inv.trackedProducts||0],
+  ["Unidades en stock",inv.trackedUnits||0],
+  ["Sin inventario configurado",inv.untrackedProducts||0],
+  ["Stock bajo (≤ 5)",(inv.lowStockProducts||[]).length],
+  ["Agotados",(inv.outOfStockProducts||[]).length]
+ ].map(([label,value])=>'<div class="admin-inventory-stat"><span>'+esc(label)+'</span><strong>'+Number(value)+'</strong></div>').join("");
+ const mix=Array.isArray(m.salesMix)?m.salesMix:[];
+ $("#adminSalesMix").innerHTML=mix.length?mix.map(p=>'<div class="admin-sales-row"><span class="name" title="'+esc(p.name)+'">'+esc(p.name)+'</span><div class="admin-sales-bar"><span style="width:'+Math.min(100,Math.max(0,Number(p.percentage)||0))+'%"></span></div><span class="admin-sales-pct">'+(Number(p.percentage)||0).toLocaleString("es-CO",{maximumFractionDigits:1})+'%</span></div>').join(""):'<p class="admin-help">Todavía no hay ventas con pago confirmado. Los pedidos pendientes por WhatsApp no cuentan como ventas pagadas.</p>';
 }
 function renderProducts(){
  const box=$("#adminProductList");if(!products.length){box.innerHTML='<p class="admin-help">No hay productos o tu cuenta no está autorizada. Inicia sesión y solicita el permiso de administrador al propietario de la tienda.</p>';return;}
- box.innerHTML=products.map(p=>'<article class="admin-product"><img src="'+esc((p.images||[])[0]||"images/streaming-placeholder.svg")+'" alt=""><div><h3>'+esc(p.name)+'</h3><p>'+money(p.price_cop)+' · '+esc(p.category)+'</p><small>#'+p.id+' · '+(p.is_active?'Visible':'Oculto')+(p.video_url?' · tiene video':'')+'</small></div><div class="admin-actions"><button type="button" data-edit="'+p.id+'">Editar</button>'+(p.is_active?'<button type="button" data-off="'+p.id+'">Ocultar</button>':'')+'</div></article>').join("");
+ box.innerHTML=products.map(p=>'<article class="admin-product"><img src="'+esc((p.images||[])[0]||"images/streaming-placeholder.svg")+'" alt=""><div><h3>'+esc(p.name)+'</h3><p>'+money(p.price_cop)+' · '+esc(p.category)+'</p><small>#'+p.id+' · '+(p.is_active?'Visible':'Oculto')+(p.video_url?' · tiene video':'')+' · '+(p.stock_quantity==null?'Stock sin configurar':(Number(p.stock_quantity)===0?'Agotado':'Stock: '+Number(p.stock_quantity)))+'</small></div><div class="admin-actions"><button type="button" data-edit="'+p.id+'">Editar</button>'+(p.is_active?'<button type="button" data-off="'+p.id+'">Ocultar</button>':'')+'</div></article>').join("");
  box.querySelectorAll("[data-edit]").forEach(b=>b.addEventListener("click",()=>editProduct(Number(b.dataset.edit))));
  box.querySelectorAll("[data-off]").forEach(b=>b.addEventListener("click",()=>deactivate(Number(b.dataset.off))));
 }
 function editProduct(id){
  const p=products.find(x=>x.id===id);if(!p)return;const f=$("#adminProductForm");
  f.elements.id.value=p.id;f.elements.name.value=p.name;f.elements.category.value=p.category;f.elements.delivery_type.value=p.delivery_type;
- f.elements.price_cop.value=p.price_cop;f.elements.old_price_cop.value=p.old_price_cop||"";
+ f.elements.price_cop.value=p.price_cop;f.elements.old_price_cop.value=p.old_price_cop||"";f.elements.stock_quantity.value=p.stock_quantity==null?"":p.stock_quantity;f.elements.sort_order.value=p.sort_order??100;
  f.elements.description.value=p.description||"";f.elements.features.value=(p.features||[]).join("\n");
  f.elements.tag.value=p.tag||"";f.elements.shipping.value=p.shipping||"";f.elements.is_active.checked=!!p.is_active;
  editingImages=(p.images||[]).slice();editingVideo=p.video_url||null;f.elements.images.value="";f.elements.video.value="";
  $("#adminFormTitle").textContent="Editar producto #"+p.id;window.scrollTo({top:0,behavior:"smooth"});
 }
-function resetForm(){ $("#adminProductForm").reset();$("#adminProductForm").elements.id.value="";$("#adminProductForm").elements.is_active.checked=true;editingImages=[];editingVideo=null;$("#adminFormTitle").textContent="Añadir nuevo producto";}
+function resetForm(){ $("#adminProductForm").reset();$("#adminProductForm").elements.id.value="";$("#adminProductForm").elements.stock_quantity.value="";$("#adminProductForm").elements.sort_order.value="100";$("#adminProductForm").elements.is_active.checked=true;editingImages=[];editingVideo=null;$("#adminFormTitle").textContent="Añadir nuevo producto";}
 async function save(e){
  e.preventDefault();const f=e.currentTarget;if(!f.reportValidity())return;
  const submit=f.querySelector('[type="submit"]');submit.disabled=true;submit.textContent="Subiendo y guardando…";
@@ -48,7 +69,7 @@ async function save(e){
 }
 async function deactivate(id){if(!confirm("¿Ocultar este producto de la tienda? El historial de pedidos se conservará."))return;try{await call({action:"deactivate",id});status("Producto ocultado de la tienda.","success");await loadProducts();}catch(e){status(e.message||"No se pudo ocultar el producto.","error");}}
 async function init(){
- $("#adminProductForm").addEventListener("submit",save);$("#resetAdminForm").addEventListener("click",resetForm);$("#refreshAdminProducts").addEventListener("click",loadProducts);
+ $("#adminProductForm").addEventListener("submit",save);$("#resetAdminForm").addEventListener("click",resetForm);$("#refreshAdminProducts").addEventListener("click",loadProducts);$("#refreshAdminMetrics")?.addEventListener("click",loadProducts);
  if(!db?.isConfigured?.()){status("Supabase no está conectado.","error");return;}
  const {data}=await db.client.auth.getSession();
  if(!data.session){status("Inicia sesión con tu cuenta y verifica que el propietario la haya habilitado como administradora.","error");return;}
