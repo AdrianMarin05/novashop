@@ -85,6 +85,55 @@ Deno.serve(async (req: Request) => {
       return json({ok:true,products:data || []},200,origin);
     }
 
+    if (action === "metrics") {
+      const [ordersResult, itemsResult, productsResult] = await Promise.all([
+        admin.from("orders").select("id,status,payment_status,subtotal_cop,created_at").order("created_at",{ascending:false}).limit(10000),
+        admin.from("order_items").select("order_id,product_id,product_name,quantity,unit_price_cop,line_total_cop").limit(50000),
+        admin.from("products").select("id,name,category,stock_quantity,is_active,price_cop").order("id",{ascending:true}).limit(10000)
+      ]);
+      if (ordersResult.error) throw ordersResult.error;
+      if (itemsResult.error) throw itemsResult.error;
+      if (productsResult.error) throw productsResult.error;
+      const orders = ordersResult.data || [];
+      const items = itemsResult.data || [];
+      const products = productsResult.data || [];
+      const paidStatuses = new Set(["paid","preparing","shipped","delivered"]);
+      const paidOrders = orders.filter((o: any) => o.payment_status === "approved" || paidStatuses.has(o.status));
+      const paidOrderIds = new Set(paidOrders.map((o: any) => o.id));
+      const revenueCop = paidOrders.reduce((n: number, o: any) => n + Number(o.subtotal_cop || 0), 0);
+      const confirmedItems = items.filter((it: any) => paidOrderIds.has(it.order_id));
+      const unitsSold = confirmedItems.reduce((n: number, it: any) => n + Number(it.quantity || 0), 0);
+      const productById = new Map(products.map((p: any) => [Number(p.id), p]));
+      const mix = new Map();
+      for (const it of confirmedItems) {
+        const id = Number(it.product_id);
+        const p: any = productById.get(id);
+        const key = String(id);
+        const row: any = mix.get(key) || {productId:id,name:it.product_name || p?.name || "Producto",category:p?.category || "Otra",units:0,revenueCop:0};
+        row.units += Number(it.quantity || 0);
+        row.revenueCop += Number(it.line_total_cop ?? (Number(it.unit_price_cop || 0) * Number(it.quantity || 0)));
+        mix.set(key,row);
+      }
+      const salesMix = Array.from(mix.values())
+        .map((p: any) => ({...p,percentage:unitsSold ? Math.round((p.units / unitsSold) * 1000) / 10 : 0}))
+        .sort((a: any,b: any) => b.units-a.units)
+        .slice(0,15);
+      const active = products.filter((p: any) => p.is_active);
+      const tracked = active.filter((p: any) => p.stock_quantity !== null && p.stock_quantity !== undefined);
+      const outOfStock = tracked.filter((p: any) => Number(p.stock_quantity) === 0);
+      const lowStock = tracked.filter((p: any) => Number(p.stock_quantity) > 0 && Number(p.stock_quantity) <= 5);
+      const untracked = active.filter((p: any) => p.stock_quantity === null || p.stock_quantity === undefined);
+      const pendingOrders = orders.filter((o: any) => o.status === "pending_payment" || o.payment_status === "pending").length;
+      return json({ok:true,metrics:{
+        revenueCop,paidOrders:paidOrders.length,unitsSold,pendingOrders,
+        inventory:{activeProducts:active.length,trackedProducts:tracked.length,untrackedProducts:untracked.length,
+          trackedUnits:tracked.reduce((n: number,p: any)=>n+Number(p.stock_quantity||0),0),
+          lowStockProducts:lowStock.map((p: any)=>({id:p.id,name:p.name,stock_quantity:p.stock_quantity})),
+          outOfStockProducts:outOfStock.map((p: any)=>({id:p.id,name:p.name,stock_quantity:p.stock_quantity}))},
+        salesMix
+      }},200,origin);
+    }
+
     if (action === "upload-url") {
       const filename = clean(body.filename,180);
       const type = clean(body.contentType,100).toLowerCase();
@@ -115,9 +164,12 @@ Deno.serve(async (req: Request) => {
       const shipping = clean(body.shipping,500);
       const active = body.is_active !== false;
       const sortOrder = Number.isFinite(Number(body.sort_order)) ? Math.trunc(Number(body.sort_order)) : 100;
+      const stockRaw = body.stock_quantity;
+      const stock = stockRaw === null || stockRaw === undefined || stockRaw === "" ? null : Number(stockRaw);
       if (!name || !category || !description) return json({error:"Completa nombre, categoría y descripción."},400,origin);
       if (!Number.isSafeInteger(price) || price <= 0 || price > 100_000_000) return json({error:"El precio no es válido."},400,origin);
       if (oldPrice !== null && (!Number.isSafeInteger(oldPrice) || oldPrice < price || oldPrice > 100_000_000)) return json({error:"El precio anterior debe ser mayor o igual al precio actual."},400,origin);
+      if (stock !== null && (!Number.isSafeInteger(stock) || stock < 0 || stock > 10000000)) return json({error:"El stock debe ser un número entero entre 0 y 10.000.000, o dejarse vacío para no controlarlo."},400,origin);
       if (!["physical","digital"].includes(delivery)) return json({error:"El tipo de entrega no es válido."},400,origin);
       if (images.length < 1 || images.some((v: string)=>!safeMediaUrl(v,supabaseUrl,true))) return json({error:"Añade al menos una imagen válida de Supabase Storage o Unsplash."},400,origin);
       if (video && !safeMediaUrl(video,supabaseUrl,false)) return json({error:"El video debe estar alojado en el bucket de medios de NovaShop."},400,origin);
@@ -125,7 +177,8 @@ Deno.serve(async (req: Request) => {
 
       const payload = {
         name,category,delivery_type:delivery,price_cop:price,old_price_cop:oldPrice,
-        description,features,images,video_url:video,tag,shipping,is_active:active,sort_order:sortOrder,updated_at:new Date().toISOString()
+        description,features,images,video_url:video,tag,shipping,is_active:active,sort_order:sortOrder,
+        stock_quantity:stock,updated_at:new Date().toISOString()
       };
       const query = id === null
         ? admin.from("products").insert(payload).select("*").single()
