@@ -32,3 +32,34 @@ El registro de pedidos funciona, pero el checkout de esta versión aún abre Wha
 ## Supabase Auth
 
 En el panel de Supabase, configura Site URL y Redirect URLs con el dominio publicado del sitio, incluyendo `cuenta.html`, para que funcionen confirmación de correo y recuperación de contraseña.
+
+
+## Accounts and address verification
+
+The account page supports passwordless one-time codes. Email OTP requires Supabase Auth email configuration and the Magic Link/OTP template to use `{{ .Token }}`; a production SMTP sender is recommended. SMS OTP requires enabling Phone Auth and configuring a supported SMS provider in Supabase. SMS providers may charge per message.
+
+The signup form collects first/last name, phone, email, a written delivery address and a map pin. For guest checkouts, physical delivery forms also include a map pin; coordinates are sent with the order when selected. The pin is a supplement, not a replacement for street address, neighborhood, city and department.
+
+## Administrator product catalog
+
+- Admin UI: `admin.html`
+- Admin browser script: `admin.js`
+- Edge Function: `supabase/functions/admin-products/index.ts`
+- Media bucket: `products-media` (public-read media; uploads require admin authorization)
+- Schema additions: `supabase/schema.sql`
+
+### Grant the first admin
+
+Security by design: the first account is **not** automatically made an administrator. After creating and verifying your own account in `cuenta.html`, open Supabase > Authentication > Users and copy your user UUID. Then run in SQL Editor:
+
+```sql
+insert into public.store_admins (user_id)
+values ('PASTE-YOUR-USER-UUID-HERE')
+on conflict (user_id) do nothing;
+```
+
+Replace the example text with your own verified account UUID. Never give this role to customer accounts. Then open `admin.html`; the server checks this allowlist before listing, editing, hiding, or uploading product media.
+
+## Current payment status
+
+Orders are persisted in Supabase and start as `pending_payment`. The store currently continues to WhatsApp after creating the order. It does **not** yet create a Mercado Pago checkout or mark payments approved automatically. Confirm payment independently before fulfilling an order until a payment-provider webhook has been implemented and tested.
