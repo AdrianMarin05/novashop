@@ -72,3 +72,13 @@ Orders are persisted in Supabase and start as `pending_payment`. The store curre
 - El servidor comprueba que el usuario autenticado esté en `public.store_admins`.
 - Para conceder acceso, crea primero la cuenta de usuario y ejecuta un `INSERT INTO public.store_admins (user_id)` usando el UUID de esa cuenta desde el SQL Editor privado de Supabase. No abras permisos de escritura directos en la tabla a usuarios normales.
 - El panel permite cargar hasta 8 fotos (12 MB cada una) y un video (máximo 50 MB) al bucket `products-media`, editar nombre, descripción, categoría, precio y ocultar productos.
+
+
+## Registro y acceso v16
+
+- `cuenta.html`: registro en dos pasos; contacto/contraseña y después dirección/mapa.
+- `verificar.html`: una única pantalla para introducir el código enviado por Supabase Auth.
+- `verify.js`: valida el OTP y guarda el perfil/dirección sin almacenar la contraseña en sessionStorage.
+- `auth-login`: Edge Function permite iniciar sesión con correo o teléfono y contraseña. Supabase Auth valida la contraseña y la función solo devuelve tokens con credenciales correctas.
+- `profiles.marketing_opt_in`: consentimiento opcional independiente para recibir ofertas por correo.
+- El envío por correo utiliza el proveedor de correo de Supabase. El envío por SMS necesita proveedor de SMS; WhatsApp requiere configurar Twilio/Twilio Verify con canal WhatsApp y credenciales. No se simula un envío WhatsApp mientras no esté configurado.
