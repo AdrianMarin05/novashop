@@ -15,6 +15,9 @@
 .map-card{border:1px solid #dfe6eb;border-radius:14px;overflow:hidden}.delivery-map{height:260px;width:100%;background:#eef3f4;z-index:0}.map-toolbar{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:10px;background:#f7f9fa;align-items:center}.map-toolbar small{font-size:11px;color:#667480}.map-coordinates{font-size:11px;color:#4b5a67;word-break:break-word}.verification-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}.verification-choice{display:flex!important;align-items:start;gap:8px;border:1px solid #e1e7ec;border-radius:12px;padding:12px;cursor:pointer}.verification-choice input{width:16px!important;height:16px!important;min-height:16px!important;margin:1px 0 0}.verification-choice strong{display:block;font-size:12px;color:#1c2c3b}.verification-choice small{display:block;font-size:11px;font-weight:500;color:#6f7b85;margin-top:4px;line-height:1.45}
 @media(max-width:820px){.account-wrap{grid-template-columns:1fr;margin-top:20px;gap:15px}.account-story{min-height:0;padding:25px}.account-story h1{font-size:34px}.account-panel{padding:19px}}
 @media(max-width:620px){.verification-choices{grid-template-columns:1fr}.delivery-map{height:220px}.header-actions{gap:5px}.auth-nav-link{font-size:10px;padding:8px 7px}.account-actions .cart-btn span{display:none}}
+
+.registration-progress{display:flex;align-items:center;gap:10px;margin-bottom:3px}.registration-progress span{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:800;color:#8a969f;white-space:nowrap}.registration-progress span b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#edf1f4;color:#65727d}.registration-progress span.active{color:#cb4528}.registration-progress span.active b{background:#ff5a36;color:white}.registration-progress span.done{color:#237345}.registration-progress span.done b{background:#e3f5e8;color:#237345}.registration-progress i{height:1px;flex:1;background:#dfe5e9}
+.register-step{border:0;margin:0;padding:0;min-width:0}.register-step[hidden]{display:none!important}.marketing-opt-in,.consent-checkbox{display:flex!important;align-items:flex-start;gap:9px;font-weight:500!important;line-height:1.5}.marketing-opt-in input,.consent-checkbox input{width:16px!important;height:16px!important;min-height:16px!important;flex:0 0 auto;margin:2px 0 0}.marketing-opt-in span,.consent-checkbox span{font-size:12px;color:#586672;font-weight:500}.register-step-actions{display:flex;gap:10px;justify-content:space-between;align-items:center}.register-step-actions .btn{flex:1}
 </style></head>
 <body class="account-page">
 <div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
@@ -28,38 +31,68 @@
 <div class="account-perks"><span>✓ Historial de pedidos y estados</span><span>✓ Datos de entrega guardados</span><span>✓ Código de verificación por correo o SMS</span><span>✓ Ubicación exacta con pin en el mapa</span></div></section>
 <section class="account-panel" id="accountPanel">
 <div id="authPanel">
-<div class="account-tabs"><button type="button" class="active" data-tab="register">Crear cuenta</button><button type="button" data-tab="login">Iniciar sesión</button></div>
-<form id="registerForm" class="account-form">
-<h2>Crear cuenta gratis</h2><p>Confirma un correo o teléfono con un código de un solo uso. Tu dirección queda guardada para los pedidos.</p>
-<div class="form-grid two-cols">
-<label><span>Nombres *</span><input name="firstName" required maxlength="60" autocomplete="given-name" placeholder="Tus nombres"></label>
-<label><span>Apellidos *</span><input name="lastName" required maxlength="60" autocomplete="family-name" placeholder="Tus apellidos"></label>
-<label><span>Teléfono móvil *</span><input name="phone" type="tel" required maxlength="24" autocomplete="tel" placeholder="+57 300 123 4567"></label>
-<label><span>Correo electrónico *</span><input name="email" type="email" required maxlength="120" autocomplete="email" placeholder="tu@correo.com"></label></div>
-<div class="form-section-title">¿Dónde quieres recibir el código?</div>
-<div class="verification-choices">
-<label class="verification-choice"><input type="radio" name="verifyVia" value="email" checked><span><strong>📧 Correo</strong><small>Código de seis dígitos. Supabase debe usar una plantilla OTP.</small></span></label>
-<label class="verification-choice"><input type="radio" name="verifyVia" value="sms"><span><strong>📱 SMS</strong><small>Requiere proveedor SMS habilitado; el proveedor puede cobrar por mensaje.</small></span></label></div>
-<div class="form-section-title">Dirección de entrega</div>
-<label><span>Dirección exacta *</span><input name="address" required maxlength="180" autocomplete="street-address" placeholder="Ej. Calle 10 # 20-35, torre, piso y apartamento"></label>
-<div class="form-grid two-cols"><label><span>Barrio / Vereda *</span><input name="neighborhood" required maxlength="80" placeholder="Barrio o vereda"></label><label><span>Ciudad / Municipio *</span><input name="city" required maxlength="80" placeholder="Municipio"></label>
-<label><span>Departamento *</span><select name="department" required><option value="">Selecciona</option><option>Amazonas</option><option>Antioquia</option><option>Arauca</option><option>Atlántico</option><option>Bogotá D.C.</option><option>Bolívar</option><option>Boyacá</option><option>Caldas</option><option>Caquetá</option><option>Casanare</option><option>Cauca</option><option>Cesar</option><option>Chocó</option><option>Córdoba</option><option>Cundinamarca</option><option>Guainía</option><option>Guaviare</option><option>Huila</option><option>La Guajira</option><option>Magdalena</option><option>Meta</option><option>Nariño</option><option>Norte de Santander</option><option>Putumayo</option><option>Quindío</option><option>Risaralda</option><option>San Andrés y Providencia</option><option>Santander</option><option>Sucre</option><option>Tolima</option><option>Valle del Cauca</option><option>Vaupés</option><option>Vichada</option></select></label>
-<label><span>Código postal</span><input name="postalCode" maxlength="12" autocomplete="postal-code" placeholder="Opcional"></label></div>
-<label><span>Referencia adicional</span><textarea name="deliveryReference" rows="2" maxlength="240" placeholder="Color de la casa, portería, indicaciones..."></textarea></label>
-<input type="hidden" id="registerLat" name="latitude"><input type="hidden" id="registerLng" name="longitude">
-<div class="map-card"><div class="map-toolbar"><small>📍 Marca el punto exacto de entrega</small><button class="btn btn-ghost" id="useLocationRegister" type="button">Usar mi ubicación</button></div><div id="registerMap" class="delivery-map" aria-label="Mapa para seleccionar ubicación"></div><div class="map-toolbar"><small id="registerMapStatus">Toca el mapa para colocar el pin.</small><small id="registerCoords" class="map-coordinates">Sin coordenadas</small></div></div>
-<p class="account-help">Copia la dirección como aparece en Maps y coloca el pin en la entrada correcta. Las coordenadas complementan la dirección escrita.</p>
-<label style="display:flex!important;grid-template-columns:auto 1fr;align-items:start;gap:9px;font-weight:500"><input type="checkbox" name="consent" required style="width:16px;min-height:16px;height:16px;margin-top:2px"><span>Acepto el uso de mis datos para administrar mi cuenta y mis pedidos. *</span></label>
-<button class="btn btn-primary wide" type="submit">Enviar código de verificación</button><div class="account-help">Registro gratuito. También puedes seguir comprando como invitado.</div>
-</form>
-<form id="verifySignupForm" class="account-form" hidden><h2>Confirma tu contacto</h2><p id="verifySignupInfo">Escribe el código de seis dígitos que acabamos de enviar.</p><label><span>Código de verificación *</span><input name="token" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required placeholder="123456"></label><button class="btn btn-primary wide" type="submit">Verificar y crear cuenta</button><button type="button" id="resendSignupCode" class="account-ghost">Reenviar código</button><button type="button" data-back-register class="account-ghost">Volver y corregir mis datos</button></form>
-<form id="loginForm" class="account-form" hidden><h2>Iniciar sesión</h2><p>Te enviaremos un código de acceso de un solo uso. Selecciona el mismo medio que verificaste al crear tu cuenta.</p>
-<div class="form-section-title">Recibir código en</div><div class="verification-choices">
-<label class="verification-choice"><input type="radio" name="loginVia" value="email" checked><span><strong>📧 Correo</strong><small>Requiere correo OTP habilitado.</small></span></label>
-<label class="verification-choice"><input type="radio" name="loginVia" value="sms"><span><strong>📱 SMS</strong><small>Requiere proveedor SMS habilitado.</small></span></label></div>
-<label><span id="loginIdentityLabel">Correo electrónico</span><input name="identity" required autocomplete="email" placeholder="tu@correo.com"></label><button class="btn btn-primary wide" type="submit">Enviar código</button></form>
-<form id="verifyLoginForm" class="account-form" hidden><h2>Verifica tu inicio</h2><p id="verifyLoginInfo">Introduce el código enviado.</p><label><span>Código de acceso *</span><input name="token" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required></label><button class="btn btn-primary wide" type="submit">Verificar e iniciar sesión</button><button type="button" id="resendLoginCode" class="account-ghost">Reenviar código</button><button type="button" data-back-login class="account-ghost">Volver</button></form>
+<div class="account-tabs">
+  <button type="button" class="active" data-tab="register">Crear cuenta</button>
+  <button type="button" data-tab="login">Iniciar sesión</button>
 </div>
+
+<form id="registerForm" class="account-form" novalidate>
+  <div class="registration-progress" aria-label="Progreso del registro">
+    <span id="registerProgress1" class="active"><b>1</b> Contacto</span>
+    <i></i>
+    <span id="registerProgress2"><b>2</b> Dirección</span>
+  </div>
+
+  <fieldset id="registerContactStep" class="register-step">
+    <h2>Crear cuenta gratis</h2>
+    <p>Paso 1 de 2 · Tus datos de contacto y una contraseña para entrar después.</p>
+    <div class="form-grid two-cols">
+      <label><span>Nombres *</span><input name="firstName" required maxlength="60" autocomplete="given-name" placeholder="Tus nombres"></label>
+      <label><span>Apellidos *</span><input name="lastName" required maxlength="60" autocomplete="family-name" placeholder="Tus apellidos"></label>
+      <label class="full"><span>Teléfono móvil *</span><input name="phone" type="tel" required maxlength="24" autocomplete="tel" placeholder="+57 300 123 4567"></label>
+      <label class="full"><span>Correo electrónico *</span><input name="email" type="email" required maxlength="120" autocomplete="email" placeholder="tu@correo.com"></label>
+      <label><span>Contraseña *</span><input name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Mínimo 8 caracteres"></label>
+      <label><span>Repetir contraseña *</span><input name="confirmPassword" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Escribe de nuevo"></label>
+    </div>
+    <div class="form-section-title">¿Dónde quieres recibir el único código?</div>
+    <div class="verification-choices">
+      <label class="verification-choice"><input type="radio" name="verifyVia" value="email" checked><span><strong>📧 Correo electrónico</strong><small>Código de verificación de un solo uso.</small></span></label>
+      <label class="verification-choice"><input type="radio" name="verifyVia" value="sms"><span><strong>📱 SMS al teléfono</strong><small>Necesita configurar un proveedor SMS; puede tener costo por mensaje.</small></span></label>
+    </div>
+    <p class="account-help">El código por WhatsApp requiere conectar WhatsApp Business/Twilio. No enviaremos un SMS haciéndolo pasar por WhatsApp.</p>
+    <label class="marketing-opt-in"><input type="checkbox" name="marketingOptIn"><span>Quiero recibir ofertas, novedades y promociones por correo electrónico. Es opcional.</span></label>
+    <button class="btn btn-primary wide" id="registerNext" type="button">Continuar con mi dirección →</button>
+  </fieldset>
+
+  <fieldset id="registerAddressStep" class="register-step" hidden>
+    <h2>¿Dónde entregamos tus pedidos?</h2>
+    <p>Paso 2 de 2 · Escribe la dirección tal como aparece en Maps y marca el punto de entrada en el mapa.</p>
+    <label><span>Dirección exacta *</span><input name="address" required maxlength="180" autocomplete="street-address" placeholder="Calle/carrera, número, torre, piso y apartamento"></label>
+    <div class="form-grid two-cols">
+      <label><span>Barrio / Vereda *</span><input name="neighborhood" required maxlength="80" placeholder="Barrio o vereda"></label>
+      <label><span>Ciudad / Municipio *</span><input name="city" required maxlength="80" placeholder="Municipio"></label>
+      <label><span>Departamento *</span><select name="department" required>
+        <option value="">Selecciona</option><option>Amazonas</option><option>Antioquia</option><option>Arauca</option><option>Atlántico</option><option>Bogotá D.C.</option><option>Bolívar</option><option>Boyacá</option><option>Caldas</option><option>Caquetá</option><option>Casanare</option><option>Cauca</option><option>Cesar</option><option>Chocó</option><option>Córdoba</option><option>Cundinamarca</option><option>Guainía</option><option>Guaviare</option><option>Huila</option><option>La Guajira</option><option>Magdalena</option><option>Meta</option><option>Nariño</option><option>Norte de Santander</option><option>Putumayo</option><option>Quindío</option><option>Risaralda</option><option>San Andrés y Providencia</option><option>Santander</option><option>Sucre</option><option>Tolima</option><option>Valle del Cauca</option><option>Vaupés</option><option>Vichada</option>
+      </select></label>
+      <label><span>Código postal</span><input name="postalCode" maxlength="12" autocomplete="postal-code" placeholder="Opcional"></label>
+    </div>
+    <label><span>Referencia adicional</span><textarea name="deliveryReference" rows="2" maxlength="240" placeholder="Color de la casa, portería, indicaciones..."></textarea></label>
+    <input type="hidden" id="registerLat" name="latitude"><input type="hidden" id="registerLng" name="longitude">
+    <div class="map-card"><div class="map-toolbar"><small>📍 Marca el punto exacto de entrega</small><button class="btn btn-ghost" id="useLocationRegister" type="button">Usar mi ubicación</button></div><div id="registerMap" class="delivery-map" aria-label="Mapa para seleccionar ubicación"></div><div class="map-toolbar"><small id="registerMapStatus">Toca el mapa para colocar el pin.</small><small id="registerCoords" class="map-coordinates">Sin coordenadas</small></div></div>
+    <p class="account-help">Las coordenadas ayudan al repartidor a encontrar la entrada correcta. La dirección escrita sigue siendo necesaria.</p>
+    <label class="consent-checkbox"><input type="checkbox" name="consent" required><span>Acepto el uso de mis datos para crear la cuenta y gestionar pedidos. *</span></label>
+    <div class="register-step-actions"><button class="btn btn-ghost" id="registerBack" type="button">← Volver</button><button class="btn btn-primary" id="registerSubmit" type="submit">Enviar código y continuar</button></div>
+  </fieldset>
+</form>
+
+<form id="loginForm" class="account-form" hidden>
+  <h2>Bienvenido de nuevo</h2>
+  <p>Escribe tu correo electrónico o teléfono móvil y tu contraseña. No necesitas pedir otro código para iniciar sesión.</p>
+  <label><span>Correo o teléfono móvil *</span><input name="identity" type="text" required autocomplete="username" placeholder="tu@correo.com o +57 300 123 4567"></label>
+  <label><span>Contraseña *</span><input name="password" type="password" required autocomplete="current-password" placeholder="Tu contraseña"></label>
+  <button class="btn btn-primary wide" type="submit">Iniciar sesión</button>
+  <button type="button" id="forgotPassword" class="account-ghost">¿Olvidaste tu contraseña?</button>
+</form>
 <div id="dashboard" hidden class="account-dashboard"><h2 id="welcome">Mi cuenta</h2><p id="userEmail" class="account-help"></p>
 <a id="adminAccessLink" class="btn btn-ghost wide" href="admin.html" hidden style="margin:12px 0 20px">🛠️ Administrar tienda</a>
 <form id="profileForm" class="account-form"><h3>Mis datos de entrega</h3>
