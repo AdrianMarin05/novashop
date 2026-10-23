@@ -315,7 +315,6 @@ function closeProductEditor(force=false){
  const placeholder=$("#productEditorPlaceholder");
  if(editor&&placeholder?.parentNode){
   placeholder.parentNode.insertBefore(editor,placeholder.nextSibling);
-  placeholder.remove();
  }
  modal.hidden=true;modal.setAttribute("aria-hidden","true");
  document.body.classList.remove("product-editor-open");
