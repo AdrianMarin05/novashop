@@ -81,7 +81,7 @@ Deno.serve(async (req: Request) => {
       const category = clean(body.category, 70);
       const price = Number(body.price_cop);
       const oldPrice = body.old_price_cop === "" || body.old_price_cop == null ? null : Number(body.old_price_cop);
-      const delivery = body.delivery_type === "digital" ? "digital" : "physical";
+      const delivery = category === "Streaming" ? "digital" : (body.delivery_type === "digital" ? "digital" : "physical");
       const description = clean(body.description, 4000);
       const features = Array.isArray(body.features) ? body.features.map((v: unknown) => clean(v, 160)).filter(Boolean).slice(0, 20) : [];
       const images = Array.isArray(body.images) ? body.images.map((v: unknown) => clean(v, 700)).filter(validPublicMedia).slice(0, 8) : [];
