@@ -49,6 +49,7 @@
   for(const [name,value] of [["phone",p.phone],["email",p.email||session.user.email],["address",p.address],["neighborhood",p.neighborhood],
    ["city",p.city],["department",p.department],["postalCode",p.postal_code],["reference",p.delivery_reference],["deliveryReference",p.delivery_reference],
    ["latitude",p.latitude],["longitude",p.longitude]])put(name,value);
+  form.dispatchEvent(new Event("novashop:profile-prefilled"));
  }
  async function adminCall(body){
   if(!client)throw new Error("Supabase no está conectado.");
