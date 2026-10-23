@@ -18,6 +18,8 @@
 
 .registration-progress{display:flex;align-items:center;gap:10px;margin-bottom:3px}.registration-progress span{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:800;color:#8a969f;white-space:nowrap}.registration-progress span b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#edf1f4;color:#65727d}.registration-progress span.active{color:#cb4528}.registration-progress span.active b{background:#ff5a36;color:white}.registration-progress span.done{color:#237345}.registration-progress span.done b{background:#e3f5e8;color:#237345}.registration-progress i{height:1px;flex:1;background:#dfe5e9}
 .register-step{border:0;margin:0;padding:0;min-width:0}.register-step[hidden]{display:none!important}.marketing-opt-in,.consent-checkbox{display:flex!important;align-items:flex-start;gap:9px;font-weight:500!important;line-height:1.5}.marketing-opt-in input,.consent-checkbox input{width:16px!important;height:16px!important;min-height:16px!important;flex:0 0 auto;margin:2px 0 0}.marketing-opt-in span,.consent-checkbox span{font-size:12px;color:#586672;font-weight:500}.register-step-actions{display:flex;gap:10px;justify-content:space-between;align-items:center}.register-step-actions .btn{flex:1}
+
+.whatsapp-pending{opacity:.58;cursor:not-allowed!important;background:#f7f8f9}.whatsapp-pending strong:after{content:" · Próximamente";font-size:10px;color:#a43f29;font-weight:800}
 </style></head>
 <body class="account-page">
 <div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
@@ -57,9 +59,9 @@
     <div class="form-section-title">¿Dónde quieres recibir el único código?</div>
     <div class="verification-choices">
       <label class="verification-choice"><input type="radio" name="verifyVia" value="email" checked><span><strong>📧 Correo electrónico</strong><small>Código de verificación de un solo uso.</small></span></label>
-      <label class="verification-choice"><input type="radio" name="verifyVia" value="sms"><span><strong>📱 SMS al teléfono</strong><small>Necesita configurar un proveedor SMS; puede tener costo por mensaje.</small></span></label>
+      <label class="verification-choice whatsapp-pending"><input type="radio" name="verifyVia" value="whatsapp" disabled><span><strong>💬 WhatsApp</strong><small>Se activará al conectar Twilio Verify y WhatsApp Business.</small></span></label>
     </div>
-    <p class="account-help">El código por WhatsApp requiere conectar WhatsApp Business/Twilio. No enviaremos un SMS haciéndolo pasar por WhatsApp.</p>
+    <p class="account-help">Por ahora puedes verificar por correo. La verificación por WhatsApp se habilitará cuando conectemos el proveedor y las credenciales comerciales.</p>
     <label class="marketing-opt-in"><input type="checkbox" name="marketingOptIn"><span>Quiero recibir ofertas, novedades y promociones por correo electrónico. Es opcional.</span></label>
     <button class="btn btn-primary wide" id="registerNext" type="button">Continuar con mi dirección →</button>
   </fieldset>
