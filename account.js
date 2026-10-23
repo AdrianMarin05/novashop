@@ -123,6 +123,8 @@ async function showDashboard(user){
   $("#userEmail").textContent=profile.email||user.email||user.phone||"Cuenta verificada";
  }
  await loadOrders();
+ const adminLink=$("#adminAccessLink");
+ if(adminLink){adminLink.hidden=true;try{await db.adminCall({action:"whoami"});adminLink.hidden=false;}catch(_){adminLink.hidden=true;}}
 }
 async function loadOrders(){
  if(!client||!session?.user)return;$("#ordersList").innerHTML='<p class="account-help">Cargando pedidos…</p>';
