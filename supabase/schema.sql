@@ -126,7 +126,12 @@ for select to authenticated using(exists(
 revoke all on public.profiles from anon;
 revoke all on public.orders from anon,authenticated;
 revoke all on public.order_items from anon,authenticated;
-grant select on public.products to anon,authenticated;
+revoke select on table public.products from anon, authenticated;
+grant select (
+  id, name, category, price_cop, delivery_type, is_active, updated_at,
+  old_price_cop, description, images, video_url, features, rating, reviews,
+  tag, shipping, sort_order
+) on table public.products to anon, authenticated;
 grant select,update on public.profiles to authenticated;
 grant select on public.orders,public.order_items to authenticated;
 
