@@ -76,7 +76,9 @@ function openProductCheckout() {
   modal.classList.add('show');
   modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+  const deliveryFields=$('#productDeliveryFields');if(deliveryFields)deliveryFields.hidden=currentProduct.deliveryType==='digital';
   window.NovaShopDB?.prefillCheckout?.($('#productCheckoutForm')).catch(err=>console.warn('Perfil no precargado:',err));
+  window.NovaShopDeliveryMaps?.invalidate('productCheckoutMap');
   window.setTimeout(() => $('#productCheckoutForm input[name="firstName"]')?.focus(), 50);
 }
 
