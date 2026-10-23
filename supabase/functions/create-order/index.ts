@@ -57,8 +57,8 @@ Deno.serve(async (req: Request) => {
     let postalCode = clean(c.postalCode, 16);
     let reference = clean(c.reference, 220);
     const paymentMethod = clean(c.paymentMethod, 80);
-    const latitude = c.latitude == null || c.latitude === "" ? null : Number(c.latitude);
-    const longitude = c.longitude == null || c.longitude === "" ? null : Number(c.longitude);
+    let latitude = c.latitude == null || c.latitude === "" ? null : Number(c.latitude);
+    let longitude = c.longitude == null || c.longitude === "" ? null : Number(c.longitude);
     const itemsInput = body?.items;
 
     if (!Array.isArray(itemsInput) || itemsInput.length < 1 || itemsInput.length > 25) {
@@ -108,23 +108,33 @@ Deno.serve(async (req: Request) => {
     // Fields explicitly entered at checkout stay in place in case the customer is delivering to another address.
     if (userId) {
       const { data: profile, error: profileError } = await admin.from("profiles")
-        .select("full_name,phone,email,address,neighborhood,city,department,postal_code,delivery_reference")
+        .select("full_name,phone,email,address,neighborhood,city,department,postal_code,delivery_reference,latitude,longitude")
         .eq("id", userId).maybeSingle();
       if (profileError) throw profileError;
-      const savedName = clean(profile?.full_name || authenticatedUser?.user_metadata?.full_name, 120);
+      // Profile table is the source of truth; user metadata is a backup for fields missing from older profiles.
+      const metadata = authenticatedUser?.user_metadata || {};
+      const savedName = clean(profile?.full_name || metadata.full_name, 120);
       const split = savedName.indexOf(" ");
-      const fallbackFirst = split < 0 ? savedName : savedName.slice(0, split);
-      const fallbackLast = split < 0 ? "" : savedName.slice(split + 1);
+      const fallbackFirst = clean(metadata.first_name || (split < 0 ? savedName : savedName.slice(0, split)), 60);
+      const fallbackLast = clean(metadata.last_name || (split < 0 ? "" : savedName.slice(split + 1)), 60);
       if (!firstName) firstName = fallbackFirst;
       if (!lastName) lastName = fallbackLast;
-      phone = phone || clean(profile?.phone || authenticatedUser?.phone || authenticatedUser?.user_metadata?.phone, 24);
-      email = (email || clean(profile?.email || authenticatedUser?.email, 120)).toLowerCase();
-      address = address || clean(profile?.address, 160);
-      neighborhood = neighborhood || clean(profile?.neighborhood, 80);
-      city = city || clean(profile?.city, 80);
-      department = department || clean(profile?.department, 80);
-      postalCode = postalCode || clean(profile?.postal_code, 16);
-      reference = reference || clean(profile?.delivery_reference, 220);
+      phone = phone || clean(profile?.phone || authenticatedUser?.phone || metadata.phone, 24);
+      email = (email || clean(profile?.email || authenticatedUser?.email || metadata.email, 120)).toLowerCase();
+      address = address || clean(profile?.address || metadata.address, 160);
+      neighborhood = neighborhood || clean(profile?.neighborhood || metadata.neighborhood, 80);
+      city = city || clean(profile?.city || metadata.city, 80);
+      department = department || clean(profile?.department || metadata.department, 80);
+      postalCode = postalCode || clean(profile?.postal_code || metadata.postal_code, 16);
+      reference = reference || clean(profile?.delivery_reference || metadata.delivery_reference, 220);
+      if (latitude === null) {
+        const savedLatitude = profile?.latitude ?? metadata.latitude;
+        if (savedLatitude != null && savedLatitude !== "") latitude = Number(savedLatitude);
+      }
+      if (longitude === null) {
+        const savedLongitude = profile?.longitude ?? metadata.longitude;
+        if (savedLongitude != null && savedLongitude !== "") longitude = Number(savedLongitude);
+      }
     }
 
     if (!firstName || !lastName || phone.length < 7 || !emailOk(email)) {
