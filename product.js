@@ -265,3 +265,4 @@ document.addEventListener('visibilitychange', () => {
 
 renderProduct();
 updateCartCount();
+window.NovaShopDB?.syncCatalog?.(products).then(()=>{currentProduct=products.find(p=>p.id===productId)||currentProduct;renderProduct();}).catch(err=>console.warn('Catálogo Supabase:',err));
