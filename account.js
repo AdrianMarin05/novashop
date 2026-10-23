@@ -120,12 +120,16 @@ async function submitSignup(event){
  const button=$("#registerSubmit");button.disabled=true;button.textContent="Enviando código…";
  try{
   const metadata={full_name:values.fullName,phone:values.phone,email:values.email,marketing_opt_in:values.marketingOptIn};
-  const redirectTo=new URL("verificar.html",location.href).href;
+  // Always redirect production confirmation links to the published site, even when registration was started from localhost.
+  const redirectTo="https://adrianmarin05.github.io/novashop/verificar.html";
   const result=channel==="email"
    ? await client.auth.signUp({email:values.email,password,options:{data:metadata,emailRedirectTo:redirectTo}})
    : await client.auth.signUp({phone:values.phone,password,options:{data:metadata}});
   if(result.error)throw result.error;
   if(!result.data?.user)throw new Error("Supabase no devolvió una cuenta. Verifica la configuración de Auth.");
+  if(Array.isArray(result.data.user.identities)&&result.data.user.identities.length===0){
+    throw new Error("Este correo ya tiene una cuenta. Por eso Supabase no envió otro código. Ve a Iniciar sesión o usa ¿Olvidaste tu contraseña? si no recuerdas la clave.");
+  }
   // Never keep the password in browser storage. The Auth server already holds the hashed credential.
   const pendingValues={...values};
   pendingSignupStorage({channel,identity:channel==="email"?values.email:values.phone,values:pendingValues});
@@ -181,8 +185,14 @@ function init(){
  createMap("profileMap","profileLat","profileLng","profileMapStatus","profileCoords","useLocationProfile");
  const params=new URLSearchParams(location.search);
  setVisible(params.get("tab")==="login"?"login":"register");
- if(params.get("registered")==="1")msg("Tu cuenta se creó correctamente.","success");
+ if(params.get("registered")==="1")msg("Tu cuenta se creó correctamente.", "success");
  document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>{setVisible(b.dataset.tab);msg("");}));
+ document.querySelectorAll("[data-password-toggle]").forEach(button=>button.addEventListener("click",()=>{
+   const input=button.parentElement.querySelector("input");if(!input)return;
+   const reveal=input.type==="password";input.type=reveal?"text":"password";
+   button.textContent=reveal?"🙈":"👁";button.setAttribute("aria-label",reveal?"Ocultar contraseña":"Mostrar contraseña");
+   button.setAttribute("aria-pressed",String(reveal));
+ }));
  $("#registerNext").addEventListener("click",continueToAddress);
  $("#registerBack").addEventListener("click",()=>{setVisible("register");msg("");});
  $("#registerForm").addEventListener("submit",submitSignup);
