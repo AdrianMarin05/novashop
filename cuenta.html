@@ -32,7 +32,7 @@
 <section class="account-story"><span class="eyebrow" style="color:#ffb49f">TU ESPACIO EN NOVASHOP</span>
 <h1>Compra a tu manera.<br><span style="color:#ff967c">Tu historial siempre contigo.</span></h1>
 <p>Crea una cuenta gratuita para consultar pedidos y guardar tu dirección. No es obligatorio: puedes comprar como invitado.</p>
-<div class="account-perks"><span>✓ Historial de pedidos y estados</span><span>✓ Datos de entrega guardados</span><span>✓ Código de verificación por correo o SMS</span><span>✓ Ubicación exacta con pin en el mapa</span></div></section>
+<div class="account-perks"><span>✓ Historial de pedidos y estados</span><span>✓ Datos de entrega guardados</span><span>✓ Acceso inmediato con correo y contraseña</span><span>✓ Ubicación exacta con pin en el mapa</span></div></section>
 <section class="account-panel" id="accountPanel">
 <div id="authPanel">
 <div class="account-tabs">
@@ -49,7 +49,7 @@
 
   <fieldset id="registerContactStep" class="register-step">
     <h2>Crear cuenta gratis</h2>
-    <p>Paso 1 de 2 · Tus datos de contacto y una contraseña para entrar después.</p>
+    <p>Paso 1 de 2 · Tus datos de contacto y una contraseña. No necesitas activar la cuenta por correo.</p>
     <div class="form-grid two-cols">
       <label><span>Nombres *</span><input name="firstName" required maxlength="60" autocomplete="given-name" placeholder="Tus nombres"></label>
       <label><span>Apellidos *</span><input name="lastName" required maxlength="60" autocomplete="family-name" placeholder="Tus apellidos"></label>
@@ -58,8 +58,7 @@
       <label><span>Contraseña *</span><div class="password-field"><input name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Mínimo 8 caracteres"><button type="button" class="password-toggle" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false">👁</button></div></label>
       <label><span>Repetir contraseña *</span><div class="password-field"><input name="confirmPassword" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Escribe de nuevo"><button type="button" class="password-toggle" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false">👁</button></div></label>
     </div>
-    <input type="hidden" name="verifyVia" value="email">
-    <div class="verification-choice verification-email-only"><span><strong>📧 Verificación por correo electrónico</strong><small>Te enviaremos un código de un solo uso para activar tu cuenta.</small></span></div>
+    <div class="verification-choice verification-email-only"><span><strong>✅ Sin códigos ni correos de activación</strong><small>La cuenta se activa al terminar el registro. Para recuperar o cambiar tu contraseña, contáctanos por WhatsApp.</small></span></div>
     <label class="marketing-opt-in"><input type="checkbox" name="marketingOptIn"><span>Quiero recibir ofertas, novedades y promociones por correo electrónico. Es opcional.</span></label>
     <button class="btn btn-primary wide" id="registerNext" type="button">Continuar con mi dirección →</button>
   </fieldset>
@@ -81,7 +80,7 @@
     <div class="map-card"><div class="map-toolbar"><small>📍 Marca el punto exacto de entrega</small><button class="btn btn-ghost" id="useLocationRegister" type="button">Usar mi ubicación</button></div><div id="registerMap" class="delivery-map" aria-label="Mapa para seleccionar ubicación"></div><div class="map-toolbar"><small id="registerMapStatus">Toca el mapa para colocar el pin.</small><small id="registerCoords" class="map-coordinates">Sin coordenadas</small></div></div>
     <p class="account-help">Las coordenadas ayudan al repartidor a encontrar la entrada correcta. La dirección escrita sigue siendo necesaria.</p>
     <label class="consent-checkbox"><input type="checkbox" name="consent" required><span>Acepto el uso de mis datos para crear la cuenta y gestionar pedidos. *</span></label>
-    <div class="register-step-actions"><button class="btn btn-ghost" id="registerBack" type="button">← Volver</button><button class="btn btn-primary" id="registerSubmit" type="submit">Enviar código y continuar</button></div>
+    <div class="register-step-actions"><button class="btn btn-ghost" id="registerBack" type="button">← Volver</button><button class="btn btn-primary" id="registerSubmit" type="submit">Crear cuenta y entrar</button></div>
   </fieldset>
 </form>
 
@@ -111,5 +110,5 @@
 
 </section></main>
 <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Cuenta gratuita y opcional</span></div></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="supabase-config.js?v=26"></script><script src="supabase-client.js?v=26"></script><script src="auth-nav.js?v=25"></script><script src="account.js?v=27"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="supabase-config.js?v=26"></script><script src="supabase-client.js?v=26"></script><script src="auth-nav.js?v=25"></script><script src="account.js?v=28"></script>
 </body></html>
