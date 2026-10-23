@@ -1,28 +1,34 @@
-# NovaShop — tienda estática para GitHub Pages
+# NovaShop
 
-Plantilla de tienda online creada con HTML, CSS y JavaScript puro.
+Tienda estática con catálogo, carrito, una página de Streaming, cuentas opcionales y pedidos registrados en Supabase.
 
-## Incluye
-- Catálogo con búsqueda, filtros y ordenamiento.
-- Carrito con `localStorage`.
-- Página individual de producto con URL dinámica: `producto.html?id=1`.
-- Galería de imágenes, descripción, características, cantidad y botón "Añadir al carrito".
-- Botón de compra directa por WhatsApp.
-- Diseño responsive.
-- Sin backend ni base de datos.
+## Tecnologías
 
-## Estructura
-- `index.html` — portada y catálogo.
-- `producto.html` — plantilla de detalle de producto.
-- `products.js` — productos, imágenes, descripciones y configuración.
-- `script.js` — catálogo y carrito.
-- `product.js` — lógica de la página individual.
-- `styles.css` — estilos.
+- HTML, CSS y JavaScript estáticos.
+- GitHub para guardar el código.
+- Supabase Auth + Postgres para cuentas, perfiles y el historial de pedidos.
+- Supabase Edge Function `create-order` para guardar pedidos y calcular importes desde el catálogo del servidor.
+- Los clientes pueden comprar como invitados; las cuentas son opcionales.
 
-## Personalización rápida
-En `products.js` puedes cambiar nombre, precio, imágenes, descripción, características y categoría de cada producto.
+## Archivos principales
 
-Cambia también `CONFIG.whatsapp` por el número real de la tienda usando código de país y sin el signo `+`.
+- `index.html`: catálogo general.
+- `streaming.html`: catálogo de servicios digitales.
+- `producto.html?id=<id>`: detalles individuales.
+- `cuenta.html`: registro, inicio de sesión, perfil e historial.
+- `products.js`: catálogo visible del sitio.
+- `supabase-config.js`: solo URL y clave publicable del proyecto.
+- `supabase-client.js`: cliente público e integración con la función de pedidos.
+- `supabase/`: configuración documentada.
 
-## Publicación gratis
-Sube estos archivos a un repositorio de GitHub y activa GitHub Pages desde **Settings → Pages**.
+## Seguridad
+
+No se debe publicar ninguna clave secreta ni `service_role`. La clave publishable está diseñada para usarse desde el navegador; las tablas públicas tienen RLS. La función `create-order` valida productos y precios en el servidor. Las compras de invitados se guardan sin asociarse a una cuenta y no se vinculan automáticamente después.
+
+## Estado de pagos
+
+El registro de pedidos funciona, pero el checkout de esta versión aún abre WhatsApp y deja los pedidos en estado `pending_payment`. No existe una pasarela de pago online ni confirmación automática de pago integrada. No despaches pedidos basándote solo en el registro; confirma el pago hasta que se añada un proveedor de pagos con notificaciones verificadas.
+
+## Supabase Auth
+
+En el panel de Supabase, configura Site URL y Redirect URLs con el dominio publicado del sitio, incluyendo `cuenta.html`, para que funcionen confirmación de correo y recuperación de contraseña.
