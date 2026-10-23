@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Tu cuenta NovaShop: consulta tus pedidos y guarda tus datos. El registro es gratuito y opcional.">
+<title>Mi cuenta — NovaShop</title><link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=13">
+<style>
+.account-wrap{max-width:1120px;margin:44px auto 70px;padding:0 22px;display:grid;grid-template-columns:1fr minmax(320px,470px);gap:36px;align-items:start}
+.account-story{background:linear-gradient(135deg,#101f32,#203d59);color:white;border-radius:26px;padding:36px;min-height:450px;position:relative;overflow:hidden}
+.account-story:after{content:"";position:absolute;width:270px;height:270px;border-radius:50%;background:#ff5a3622;right:-90px;bottom:-80px}
+.account-story h1{font-size:clamp(30px,4vw,46px);letter-spacing:-.05em;line-height:1.07;margin:18px 0}
+.account-story p{color:#d5e0e9;line-height:1.7;max-width:480px}
+.account-perks{display:grid;gap:13px;margin-top:26px}.account-perks span{display:flex;gap:10px;align-items:center;color:#f3f6f9;font-size:14px}
+.account-panel{border:1px solid #e1e7ec;border-radius:22px;background:#fff;padding:25px;box-shadow:0 18px 50px #15283d0d}
+.account-tabs{display:flex;gap:8px;background:#f3f6f8;padding:5px;border-radius:12px;margin-bottom:19px}
+.account-tabs button{border:0;background:transparent;border-radius:9px;flex:1;padding:11px 8px;font-weight:750;color:#586672;cursor:pointer}
+.account-tabs button.active{background:white;color:#162a3e;box-shadow:0 2px 8px #15283d12}
+.account-form{display:grid;gap:13px}.account-form h2{margin:0;font-size:24px;letter-spacing:-.04em}.account-form p{margin:-5px 0 4px;color:#697783;font-size:13px;line-height:1.5}
+.account-form label{display:grid;gap:6px;font-size:12px;font-weight:700;color:#43515e}.account-form input{min-width:0;width:100%;height:44px;border:1px solid #dce3e9;border-radius:11px;padding:0 12px;font:inherit;font-weight:500;outline:none}
+.account-form input:focus{border-color:#ff5a36;box-shadow:0 0 0 3px #ff5a3618}.account-help{font-size:12px;color:#697783;line-height:1.5}
+.account-message{padding:11px 13px;border-radius:10px;background:#eef5ff;color:#244b72;font-size:13px;line-height:1.5;margin-top:16px}.account-message.error{background:#fff0ee;color:#a63220}.account-message.success{background:#eaf8ef;color:#20653a}
+.account-dashboard h2{margin:0}.account-order{border:1px solid #e2e8ed;border-radius:14px;padding:15px;margin-top:12px}.account-order-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.account-order h3{margin:0;font-size:14px}.account-status{font-size:11px;font-weight:800;border-radius:99px;background:#fff1d7;color:#885300;padding:5px 8px}.account-order ul{padding-left:18px;color:#586672;font-size:12px;line-height:1.7}.account-order-total{display:flex;justify-content:space-between;border-top:1px solid #e9edf0;padding-top:10px;font-size:13px}
+.account-guest{font-size:12px;line-height:1.5;color:#697783;margin-top:14px}.account-ghost{border:0;background:transparent;color:#596a78;text-decoration:underline;cursor:pointer;font-weight:700}
+@media(max-width:800px){.account-wrap{grid-template-columns:1fr;margin-top:22px;gap:18px}.account-story{min-height:0;padding:27px}.account-story h1{font-size:34px}.account-panel{padding:20px}}
+</style></head>
+<body>
+<div class="announcement">✨ Regístrate gratis para guardar tu historial · También puedes comprar como invitado</div>
+<header class="site-header"><div class="container nav-wrap">
+<a class="brand" href="index.html"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a>
+<nav class="main-nav"><a href="index.html">Inicio</a><a href="index.html#categorias">Categorías</a><a href="index.html#productos">Productos</a></nav>
+<div class="header-actions"><a class="account-btn" href="cuenta.html">👤 Mi cuenta</a><a class="cart-btn" href="index.html#carrito">🛒 <span>Carrito</span></a></div>
+</div></header>
+<main class="account-wrap">
+<section class="account-story"><span class="eyebrow" style="color:#ffb7a4">TU ESPACIO EN NOVASHOP</span>
+<h1>Compra a tu manera.<br><span style="color:#ff967c">Tu historial siempre contigo.</span></h1>
+<p>Crea una cuenta gratuita para consultar tus pedidos más adelante. No es obligatorio: puedes comprar como invitado sin crear una contraseña.</p>
+<div class="account-perks"><span>✓ Historial de compras en un solo lugar</span><span>✓ Consulta el estado de tus pedidos</span><span>✓ Guarda tus datos para futuras compras</span><span>✓ Cuenta gratis y registro opcional</span></div>
+</section>
+<section class="account-panel" id="accountPanel">
+<div id="authPanel">
+<div class="account-tabs"><button type="button" class="active" data-tab="register">Crear cuenta gratis</button><button type="button" data-tab="login">Iniciar sesión</button></div>
+<form id="registerForm" class="account-form"><h2>Únete a NovaShop</h2><p>Solo necesitas tu nombre, correo y una contraseña.</p>
+<label>Nombre completo<input name="fullName" required maxlength="100" autocomplete="name" placeholder="Nombre y apellidos"></label>
+<label>Correo electrónico<input name="email" type="email" required maxlength="120" autocomplete="email" placeholder="tu@correo.com"></label>
+<label>Contraseña<input name="password" type="password" minlength="8" required autocomplete="new-password" placeholder="Mínimo 8 caracteres"></label>
+<label style="display:flex;grid-template-columns:auto 1fr;align-items:start;gap:9px;font-weight:500"><input type="checkbox" name="consent" required style="width:16px;height:16px;margin-top:2px"><span>Acepto la política de privacidad y el uso de mis datos para administrar mi cuenta.</span></label>
+<button class="btn btn-primary wide" type="submit">Crear mi cuenta gratis</button><div class="account-help">El registro es opcional. Puedes seguir comprando sin cuenta desde la tienda.</div></form>
+<form id="loginForm" class="account-form" hidden><h2>Qué bueno verte de nuevo</h2><p>Inicia sesión para consultar tus pedidos.</p>
+<label>Correo electrónico<input name="email" type="email" required autocomplete="email" placeholder="tu@correo.com"></label>
+<label>Contraseña<input name="password" type="password" required autocomplete="current-password" placeholder="Tu contraseña"></label>
+<button class="btn btn-primary wide" type="submit">Iniciar sesión</button><button type="button" id="forgotPassword" class="account-ghost">¿Olvidaste tu contraseña?</button></form>
+<form id="resetForm" class="account-form" hidden><h2>Crea una contraseña nueva</h2>
+<label>Nueva contraseña<input name="password" type="password" required minlength="8" autocomplete="new-password"></label><label>Repite la contraseña<input name="confirm" type="password" required minlength="8" autocomplete="new-password"></label>
+<button class="btn btn-primary wide" type="submit">Actualizar contraseña</button></form></div>
+<div id="dashboard" hidden class="account-dashboard"><h2 id="welcome">Mi cuenta</h2><p id="userEmail" class="account-help"></p>
+<form id="profileForm" class="account-form"><h3>Mis datos</h3><label>Nombre completo<input name="fullName" required maxlength="100"></label><label>Teléfono<input name="phone" maxlength="24" autocomplete="tel" placeholder="Opcional"></label><button class="btn btn-ghost wide" type="submit">Guardar mis datos</button></form>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:25px"><h2>Mis pedidos</h2><button type="button" id="refreshOrders" class="account-ghost">Actualizar ↻</button></div><div id="ordersList"><p class="account-help">Tus pedidos aparecerán aquí.</p></div>
+<button type="button" id="signOut" class="account-ghost" style="margin-top:18px">Cerrar sesión</button><p class="account-guest">Las compras realizadas como invitado no se unen automáticamente a tu cuenta.</p></div>
+<div id="message" class="account-message" role="status" aria-live="polite" hidden></div>
+<p class="account-guest">¿Prefieres no registrarte? <a href="index.html">Seguir comprando como invitado →</a></p>
+</section></main>
+<footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Registro gratuito y opcional</span></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=13"></script><script src="supabase-client.js?v=13"></script><script src="account.js?v=13"></script>
+</body></html>
