@@ -3,18 +3,70 @@
 const $=s=>document.querySelector(s), db=window.NovaShopDB;
 const money=n=>new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(Number(n)||0);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let products=[], editingImages=[], editingVideo=null, metrics=null;
+let products=[], editingImages=[], editingVideo=null, metrics=null, currentRole=null, adminUsers=[];
 function status(text,kind="info"){const el=$("#adminStatus");el.textContent=text;el.className="admin-status "+kind;}
 function formData(){const f=$("#adminProductForm"),v=new FormData(f);return {id:v.get("id")?Number(v.get("id")):null,name:String(v.get("name")||"").trim(),category:String(v.get("category")||""),delivery_type:v.get("delivery_type"),price_cop:Number(v.get("price_cop")),old_price_cop:v.get("old_price_cop")?Number(v.get("old_price_cop")):null,stock_quantity:v.get("stock_quantity")===""?null:Number(v.get("stock_quantity")),description:String(v.get("description")||"").trim(),features:String(v.get("features")||"").split("\n").map(s=>s.trim()).filter(Boolean),images:editingImages.slice(),video_url:editingVideo,tag:String(v.get("tag")||"").trim(),shipping:String(v.get("shipping")||"").trim(),is_active:!!f.elements.is_active.checked,sort_order:v.get("sort_order")?Number(v.get("sort_order")):(v.get("id")?Number(v.get("id")):100)};}
 async function call(body){if(!db?.isConfigured?.())throw new Error("Supabase no está conectado.");return db.adminCall(body);}
 async function upload(file){const signed=await call({action:"upload-url",filename:file.name,contentType:file.type,size:file.size});const {error}=await db.client.storage.from("products-media").uploadToSignedUrl(signed.path,signed.token,file,{contentType:file.type,upsert:false});if(error)throw error;return signed.publicUrl;}
+
+function roleLabel(role){return ({owner:"Propietario",admin:"Administrador",catalog_manager:"Gestor de catálogo",analyst:"Analista",customer:"Cliente"})[role]||role||"Cliente";}
+function userStatus(text,kind="info"){const el=$("#adminUsersStatus");if(el){el.textContent=text;el.className="admin-status "+kind;}}
+async function loadAdminUsers(){
+ if(!["owner","admin"].includes(currentRole))return;
+ try{
+  const result=await call({action:"list-users"});adminUsers=result.users||[];renderAdminUsers();
+  userStatus("Usuarios cargados. Los cambios de rol se validan en el servidor.","success");
+ }catch(e){userStatus(e.message||"No pudimos cargar los usuarios.","error");}
+}
+function renderAdminUsers(){
+ const box=$("#adminUsersList");if(!box)return;
+ $("#adminUsersCount").textContent=String(adminUsers.length);
+ if(!adminUsers.length){box.innerHTML='<p class="admin-help">Todavía no hay usuarios registrados.</p>';return;}
+ box.innerHTML=adminUsers.map(u=>{
+   const locked=u.role==="owner"||u.id===db.client.auth.getUser?.id;
+   const options=[["customer","Cliente"],["catalog_manager","Gestor de catálogo"],["analyst","Analista"],["admin","Administrador"]];
+   const safeOptions=options.filter(([value])=>value!=="admin"||currentRole==="owner"||u.role==="admin");
+   const select=safeOptions.map(([value,label])=>'<option value="'+value+'" '+(u.role===value?'selected':'')+'>'+label+'</option>').join("");
+   return '<article class="admin-user" data-user-row="'+esc(u.id)+'"><div class="admin-user-top"><div><div class="admin-user-name">'+esc(u.full_name||u.username||"Usuario")+'</div><div class="admin-user-email">'+esc(u.email||u.phone||"Sin correo")+'</div></div><span class="admin-pill '+(u.role==="customer"?"off":"")+'">'+esc(roleLabel(u.role))+'</span></div><div class="admin-user-meta"><span>'+ (u.email_confirmed?"Correo confirmado":"Correo pendiente") +'</span><span>·</span><span>Alta: '+esc(new Date(u.created_at).toLocaleDateString("es-CO"))+'</span>'+(u.last_sign_in_at?'<span>·</span><span>Último acceso: '+esc(new Date(u.last_sign_in_at).toLocaleDateString("es-CO"))+'</span>':'')+'</div><div class="admin-user-controls"><label>Asignar rol<select data-role-select="'+esc(u.id)+'" '+(u.role==="owner"?"disabled":"")+'>'+select+'</select></label><button type="button" data-role-save="'+esc(u.id)+'" '+(u.role==="owner"?"disabled":"")+'>Guardar rol</button></div></article>';
+ }).join("");
+ box.querySelectorAll("[data-role-save]").forEach(button=>button.addEventListener("click",()=>saveUserRole(button.dataset.roleSave)));
+}
+async function saveUserRole(userId){
+ const select=$('[data-role-select="'+CSS.escape(userId)+'"]');if(!select)return;
+ const button=$('[data-role-save="'+CSS.escape(userId)+'"]');if(button){button.disabled=true;button.textContent="Guardando…";}
+ try{await call({action:"set-role",user_id:userId,role:select.value});userStatus("Rol actualizado correctamente.","success");await loadAdminUsers();}
+ catch(e){userStatus(e.message||"No se pudo cambiar el rol.","error");}
+ finally{if(button){button.disabled=false;button.textContent="Guardar rol";}}
+}
+async function inviteUser(event){
+ event.preventDefault();const form=event.currentTarget;if(!form.reportValidity())return;
+ const button=form.querySelector('[type="submit"]');button.disabled=true;button.textContent="Enviando invitación…";
+ try{
+  const data=new FormData(form);
+  const result=await call({action:"invite-user",full_name:String(data.get("full_name")||"").trim(),email:String(data.get("email")||"").trim().toLowerCase(),role:String(data.get("role")||"customer")});
+  userStatus("Invitación creada para "+result.user.email+". Si no llega, revisa la configuración de correo de Supabase.","success");
+  form.reset();await loadAdminUsers();
+ }catch(e){userStatus(e.message||"No pudimos invitar al usuario.","error");}
+ finally{button.disabled=false;button.textContent="Enviar invitación por correo";}
+}
+function configureRolePanels(){
+ const users=$("#adminUsersWrap"),editor=document.querySelector(".admin-grid > section:first-child"),catalog=document.querySelector(".admin-grid > section:nth-child(2)"),metricsWrap=document.querySelector(".admin-metrics-wrap");
+ const canManage=["owner","admin"].includes(currentRole),canEdit=["owner","admin","catalog_manager"].includes(currentRole),canAnalyze=["owner","admin","analyst"].includes(currentRole);
+ if(users)users.hidden=!canManage;
+ if(editor)editor.hidden=!canEdit;
+ if(catalog)catalog.hidden=!canEdit&&currentRole!=="analyst";
+ if(metricsWrap)metricsWrap.hidden=!canAnalyze;
+}
 async function loadProducts(){
  try{
   const r=await call({action:"list"});products=r.products||[];renderProducts();
-  try{const m=await call({action:"metrics"});metrics=m.metrics||null;renderMetrics(metrics);}
-  catch(e){status("Catálogo cargado, pero las métricas no están disponibles: "+(e.message||""),"error");}
-  if(!metrics)renderMetrics(null);
-  else status("Sesión lista. El servidor confirmó permisos administrativos.","success");
+  if(["owner","admin","analyst"].includes(currentRole)){
+   try{const m=await call({action:"metrics"});metrics=m.metrics||null;renderMetrics(metrics);}
+   catch(e){status("Catálogo cargado, pero las métricas no están disponibles: "+(e.message||""),"error");}
+  }else{metrics=null;renderMetrics(null);}
+  if(!["owner","admin","catalog_manager","analyst"].includes(currentRole))status("Permiso insuficiente.","error");
+  else status("Sesión lista. El servidor confirmó el rol: "+roleLabel(currentRole)+".","success");
+  configureRolePanels();
  }catch(e){products=[];renderProducts();renderMetrics(null);status(e.message||"No se pudo cargar el catálogo.","error");}
 }
 function renderMetrics(m){
@@ -70,11 +122,15 @@ async function save(e){
 async function deactivate(id){if(!confirm("¿Ocultar este producto de la tienda? El historial de pedidos se conservará."))return;try{await call({action:"deactivate",id});status("Producto ocultado de la tienda.","success");await loadProducts();}catch(e){status(e.message||"No se pudo ocultar el producto.","error");}}
 async function init(){
  $("#adminProductForm").addEventListener("submit",save);$("#resetAdminForm").addEventListener("click",resetForm);$("#refreshAdminProducts").addEventListener("click",loadProducts);$("#refreshAdminMetrics")?.addEventListener("click",loadProducts);
+ $("#adminInviteForm")?.addEventListener("submit",inviteUser);$("#refreshAdminUsers")?.addEventListener("click",loadAdminUsers);
  if(!db?.isConfigured?.()){status("Supabase no está conectado.","error");return;}
  const {data}=await db.client.auth.getSession();
- if(!data.session){status("Inicia sesión con tu cuenta y verifica que el propietario la haya habilitado como administradora.","error");return;}
+ if(!data.session){status("Inicia sesión con una cuenta autorizada para administrar NovaShop.","error");return;}
+ try{const me=await call({action:"whoami"});currentRole=me.role;configureRolePanels();}
+ catch(e){status(e.message||"Tu cuenta no tiene permisos de administración.","error");return;}
  await loadProducts();
- db.client.auth.onAuthStateChange((_event,s)=>{if(!s){products=[];renderProducts();status("Sesión cerrada.","error");}});
+ if(["owner","admin"].includes(currentRole))await loadAdminUsers();
+ db.client.auth.onAuthStateChange((_event,s)=>{if(!s){products=[];adminUsers=[];renderProducts();status("Sesión cerrada.","error");location.href="cuenta.html?tab=login";}});
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
