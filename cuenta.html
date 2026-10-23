@@ -58,8 +58,6 @@
       <label><span>Contraseña *</span><div class="password-field"><input name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Mínimo 8 caracteres"><button type="button" class="password-toggle" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false">👁</button></div></label>
       <label><span>Repetir contraseña *</span><div class="password-field"><input name="confirmPassword" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Escribe de nuevo"><button type="button" class="password-toggle" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false">👁</button></div></label>
     </div>
-    <div class="verification-choice verification-email-only"><span><strong>✅ Sin códigos ni correos de activación</strong><small>La cuenta se activa al terminar el registro. Para recuperar o cambiar tu contraseña, contáctanos por WhatsApp.</small></span></div>
-    <label class="marketing-opt-in"><input type="checkbox" name="marketingOptIn"><span>Quiero recibir ofertas, novedades y promociones por correo electrónico. Es opcional.</span></label>
     <button class="btn btn-primary wide" id="registerNext" type="button">Continuar con mi dirección →</button>
   </fieldset>
 
@@ -76,9 +74,8 @@
       <label><span>Código postal</span><input name="postalCode" maxlength="12" autocomplete="postal-code" placeholder="Opcional"></label>
     </div>
     <label><span>Referencia adicional</span><textarea name="deliveryReference" rows="2" maxlength="240" placeholder="Color de la casa, portería, indicaciones..."></textarea></label>
-    <p class="account-help">Usaremos la dirección que escribiste para gestionar la entrega. El equipo de NovaShop podrá abrir su ubicación desde el panel administrativo.</p>
     <label class="consent-checkbox"><input type="checkbox" name="consent" required><span>Acepto el uso de mis datos para crear la cuenta y gestionar pedidos. *</span></label>
-    <div class="register-step-actions"><button class="btn btn-ghost" id="registerBack" type="button">← Volver</button><button class="btn btn-primary" id="registerSubmit" type="submit">Crear mi cuenta y entrar</button></div>
+    <div class="register-step-actions"><button class="btn btn-primary wide" id="registerSubmit" type="submit">Crear mi cuenta y entrar</button></div>
   </fieldset>
 </form>
 
@@ -105,5 +102,5 @@
 
 </section></main>
 <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Cuenta gratuita y opcional</span></div></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=26"></script><script src="supabase-client.js?v=27"></script><script src="auth-nav.js?v=25"></script><script src="account.js?v=30"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=26"></script><script src="supabase-client.js?v=27"></script><script src="auth-nav.js?v=25"></script><script src="account.js?v=31"></script>
 </body></html>
