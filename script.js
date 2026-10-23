@@ -136,17 +136,13 @@ function buildWhatsAppMessage(data, orderNumber=''){
     `Nombre: ${data.firstName} ${data.lastName}`,
     `${I.phone} Teléfono / WhatsApp: ${data.phone}`,
     data.email ? `${I.email} Correo: ${data.email}` : null,
-    '',
-    '━━━━━━━━━━━━━━━━━━━━',
-    `${I.pin} *DIRECCIÓN DE ENTREGA*`,
-    '━━━━━━━━━━━━━━━━━━━━',
-    `${I.house} Dirección: ${data.address}`,
-    `Barrio: ${data.neighborhood}`,
-    `Ciudad / Municipio: ${data.city}`,
-    `Departamento: ${data.department}`,
-    data.postalCode ? `Código postal: ${data.postalCode}` : null,
-    data.reference ? `${I.note} Referencia: ${data.reference}` : null,
-    '',
+    ...(cart.every(item => product(item.id)?.deliveryType === 'digital')
+      ? ['', '━━━━━━━━━━━━━━━━━━━━', '📩 *ENTREGA DIGITAL*', 'No requiere dirección física.', '']
+      : ['', '━━━━━━━━━━━━━━━━━━━━', `${I.pin} *DIRECCIÓN DE ENTREGA*`, '━━━━━━━━━━━━━━━━━━━━',
+         `${I.house} Dirección: ${data.address}`, `Barrio: ${data.neighborhood}`,
+         `Ciudad / Municipio: ${data.city}`, `Departamento: ${data.department}`,
+         data.postalCode ? `Código postal: ${data.postalCode}` : null,
+         data.reference ? `${I.note} Referencia: ${data.reference}` : null, '']),
     '━━━━━━━━━━━━━━━━━━━━',
     `${I.card} *MÉTODO DE PAGO*`,
     '━━━━━━━━━━━━━━━━━━━━',
@@ -177,6 +173,11 @@ async function submitCheckoutForm(event){
     postalCode:cleanField(raw.get('postalCode')), reference:cleanField(raw.get('reference')),
     paymentMethod:cleanField(raw.get('paymentMethod'))
   };
+  const needsAddress = cart.some(item => product(item.id)?.deliveryType !== 'digital');
+  if(needsAddress && (!data.address || !data.neighborhood || !data.city || !data.department)){
+    toast('Para productos físicos, completa dirección, barrio, ciudad y departamento.');
+    return;
+  }
   let savedOrder = null;
   if(window.NovaShopDB?.isConfigured?.()){
     const button=form.querySelector('button[type="submit"]');
