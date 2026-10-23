@@ -6,7 +6,7 @@ const money = (n) => new Intl.NumberFormat('es-CO', {
 
 const params = new URLSearchParams(window.location.search);
 const productId = Number(params.get('id'));
-const currentProduct = products.find(p => p.id === productId) || products[0];
+let currentProduct = products.find(p => p.id === productId) || products[0];
 
 const $ = (selector) => document.querySelector(selector);
 let quantity = 1;
@@ -76,6 +76,7 @@ function openProductCheckout() {
   modal.classList.add('show');
   modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+  window.NovaShopDB?.prefillCheckout?.($('#productCheckoutForm')).catch(err=>console.warn('Perfil no precargado:',err));
   window.setTimeout(() => $('#productCheckoutForm input[name="firstName"]')?.focus(), 50);
 }
 
@@ -130,7 +131,8 @@ function buildProductWhatsAppMessage(data, orderNumber='') {
          `${I.house} Dirección: ${data.address}`, `Barrio: ${data.neighborhood}`,
          `Ciudad / Municipio: ${data.city}`, `Departamento: ${data.department}`,
          data.postalCode ? `Código postal: ${data.postalCode}` : null,
-         data.reference ? `${I.note} Referencia: ${data.reference}` : null, '']),
+         data.reference ? `${I.note} Referencia: ${data.reference}` : null,
+    data.latitude && data.longitude ? `📍 Ubicación: https://maps.google.com/?q=${data.latitude},${data.longitude}` : null, '']),
     '━━━━━━━━━━━━━━━━━━━━',
     `${I.card} *MÉTODO DE PAGO*`,
     '━━━━━━━━━━━━━━━━━━━━',
