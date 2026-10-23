@@ -89,6 +89,8 @@ Deno.serve(async (req: Request) => {
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
     let userId: string | null = null;
+    let customerEmailVerified = false;
+    let customerPhoneVerified = false;
     if (token && token !== publicKey && token !== Deno.env.get("SUPABASE_ANON_KEY")) {
       if (token.split(".").length !== 3) return json({ error: "La autorización enviada no es válida." }, 401);
       const authClient = createClient(supabaseUrl, publicKey, {
@@ -99,6 +101,8 @@ Deno.serve(async (req: Request) => {
         return json({ error: "Tu sesión no es válida. Inicia sesión de nuevo o continúa como invitado." }, 401);
       }
       userId = userData.user.id;
+      customerEmailVerified = !!userData.user.email_confirmed_at;
+      customerPhoneVerified = !!userData.user.phone_confirmed_at;
     }
 
     const admin = createClient(supabaseUrl, secretKey, {
@@ -154,6 +158,8 @@ Deno.serve(async (req: Request) => {
       customer_last_name: lastName,
       customer_email: email || null,
       customer_phone: phone,
+      customer_email_verified: customerEmailVerified,
+      customer_phone_verified: customerPhoneVerified,
       latitude,
       longitude,
       address: address || null,
