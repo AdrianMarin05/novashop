@@ -93,6 +93,14 @@
   <button class="btn btn-primary wide" type="submit">Iniciar sesión</button>
   <button type="button" id="forgotPassword" class="account-ghost">¿Olvidaste tu contraseña?</button>
 </form>
+<form id="resetPasswordForm" class="account-form" hidden>
+  <h2>Crear una contraseña nueva</h2>
+  <p>Elige una contraseña nueva para volver a entrar en NovaShop.</p>
+  <label><span>Nueva contraseña *</span><div class="password-field"><input name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Mínimo 8 caracteres"><button type="button" class="password-toggle" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false">👁</button></div></label>
+  <label><span>Repetir contraseña *</span><div class="password-field"><input name="confirmPassword" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Escríbela de nuevo"><button type="button" class="password-toggle" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false">👁</button></div></label>
+  <button class="btn btn-primary wide" type="submit">Actualizar contraseña</button>
+</form>
+</div>
 <div id="dashboard" hidden class="account-dashboard"><h2 id="welcome">Mi cuenta</h2><p id="userEmail" class="account-help"></p>
 <a id="adminAccessLink" class="btn btn-ghost wide" href="admin.html" hidden style="margin:12px 0 20px">🛠️ Administrar tienda</a>
 <form id="profileForm" class="account-form"><h3>Mis datos de entrega</h3>
@@ -108,5 +116,5 @@
 <p class="account-guest" id="guestHint">¿Prefieres no registrarte? <a href="index.html">Seguir comprando como invitado →</a></p>
 </section></main>
 <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Cuenta gratuita y opcional</span></div></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="supabase-config.js?v=21"></script><script src="supabase-client.js?v=21"></script><script src="auth-nav.js?v=21"></script><script src="account.js?v=21"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="supabase-config.js?v=21"></script><script src="supabase-client.js?v=22"></script><script src="auth-nav.js?v=21"></script><script src="account.js?v=22"></script>
 </body></html>
