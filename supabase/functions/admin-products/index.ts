@@ -180,6 +180,27 @@ Deno.serve(async (req: Request) => {
       return json({ok:true,user_id:targetId,role:wantedRole},200,origin);
     }
 
+    if (action === "set-user-password") {
+      if (!isOwner) return json({error:"Solo el propietario puede establecer contraseñas de usuarios."},403,origin);
+      const targetId = clean(body.user_id,50);
+      const password = typeof body.password === "string" ? body.password : "";
+      if (!/^[0-9a-f-]{36}$/i.test(targetId)) return json({error:"Identificador de usuario no válido."},400,origin);
+      if (targetId === user.id) return json({error:"Por seguridad, esta herramienta es solo para restablecer la contraseña de otro usuario."},409,origin);
+      if (password.length < 12 || password.length > 128 || !password.trim()) return json({error:"La contraseña temporal debe tener entre 12 y 128 caracteres."},400,origin);
+      const [targetRoleResult,targetLegacyResult] = await Promise.all([
+        admin.from("store_user_roles").select("role").eq("user_id",targetId).maybeSingle(),
+        admin.from("store_admins").select("user_id").eq("user_id",targetId).maybeSingle()
+      ]);
+      if (targetRoleResult.error) throw targetRoleResult.error;
+      if (targetLegacyResult.error) throw targetLegacyResult.error;
+      const targetRole = targetRoleResult.data?.role || (targetLegacyResult.data ? "owner" : "customer");
+      if (targetRole === "owner") return json({error:"La cuenta propietaria está protegida y no se puede restablecer desde esta herramienta."},409,origin);
+      const {data:updatedUser,error:updateError} = await admin.auth.admin.updateUserById(targetId,{password});
+      if (updateError) throw updateError;
+      if (!updatedUser?.user?.id) return json({error:"Supabase no confirmó la actualización de la contraseña."},500,origin);
+      return json({ok:true,user_id:targetId,message:"Contraseña temporal actualizada."},200,origin);
+    }
+
     if (action === "list") {
       if (!canEditCatalog && role !== "analyst") return json({error:"No tienes permiso para ver el catálogo administrativo."},403,origin);
       const {data,error} = await admin.from("products").select("*").order("sort_order",{ascending:true}).order("id",{ascending:true});
