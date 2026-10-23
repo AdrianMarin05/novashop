@@ -185,7 +185,10 @@ function renderAdminOrders(){
    const itemRows=items.map(item=>'<li><span>'+esc(item.product_name||"Producto")+' ×'+Number(item.quantity||0)+'</span><strong>'+money(item.line_total_cop??(Number(item.unit_price_cop||0)*Number(item.quantity||0)))+'</strong></li>').join("");
    const wa=whatsappHref(order.customer_phone);
    const validCoords=order.latitude!==null&&order.latitude!==undefined&&order.longitude!==null&&order.longitude!==undefined&&Number.isFinite(Number(order.latitude))&&Number.isFinite(Number(order.longitude));
-   const coords=validCoords?'<a target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps?q='+Number(order.latitude)+','+Number(order.longitude)+'">Abrir ubicación ↗</a>':"";
+   const mapUrl=validCoords
+    ? 'https://www.google.com/maps?q='+Number(order.latitude)+','+Number(order.longitude)
+    : (address?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(address):"");
+   const coords=mapUrl?'<a target="_blank" rel="noopener noreferrer" href="'+mapUrl+'">Abrir mapa para entrega ↗</a>':"";
    const badges='<span class="admin-order-badge '+(order.status==="pending_payment"?"pending":(["paid","preparing","shipped","delivered"].includes(order.status)?"paid":(["cancelled","payment_failed","refunded"].includes(order.status)?"cancelled":"")))+'">'+esc(orderStateLabel(order.status))+'</span><span class="admin-order-badge">Pago: '+esc(paymentLabel(order.payment_status))+'</span>';
    const options=ORDER_STATES.map(([value,label])=>'<option value="'+value+'" '+(order.status===value?"selected":"")+'>'+label+'</option>').join("");
    const email=order.customer_email?'<div>Correo: <a href="mailto:'+esc(order.customer_email)+'">'+esc(order.customer_email)+'</a></div>':"";
