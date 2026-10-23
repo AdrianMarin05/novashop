@@ -222,13 +222,20 @@ create table if not exists public.store_admins (
 alter table public.store_admins enable row level security;
 revoke all on public.store_admins from public,anon,authenticated;
 
-create or replace function public.is_novashop_admin()
+create schema if not exists private;
+create or replace function private.is_novashop_admin()
 returns boolean language sql stable security definer set search_path = ''
-as $$
+as $
   select exists(select 1 from public.store_admins a where a.user_id=(select auth.uid()));
-$$;
-revoke all on function public.is_novashop_admin() from public,anon;
-grant execute on function public.is_novashop_admin() to authenticated;
+$;
+revoke all on function private.is_novashop_admin() from public,anon,authenticated;
+drop function if exists private.is_novashop_admin();
+grant usage on schema private to authenticated;
+revoke all on function private.is_novashop_admin() from public,anon;
+grant execute on function private.is_novashop_admin() to authenticated;
+drop policy if exists "No direct read/write to store admins" on public.store_admins;
+create policy "No direct read/write to store admins" on public.store_admins
+for all to anon,authenticated using(false) with check(false);
 
 insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types)
 values ('products-media','products-media',true,52428800,array['image/jpeg','image/png','image/webp','image/avif','image/gif','video/mp4','video/webm','video/quicktime'])
@@ -236,13 +243,13 @@ on conflict (id) do update set public=true,file_size_limit=52428800,allowed_mime
 
 drop policy if exists "Only NovaShop admins upload product media" on storage.objects;
 create policy "Only NovaShop admins upload product media" on storage.objects for insert to authenticated
-with check (bucket_id='products-media' and (select public.is_novashop_admin()));
+with check (bucket_id='products-media' and (select private.is_novashop_admin()));
 drop policy if exists "Only NovaShop admins update product media" on storage.objects;
 create policy "Only NovaShop admins update product media" on storage.objects for update to authenticated
-using (bucket_id='products-media' and (select public.is_novashop_admin()))
-with check (bucket_id='products-media' and (select public.is_novashop_admin()));
+using (bucket_id='products-media' and (select private.is_novashop_admin()))
+with check (bucket_id='products-media' and (select private.is_novashop_admin()));
 drop policy if exists "Only NovaShop admins delete product media" on storage.objects;
 create policy "Only NovaShop admins delete product media" on storage.objects for delete to authenticated
-using (bucket_id='products-media' and (select public.is_novashop_admin()));
+using (bucket_id='products-media' and (select private.is_novashop_admin()));
 
 -- Never set a product to paid from the browser; payment status must be verified by the server.
