@@ -43,17 +43,29 @@
  async function prefillCheckout(form){
   if(!client||!form)return;
   const {data:{session}}=await client.auth.getSession();if(!session?.user)return;
-  const {data:p}=await client.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
+  const {data:p,error:profileError}=await client.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
+  if(profileError)console.warn("No se pudo leer el perfil para el checkout; se usarán los metadatos disponibles.",profileError.message);
   const metadata=session.user.user_metadata||{};
   const put=(name,value)=>{const el=form.elements[name];if(el&&value!=null&&value!==""&&!el.value)el.value=value;};
   const fullName=String(p?.full_name||metadata.full_name||"").trim();
   const splitAt=fullName.indexOf(" ");
-  put("firstName",splitAt<0?fullName:fullName.slice(0,splitAt));
-  put("lastName",splitAt<0?"":fullName.slice(splitAt+1));
+  put("firstName",metadata.first_name||(splitAt<0?fullName:fullName.slice(0,splitAt)));
+  put("lastName",metadata.last_name||(splitAt<0?"":fullName.slice(splitAt+1)));
   put("fullName",fullName);
-  for(const [name,value] of [["phone",p?.phone||session.user.phone||metadata.phone],["email",p?.email||session.user.email||metadata.email],["address",p?.address],
-   ["neighborhood",p?.neighborhood],["city",p?.city],["department",p?.department],["postalCode",p?.postal_code],["reference",p?.delivery_reference],
-   ["deliveryReference",p?.delivery_reference],["latitude",p?.latitude],["longitude",p?.longitude]])put(name,value);
+  const value=(stored,backup)=>stored!=null&&String(stored).trim()!==""?stored:backup;
+  for(const [name,saved,backup] of [
+   ["phone",p?.phone,session.user.phone||metadata.phone],
+   ["email",p?.email,session.user.email||metadata.email],
+   ["address",p?.address,metadata.address],
+   ["neighborhood",p?.neighborhood,metadata.neighborhood],
+   ["city",p?.city,metadata.city],
+   ["department",p?.department,metadata.department],
+   ["postalCode",p?.postal_code,metadata.postal_code],
+   ["reference",p?.delivery_reference,metadata.delivery_reference],
+   ["deliveryReference",p?.delivery_reference,metadata.delivery_reference],
+   ["latitude",p?.latitude,metadata.latitude],
+   ["longitude",p?.longitude,metadata.longitude]
+  ])put(name,value(saved,backup));
   form.dispatchEvent(new Event("novashop:profile-prefilled"));
  }
 
