@@ -86,7 +86,7 @@ function closeProductCheckout() {
   document.body.style.overflow = '';
 }
 
-function buildProductWhatsAppMessage(data) {
+function buildProductWhatsAppMessage(data, orderNumber='') {
   const subtotal = currentProduct.price * quantity;
 
   const I = {
@@ -106,6 +106,7 @@ function buildProductWhatsAppMessage(data) {
 
   return [
     `${I.wave} Hola, ${data.firstName}! Quiero comprar este producto en ${CONFIG.storeName}.`,
+    orderNumber ? `🧾 Número de pedido: ${orderNumber} (pendiente de pago)` : null,
     '',
     '━━━━━━━━━━━━━━━━━━━━',
     `${I.bag} *MI COMPRA*`,
@@ -150,33 +151,35 @@ function buildProductWhatsAppMessage(data) {
   ].filter(Boolean).join('\n');
 }
 
-function submitProductCheckout(event) {
+async function submitProductCheckout(event) {
   event.preventDefault();
-  const form = event.currentTarget;
-  if (!form.checkValidity()) {
-    form.reportValidity();
-    return;
-  }
-
-  const raw = new FormData(form);
-  const data = {
-    firstName: cleanField(raw.get('firstName')),
-    lastName: cleanField(raw.get('lastName')),
-    phone: cleanField(raw.get('phone')),
-    email: cleanField(raw.get('email')),
-    address: cleanField(raw.get('address')),
-    neighborhood: cleanField(raw.get('neighborhood')),
-    city: cleanField(raw.get('city')),
-    department: cleanField(raw.get('department')),
-    postalCode: cleanField(raw.get('postalCode')),
-    reference: cleanField(raw.get('reference')),
-    paymentMethod: cleanField(raw.get('paymentMethod'))
+  const form=event.currentTarget;
+  if(!form.checkValidity()){form.reportValidity();return;}
+  const raw=new FormData(form);
+  const data={
+    firstName:cleanField(raw.get('firstName')),lastName:cleanField(raw.get('lastName')),
+    phone:cleanField(raw.get('phone')),email:cleanField(raw.get('email')),
+    address:cleanField(raw.get('address')),neighborhood:cleanField(raw.get('neighborhood')),
+    city:cleanField(raw.get('city')),department:cleanField(raw.get('department')),
+    postalCode:cleanField(raw.get('postalCode')),reference:cleanField(raw.get('reference')),
+    paymentMethod:cleanField(raw.get('paymentMethod'))
   };
-
-  const text = buildProductWhatsAppMessage(data);
-  const url = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
+  let savedOrder=null;
+  if(window.NovaShopDB?.isConfigured?.()){
+    const button=form.querySelector('button[type="submit"]');
+    if(button){button.disabled=true;button.textContent='Guardando pedido…';}
+    try{
+      savedOrder=await window.NovaShopDB.createOrder(data,[{product_id:Number(currentProduct.id),quantity:Number(quantity)}]);
+    }catch(error){
+      showToast(error?.message||'No pudimos guardar el pedido. Inténtalo de nuevo.');
+      if(button){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}
+      return;
+    }finally{if(button){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}}
+  }
+  const text=buildProductWhatsAppMessage(data,savedOrder?.order_number||'');
+  const url=`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
   closeProductCheckout();
-  window.open(url, '_blank', 'noopener,noreferrer');
+  window.open(url,'_blank','noopener,noreferrer');
 }
 
 function renderProduct() {
