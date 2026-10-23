@@ -32,3 +32,5 @@ body[data-page="streaming"] .hero{background:linear-gradient(125deg,#101d32,#342
 body[data-page="streaming"] .hero-copy p{color:#e0e8f0}
 body[data-page="streaming"] .hero .eyebrow{color:#ffb49f}
 @media(max-width:600px){.account-btn{padding:9px 10px;font-size:11px}.nav-wrap{gap:8px}.main-nav a{font-size:11px}}
+
+.checkout-account-hint{margin:0 0 16px;padding:12px 14px;border:1px solid #f6d4cb;border-radius:12px;background:#fff7f4;color:#5b514e;font-size:12px;line-height:1.55}.checkout-account-hint a{color:#cb4528;font-weight:800;text-decoration:underline;text-underline-offset:2px}
