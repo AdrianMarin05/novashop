@@ -63,6 +63,7 @@ async function sendSignupCode(){
  const form=$("#registerForm");if(!form.reportValidity())return;
  const values=formObj(form),channel=currentChannel(form,"verifyVia");
  values.fullName=[values.firstName,values.lastName].filter(Boolean).join(" ");
+ values.phone=e164(values.phone);
  if(!values.latitude||!values.longitude){msg("Marca en el mapa el punto exacto de entrega o usa el botón de ubicación.","error");return;}
  if(channel==="sms"&&!values.phone){msg("Escribe un teléfono válido con prefijo de país.","error");return;}
  const btn=form.querySelector('[type=submit]');btn.disabled=true;btn.textContent="Enviando código…";
