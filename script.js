@@ -8,15 +8,17 @@ function cartTotal(){ return cart.reduce((sum,i)=>sum+i.price*i.qty,0); }
 function product(id){ return products.find(p=>p.id===id); }
 
 function renderCategories(){
-  $('#categoryGrid').innerHTML = categoryMeta.map(c=>`<button class="category-card" data-cat="${c.name}" aria-label="Ver ${c.name}"><img src="${c.image}" alt="${c.name}" loading="lazy"><div class="category-info"><h3>${c.name}</h3><span>${c.count}</span></div></button>`).join('');
-  document.querySelectorAll('.category-card').forEach(btn=>btn.addEventListener('click',()=>{ $('#categoryFilter').value=btn.dataset.cat; renderProducts(); document.querySelector('#productos').scrollIntoView({behavior:'smooth'}); }));
+  const visibleCategories = categoryMeta.filter(c => document.body.dataset.page === 'streaming' ? c.name === 'Streaming' : c.name !== 'Streaming');
+  $('#categoryGrid').innerHTML = visibleCategories.map(c=>`<button class="category-card" data-cat="${c.name}" aria-label="Ver ${c.name}"><img src="${c.image}" alt="${c.name}" loading="lazy"><div class="category-info"><h3>${c.name}</h3><span>${c.count}</span></div></button>`).join('');
+  document.querySelectorAll('.category-card').forEach(btn=>btn.addEventListener('click',()=>{ if(btn.dataset.cat==='Streaming'){ location.href='streaming.html'; return; } $('#categoryFilter').value=btn.dataset.cat; renderProducts(); document.querySelector('#productos').scrollIntoView({behavior:'smooth'}); }));
 }
 
 function renderProducts(){
   const query = $('#searchInput').value.trim().toLowerCase();
   const cat = $('#categoryFilter').value;
   const sort = $('#sortSelect').value;
-  let list = products.filter(p=>(cat==='all'||p.category===cat)&&(p.name.toLowerCase().includes(query)||p.category.toLowerCase().includes(query)));
+  const streamingPage = document.body.dataset.page === 'streaming';
+  let list = products.filter(p=>(streamingPage ? p.category==='Streaming' : p.category!=='Streaming')&&(cat==='all'||p.category===cat)&&(p.name.toLowerCase().includes(query)||p.category.toLowerCase().includes(query)));
   if(sort==='priceAsc') list.sort((a,b)=>a.price-b.price);
   if(sort==='priceDesc') list.sort((a,b)=>b.price-a.price);
   if(sort==='name') list.sort((a,b)=>a.name.localeCompare(b.name,'es'));
@@ -93,7 +95,7 @@ function cleanField(value){
   return String(value||'').trim().replace(/\s+/g,' ');
 }
 
-function buildWhatsAppMessage(data){
+function buildWhatsAppMessage(data, orderNumber=''){
   const lines=cart.map((i,index)=>[
     `${index+1}. ${i.name}`,
     `   Cantidad: ${i.qty}`,
@@ -119,6 +121,7 @@ function buildWhatsAppMessage(data){
 
   return [
     `${I.wave} Hola, ${data.firstName}! Quiero realizar un pedido en ${CONFIG.storeName}.`,
+    orderNumber ? `🧾 Número de pedido: ${orderNumber} (pendiente de pago)` : null,
     '',
     '━━━━━━━━━━━━━━━━━━━━',
     `${I.bag} *MI PEDIDO*`,
@@ -160,28 +163,33 @@ function buildWhatsAppMessage(data){
   ].filter(Boolean).join('\n');
 }
 
-function submitCheckoutForm(event){
+async function submitCheckoutForm(event){
   event.preventDefault();
   if(!cart.length){ closeCheckoutModal(); toast('Tu carrito está vacío'); return; }
   const form=event.currentTarget;
   if(!form.checkValidity()){ form.reportValidity(); return; }
-
   const raw=new FormData(form);
   const data={
-    firstName:cleanField(raw.get('firstName')),
-    lastName:cleanField(raw.get('lastName')),
-    phone:cleanField(raw.get('phone')),
-    email:cleanField(raw.get('email')),
-    address:cleanField(raw.get('address')),
-    neighborhood:cleanField(raw.get('neighborhood')),
-    city:cleanField(raw.get('city')),
-    department:cleanField(raw.get('department')),
-    postalCode:cleanField(raw.get('postalCode')),
-    reference:cleanField(raw.get('reference')),
+    firstName:cleanField(raw.get('firstName')), lastName:cleanField(raw.get('lastName')),
+    phone:cleanField(raw.get('phone')), email:cleanField(raw.get('email')),
+    address:cleanField(raw.get('address')), neighborhood:cleanField(raw.get('neighborhood')),
+    city:cleanField(raw.get('city')), department:cleanField(raw.get('department')),
+    postalCode:cleanField(raw.get('postalCode')), reference:cleanField(raw.get('reference')),
     paymentMethod:cleanField(raw.get('paymentMethod'))
   };
-
-  const text=buildWhatsAppMessage(data);
+  let savedOrder = null;
+  if(window.NovaShopDB?.isConfigured?.()){
+    const button=form.querySelector('button[type="submit"]');
+    if(button){button.disabled=true;button.textContent='Guardando pedido…';}
+    try{
+      savedOrder=await window.NovaShopDB.createOrder(data,cart.map(item=>({product_id:Number(item.id),quantity:Number(item.qty)})));
+    }catch(error){
+      toast(error?.message||'No pudimos guardar el pedido. Inténtalo de nuevo.');
+      if(button){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}
+      return;
+    }finally{if(button){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}}
+  }
+  const text=buildWhatsAppMessage(data,savedOrder?.order_number||'');
   const url=`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
   closeCheckoutModal();
   window.open(url,'_blank','noopener,noreferrer');
@@ -199,7 +207,10 @@ window.openModal=function(type){
 window.closeModal=function(){ $('#infoModal').classList.remove('show'); $('#infoModal').setAttribute('aria-hidden','true'); }
 
 document.addEventListener('DOMContentLoaded',()=>{
-  $('#categoryFilter').innerHTML='<option value="all">Todas las categorías</option>'+[...new Set(products.map(p=>p.category))].map(c=>`<option>${c}</option>`).join('');
+  const streamingPage = document.body.dataset.page === 'streaming';
+  const pageCategories = [...new Set(products.filter(p=>streamingPage ? p.category==='Streaming' : p.category!=='Streaming').map(p=>p.category))];
+  $('#categoryFilter').innerHTML='<option value="all">'+(streamingPage?'Todas las plataformas':'Todas las categorías')+'</option>'+pageCategories.map(c=>`<option>${c}</option>`).join('');
+  if(streamingPage){ $('#categorias')?.setAttribute('hidden',''); const h=$('.product-heading h2'); if(h) h.textContent='Plataformas de Streaming'; const eye=$('.product-heading .eyebrow'); if(eye) eye.textContent='SERVICIOS DIGITALES'; }
   renderCategories(); renderProducts(); renderCart();
   $('#categoryFilter').addEventListener('change',renderProducts); $('#sortSelect').addEventListener('change',renderProducts); $('#searchInput').addEventListener('input',renderProducts);
   $('#searchToggle').addEventListener('click',()=>{ const x=$('#searchBarWrap'); x.classList.toggle('open'); if(x.classList.contains('open')) $('#searchInput').focus(); });
