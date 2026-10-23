@@ -131,3 +131,118 @@ grant select,update on public.profiles to authenticated;
 grant select on public.orders,public.order_items to authenticated;
 
 comment on table public.orders is 'Los pedidos nuevos empiezan pendientes de pago; no marcar como pagado hasta confirmar con el proveedor de pagos.';
+
+
+
+-- Full metadata for catalog cards and product-detail pages.
+alter table public.profiles
+  add column if not exists email text,
+  add column if not exists address text,
+  add column if not exists neighborhood text,
+  add column if not exists city text,
+  add column if not exists department text,
+  add column if not exists postal_code text,
+  add column if not exists delivery_reference text,
+  add column if not exists latitude double precision,
+  add column if not exists longitude double precision;
+
+alter table public.orders
+  add column if not exists latitude double precision,
+  add column if not exists longitude double precision,
+  add column if not exists customer_email_verified boolean not null default false,
+  add column if not exists customer_phone_verified boolean not null default false;
+
+alter table public.products
+  add column if not exists old_price_cop bigint,
+  add column if not exists description text not null default '',
+  add column if not exists images text[] not null default '{}',
+  add column if not exists video_url text,
+  add column if not exists features text[] not null default '{}',
+  add column if not exists rating numeric(2,1),
+  add column if not exists reviews integer not null default 0,
+  add column if not exists tag text not null default '',
+  add column if not exists shipping text not null default '',
+  add column if not exists sort_order integer not null default 100;
+
+create sequence if not exists public.products_id_seq;
+select setval('public.products_id_seq',greatest(coalesce((select max(id) from public.products),0),1),true);
+alter table public.products alter column id set default nextval('public.products_id_seq');
+alter sequence public.products_id_seq owned by public.products.id;
+
+insert into public.products (id,name,category,price_cop,delivery_type,old_price_cop,description,images,video_url,features,rating,reviews,tag,shipping,sort_order,is_active)
+values
+(1,'Smartwatch Active X','Tecnología',89900,'physical',129900,'Un smartwatch moderno para acompañarte durante el día. Consulta notificaciones, registra tu actividad y disfruta de una pantalla clara con un diseño ligero y cómodo.',array['https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=1100&q=85','https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=900&q=85','https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=900&q=85']::text[],null,array['Pantalla táctil a color','Monitoreo de actividad','Notificaciones del teléfono','Diseño ligero y cómodo']::text[],4.8,127,'-31%','Envíos a todo Colombia. Confirma cobertura y tiempo de entrega por WhatsApp.',1,true),
+(2,'Auriculares Pulse Pro','Tecnología',119900,'physical',169900,'Auriculares inalámbricos pensados para disfrutar música, llamadas y contenido con una experiencia cómoda y práctica todos los días.',array['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1100&q=85','https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=900&q=85','https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?auto=format&fit=crop&w=900&q=85']::text[],null,array['Conexión inalámbrica','Micrófono integrado','Estuche de carga','Diseño ergonómico']::text[],4.9,204,'OFERTA','Envíos a todo Colombia. Confirma cobertura y tiempo de entrega por WhatsApp.',2,true),
+(3,'Mochila Urban Compact','Accesorios',74900,'physical',null,'Mochila urbana compacta para estudio, trabajo o viajes cortos. Combina un formato práctico con compartimentos para organizar tus objetos.',array['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=1100&q=85','https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?auto=format&fit=crop&w=900&q=85','https://images.unsplash.com/photo-1581605405669-fcdf81165afa?auto=format&fit=crop&w=900&q=85']::text[],null,array['Compartimento principal amplio','Bolsillo frontal','Diseño urbano','Correas ajustables']::text[],4.7,86,'NUEVO','Envíos a todo Colombia. Confirma cobertura y tiempo de entrega por WhatsApp.',3,true),
+(4,'Lámpara LED Minimal','Hogar',58900,'physical',79900,'Lámpara de diseño minimalista para escritorio o mesa auxiliar. Una forma sencilla de mejorar la iluminación y el ambiente de tu espacio.',array['https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=1100&q=85','https://images.unsplash.com/photo-1540932239986-30128078f3c5?auto=format&fit=crop&w=900&q=85','https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=900&q=85']::text[],null,array['Iluminación LED','Diseño minimalista','Ideal para escritorio','Bajo consumo']::text[],4.6,72,'-26%','Envíos a todo Colombia. Confirma cobertura y tiempo de entrega por WhatsApp.',4,true),
+(5,'Botella Térmica Steel','Hogar',49900,'physical',null,'Botella térmica reutilizable con acabado moderno, pensada para llevar tus bebidas contigo en el día a día.',array['https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=1100&q=85','https://images.unsplash.com/photo-1599360889420-da1afaba9edc?auto=format&fit=crop&w=900&q=85','https://images.unsplash.com/photo-1589365278144-c9e705f843ba?auto=format&fit=crop&w=900&q=85']::text[],null,array['Acabado resistente','Tapa de cierre','Diseño reutilizable','Formato portátil']::text[],4.8,119,'TOP','Envíos a todo Colombia. Confirma cobertura y tiempo de entrega por WhatsApp.',5,true),
+(6,'Gafas Urban Sun','Moda',63900,'physical',89900,'Gafas de sol con una silueta urbana y fácil de combinar. Un accesorio pensado para looks casuales y modernos.',array['https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1100&q=85','https://images.unsplash.com/photo-1577803645773-f96470509666?auto=format&fit=crop&w=900&q=85','https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=900&q=85']::text[],null,array['Montura ligera','Estilo urbano','Diseño unisex','Estuche protector']::text[],4.7,64,'-29%','Envíos a todo Colombia. Confirma cobertura y tiempo de entrega por WhatsApp.',6,true),
+(7,'Sneakers Street One','Moda',189900,'physical',229900,'Sneakers de estilo urbano para complementar outfits casuales. Diseño cómodo para el uso diario y una estética fácil de combinar.',array['https://images.unsplash.com/photo-1495555961986-6d4c1ecb7be3?auto=format&fit=crop&w=1100&q=85','https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85','https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&w=900&q=85']::text[],null,array['Diseño urbano','Suela flexible','Interior acolchado','Uso casual']::text[],4.9,141,'HOT','Envíos a todo Colombia. Confirma cobertura y tiempo de entrega por WhatsApp.',7,true),
+(8,'Organizador Smart Desk','Oficina',44900,'physical',null,'Organizador de escritorio para mantener cables, accesorios y pequeños objetos en orden mientras trabajas o estudias.',array['https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1100&q=85','https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=900&q=85','https://images.unsplash.com/photo-1516383607781-913a19294fd1?auto=format&fit=crop&w=900&q=85']::text[],null,array['Formato compacto','Organización de accesorios','Diseño minimalista','Ideal para escritorio']::text[],4.6,51,'NUEVO','Envíos a todo Colombia. Confirma cobertura y tiempo de entrega por WhatsApp.',8,true),
+(9,'Apple TV Cuenta Completa','Streaming',18900,'digital',null,'Apple TV Cuenta Completa: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',9,true),
+(10,'Canva Pro 1 Mes','Streaming',9900,'digital',null,'Canva Pro 1 Mes: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',10,true),
+(11,'Canva Pro 3 Meses','Streaming',21900,'digital',null,'Canva Pro 3 Meses: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',11,true),
+(12,'Crunchyroll Pantalla','Streaming',9900,'digital',null,'Crunchyroll Pantalla: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',12,true),
+(13,'Disney Premium Genérico','Streaming',12900,'digital',null,'Disney Premium Genérico: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',13,true),
+(14,'Disney Premium Original','Streaming',21900,'digital',null,'Disney Premium Original: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',14,true),
+(15,'HBO Max Pantalla','Streaming',9900,'digital',null,'HBO Max Pantalla: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',15,true),
+(16,'Jellyfin Pantalla','Streaming',8500,'digital',null,'Jellyfin Pantalla: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',16,true),
+(17,'Netflix Original 12 Días','Streaming',10000,'digital',null,'Netflix Original 12 Días: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',17,true),
+(18,'Netflix Original 30 Días','Streaming',16000,'digital',null,'Netflix Original 30 Días: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',18,true),
+(19,'Office 365','Streaming',28000,'digital',null,'Office 365: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',19,true),
+(20,'Paramount Pantalla','Streaming',9900,'digital',null,'Paramount Pantalla: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',20,true),
+(21,'Membresía Deluxe','Streaming',55000,'digital',null,'Membresía Deluxe: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',21,true),
+(22,'Membresía Extra','Streaming',45000,'digital',null,'Membresía Extra: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',22,true),
+(23,'Plex 1 Pantalla','Streaming',9900,'digital',null,'Plex 1 Pantalla: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',23,true),
+(24,'Prime Video Pantalla','Streaming',9900,'digital',null,'Prime Video Pantalla: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',24,true),
+(25,'Universal','Streaming',9900,'digital',null,'Universal: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',25,true),
+(26,'ViX Premium','Streaming',9900,'digital',null,'ViX Premium: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',26,true),
+(27,'Xbox Game Pass','Streaming',75000,'digital',null,'Xbox Game Pass: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',27,true),
+(28,'YouTube 1 Mes','Streaming',15900,'digital',null,'YouTube 1 Mes: servicio digital. Antes de pagar, confirma disponibilidad, duración, modalidad de acceso y condiciones vigentes con NovaShop.',array['https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=900&q=80']::text[],null,array['Producto digital; no requiere envío físico','Disponibilidad y condiciones por confirmar','Entrega o activación coordinada después de confirmar la compra']::text[],null,0,'DIGITAL','Servicio digital; no requiere envío físico. Confirma disponibilidad y condiciones antes del pago.',28,true)
+on conflict (id) do update set name=excluded.name,category=excluded.category,price_cop=excluded.price_cop,
+delivery_type=excluded.delivery_type,old_price_cop=excluded.old_price_cop,description=excluded.description,
+images=excluded.images,video_url=coalesce(public.products.video_url,excluded.video_url),
+features=excluded.features,rating=excluded.rating,reviews=excluded.reviews,tag=excluded.tag,
+shipping=excluded.shipping,sort_order=excluded.sort_order,updated_at=now();
+
+-- Allow each authenticated user to insert/update only their own address and profile fields.
+drop policy if exists "Users insert own profile" on public.profiles;
+create policy "Users insert own profile" on public.profiles for insert to authenticated
+with check ((select auth.uid())=id);
+grant insert (id,full_name,phone,email,address,neighborhood,city,department,postal_code,delivery_reference,latitude,longitude,updated_at) on public.profiles to authenticated;
+revoke update on public.profiles from authenticated;
+grant update (full_name,phone,email,address,neighborhood,city,department,postal_code,delivery_reference,latitude,longitude,updated_at) on public.profiles to authenticated;
+
+-- Product media is publicly readable, but uploads and catalog edits require the admin server function.
+create table if not exists public.store_admins (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  granted_at timestamptz not null default now(),
+  granted_by text not null default 'manual'
+);
+alter table public.store_admins enable row level security;
+revoke all on public.store_admins from public,anon,authenticated;
+
+create or replace function public.is_novashop_admin()
+returns boolean language sql stable security definer set search_path = ''
+as $$
+  select exists(select 1 from public.store_admins a where a.user_id=(select auth.uid()));
+$$;
+revoke all on function public.is_novashop_admin() from public,anon;
+grant execute on function public.is_novashop_admin() to authenticated;
+
+insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types)
+values ('products-media','products-media',true,52428800,array['image/jpeg','image/png','image/webp','image/avif','image/gif','video/mp4','video/webm','video/quicktime'])
+on conflict (id) do update set public=true,file_size_limit=52428800,allowed_mime_types=excluded.allowed_mime_types;
+
+drop policy if exists "Only NovaShop admins upload product media" on storage.objects;
+create policy "Only NovaShop admins upload product media" on storage.objects for insert to authenticated
+with check (bucket_id='products-media' and (select public.is_novashop_admin()));
+drop policy if exists "Only NovaShop admins update product media" on storage.objects;
+create policy "Only NovaShop admins update product media" on storage.objects for update to authenticated
+using (bucket_id='products-media' and (select public.is_novashop_admin()))
+with check (bucket_id='products-media' and (select public.is_novashop_admin()));
+drop policy if exists "Only NovaShop admins delete product media" on storage.objects;
+create policy "Only NovaShop admins delete product media" on storage.objects for delete to authenticated
+using (bucket_id='products-media' and (select public.is_novashop_admin()));
+
+-- Never set a product to paid from the browser; payment status must be verified by the server.
