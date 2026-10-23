@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Área privada de gestión de NovaShop"><meta name="robots" content="noindex,nofollow"><title>Administrar productos — NovaShop</title>
+<meta name="description" content="Área privada de gestión de NovaShop"><meta name="robots" content="noindex,nofollow"><title>Panel de administración — NovaShop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=27">
 <style>
@@ -70,11 +70,11 @@ body:not(.admin-authorized) .admin-orders-wrap,body:not(.admin-authorized) .admi
 <div class="announcement" role="region" aria-label="Administración NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🔐 Panel de administración</span><b>•</b><span>Gestiona tu catálogo</span><b>•</b><span>Solo usuarios autorizados</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🔐 Panel de administración</span><b>•</b><span>Gestiona tu catálogo</span><b>•</b><span>Solo usuarios autorizados</span><b>•</b></div></div></div></div>
 <header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a><nav class="main-nav"><a href="index.html">Tienda</a><a href="streaming.html">Streaming</a></nav><div class="header-actions account-actions"><a class="account-btn auth-nav-link" data-auth-nav="login" href="cuenta.html?tab=login">Iniciar sesión</a><a class="account-btn auth-nav-link" data-auth-nav="register" href="cuenta.html?tab=register">Crear cuenta</a><a class="account-btn auth-nav-link" data-auth-nav="account" href="cuenta.html" hidden>Mi cuenta</a></div></div></header>
 <main class="admin-page-wrap">
-<div class="admin-title"><div><span class="eyebrow">GESTIÓN DE CATÁLOGO</span><h1>Administrar productos</h1><p>Sube imágenes, fotos adicionales y video. Guarda precios y descripción en Supabase.</p></div><a href="index.html" class="btn btn-ghost">← Volver a la tienda</a></div>
+<div class="admin-title"><div><span class="eyebrow">PANEL PRIVADO</span><h1>Administración de NovaShop</h1><p>Gestiona pedidos, compradores, catálogo e inventario desde un solo lugar.</p></div><a href="index.html" class="btn btn-ghost">← Volver a la tienda</a></div>
 <div id="adminStatus" class="admin-status" role="status">Comprobando sesión y permisos…</div>
 <section id="adminOrdersWrap" class="admin-orders-wrap" hidden>
  <div class="admin-orders-heading">
-  <div><h2>Pedidos y compradores</h2><p>Consulta compras registradas, datos de entrega y actualiza cada estado. Solo propietario y administradores pueden ver datos de clientes.</p></div>
+  <div><h2>Pedidos y compradores</h2><p>Consulta compras registradas, datos de entrega y actualiza cada estado. Confirma un pago solo cuando lo hayas verificado. Solo propietario y administradores pueden ver datos de clientes.</p></div>
   <button type="button" class="btn btn-ghost" id="refreshAdminOrders">Actualizar pedidos</button>
  </div>
  <div class="admin-orders-tools">
