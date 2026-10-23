@@ -178,6 +178,8 @@ async function submitCheckoutForm(event){
     toast('Para productos físicos, completa dirección, barrio, ciudad y departamento.');
     return;
   }
+  // Pre-open WhatsApp while still inside the click event to avoid popup blockers after the async save.
+  const whatsappTab = window.open('about:blank', '_blank');
   let savedOrder = null;
   if(window.NovaShopDB?.isConfigured?.()){
     const button=form.querySelector('button[type="submit"]');
@@ -185,6 +187,7 @@ async function submitCheckoutForm(event){
     try{
       savedOrder=await window.NovaShopDB.createOrder(data,cart.map(item=>({product_id:Number(item.id),quantity:Number(item.qty)})));
     }catch(error){
+      whatsappTab?.close();
       toast(error?.message||'No pudimos guardar el pedido. Inténtalo de nuevo.');
       if(button){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}
       return;
@@ -193,7 +196,8 @@ async function submitCheckoutForm(event){
   const text=buildWhatsAppMessage(data,savedOrder?.order_number||'');
   const url=`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
   closeCheckoutModal();
-  window.open(url,'_blank','noopener,noreferrer');
+  if(whatsappTab) whatsappTab.location.href=url;
+  else window.location.href=url;
 }
 
 window.openModal=function(type){
