@@ -78,3 +78,12 @@ body[data-page="streaming"] .hero .eyebrow{color:#ffb49f}
 .product-main-video{width:100%;max-height:650px;aspect-ratio:4/3;object-fit:contain;background:#101820;border-radius:22px}
 .thumbnail.video-thumbnail{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:#13233a;color:#fff;min-width:75px;min-height:70px;border:2px solid transparent;border-radius:12px}
 .thumbnail.video-thumbnail span{font-size:22px}.thumbnail.video-thumbnail small{font-size:10px;font-weight:800}
+
+/* Delivery map for checkout forms. Coordinates are optional; written address stays required for physical orders. */
+.map-card{border:1px solid #dfe6eb;border-radius:14px;overflow:hidden;background:#fff}
+.delivery-map{height:240px;width:100%;background:#eef3f4;z-index:0}
+.map-toolbar{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:10px;background:#f7f9fa;align-items:center}
+.map-toolbar small{font-size:11px;color:#667480}.map-coordinates{font-size:11px;color:#4b5a67;word-break:break-word}
+.checkout-location-card{grid-column:1/-1;margin-top:4px}
+#cartDeliveryFields[hidden],#productDeliveryFields[hidden]{display:none!important}
+@media(max-width:620px){.delivery-map{height:205px}}
