@@ -210,7 +210,7 @@ function renderProduct() {
   $('#productDescription').textContent = currentProduct.description;
   $('#longDescription').textContent = currentProduct.description;
   $('#productShipping').textContent = currentProduct.shipping;
-  $('#productTag').textContent = currentProduct.tag;
+  $('#productTag').textContent = currentProduct.category === 'Streaming' ? 'SERVICIO DIGITAL' : currentProduct.tag;
 
   const stars = '★'.repeat(Math.round(currentProduct.rating)) + '☆'.repeat(5 - Math.round(currentProduct.rating));
   $('#productRatingStars').textContent = stars;
