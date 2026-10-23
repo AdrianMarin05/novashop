@@ -17,6 +17,7 @@ function setVisible(which){
  $("#authPanel").hidden=which==="dashboard";
  $("#registerForm").hidden=!register;
  $("#loginForm").hidden=which!=="login";
+ $("#resetPasswordForm").hidden=which!=="reset";
  $("#dashboard").hidden=which!=="dashboard";
  $("#registerContactStep").hidden=which!=="register";
  $("#registerAddressStep").hidden=which!=="registerAddress";
@@ -208,11 +209,27 @@ function init(){
   }catch(err){msg(/invalid|incorrect|credentials|not found|contraseña/i.test(err?.message||"")?"Correo/teléfono o contraseña incorrectos.":err?.message||"No pudimos iniciar sesión.","error");}
   finally{btn.disabled=false;btn.textContent="Iniciar sesión";}
  });
+ $("#forgotPassword").addEventListener("click",async()=>{
+  const email=String($("#loginForm").elements.identity.value||"").trim().toLowerCase();
+  if(!email.includes("@")){msg("Escribe el correo electrónico asociado a tu cuenta para recuperar la contraseña. El alias ADMIN no sirve para enviar el enlace de recuperación.","error");return;}
+  const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:"https://adrianmarin05.github.io/novashop/cuenta.html"});
+  msg(error?"No pudimos enviar la recuperación: "+error.message:"Si el correo está registrado, te enviaremos un enlace para cambiar la contraseña. Revisa también spam.",error?"error":"success");
+ });
+ $("#resetPasswordForm").addEventListener("submit",async event=>{
+  event.preventDefault();const f=event.currentTarget;if(!f.reportValidity())return;
+  if(f.elements.password.value!==f.elements.confirmPassword.value){msg("Las contraseñas no coinciden.","error");return;}
+  const {error}=await client.auth.updateUser({password:f.elements.password.value});
+  if(error){msg(error.message,"error");return;}
+  await client.auth.signOut();f.reset();setVisible("login");msg("Contraseña actualizada. Inicia sesión con tu nueva contraseña.","success");
+ });
  $("#profileForm").addEventListener("submit",saveProfileHandler);
  $("#refreshOrders").addEventListener("click",loadOrders);
  $("#signOut").addEventListener("click",async()=>{await client.auth.signOut();session=null;setVisible("login");msg("Has cerrado sesión.","success");});
  if(!client||!db?.isConfigured?.()){msg("Supabase no está conectado. Revisa la URL y la clave publicable.","error");return;}
- client.auth.onAuthStateChange((_event,s)=>{if(s?.user){session={user:s.user};showDashboard(s.user);}else{session=null;}});
+ client.auth.onAuthStateChange((event,s)=>{
+  if(event==="PASSWORD_RECOVERY"){setVisible("reset");msg("Escribe y confirma tu nueva contraseña.","success");return;}
+  if(s?.user){session={user:s.user};showDashboard(s.user);}else{session=null;}
+ });
  client.auth.getSession().then(({data})=>{if(data.session?.user)showDashboard(data.session.user);});
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
