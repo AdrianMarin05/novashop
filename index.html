@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="styles.css?v=13">
 </head>
 <body>
-  <div class="announcement">🚚 Envíos y atención personalizada · Compra fácil desde tu celular</div>
+  <div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>💳 Opciones de pago</span><b>•</b><span>🔒 Protección de datos</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>💳 Opciones de pago</span><b>•</b><span>🔒 Protección de datos</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
 
   <header class="site-header">
     <div class="container nav-wrap">
@@ -25,12 +25,7 @@
         <a href="#productos">Productos</a><a href="streaming.html">Streaming</a>
         <a href="#beneficios">Beneficios</a>
       </nav>
-      <div class="header-actions"><a class="account-btn" href="cuenta.html" aria-label="Mi cuenta">👤 Mi cuenta</a>
-        <button class="icon-btn" id="searchToggle" aria-label="Buscar">⌕</button>
-        <button class="cart-btn" id="cartToggle" aria-label="Abrir carrito">
-          🛒 <span>Carrito</span><b id="cartCount">0</b>
-        </button>
-      </div>
+      <div class="header-actions account-actions"><a class="account-btn auth-nav-link" data-auth-nav="login" href="cuenta.html?tab=login">Iniciar sesión</a><a class="account-btn auth-nav-link" data-auth-nav="register" href="cuenta.html?tab=register">Crear cuenta</a><a class="account-btn auth-nav-link" data-auth-nav="account" href="cuenta.html" hidden>Mi cuenta</a><button class="icon-btn" id="searchToggle" aria-label="Buscar">⌕</button><button class="cart-btn" id="cartToggle" aria-label="Abrir carrito">🛒 <span>Carrito</span><b id="cartCount">0</b></button></div>
     </div>
     <div class="search-bar-wrap" id="searchBarWrap">
       <div class="container search-inner">
@@ -59,14 +54,14 @@
           </div>
         </div>
         <div class="hero-visual">
-          <div class="hero-card main">
-            <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1100&q=80" alt="Producto destacado">
-            <div class="hero-badge">OFERTA</div>
-            <div class="hero-caption"><span>Producto destacado</span><strong>Hasta 35% OFF</strong></div>
-          </div>
-          <div class="float-card float-one">⚡ <span>Compra rápida</span></div>
-          <div class="float-card float-two">★ <span>Productos seleccionados</span></div>
-        </div>
+  <a class="hero-card main featured-product-link" id="featuredProductLink" href="producto.html?id=1" aria-label="Ver detalles del producto destacado: Smartwatch Active X">
+    <img id="featuredProductImage" src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=1100&q=85" alt="Smartwatch Active X" fetchpriority="high">
+    <span class="hero-badge" id="featuredProductBadge">OFERTA</span>
+    <div class="hero-caption"><span id="featuredProductName">Smartwatch Active X</span><strong id="featuredProductDiscount">31% OFF</strong></div>
+  </a>
+  <div class="float-card float-one" aria-hidden="true">⚡ <span>Compra rápida</span></div>
+  <div class="float-card float-two" aria-hidden="true">★ <span>Productos seleccionados</span></div>
+</div>
       </div>
     </section>
 
@@ -242,9 +237,9 @@
 
   <div class="toast" id="toast" role="status"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=13"></script>
-  <script src="supabase-client.js?v=13"></script>
-  <script src="products.js?v=13"></script>
-  <script src="script.js?v=13"></script>
+  <script src="supabase-config.js?v=14"></script>
+  <script src="supabase-client.js?v=14"></script><script src="auth-nav.js?v=14"></script>
+  <script src="products.js?v=14"></script>
+  <script src="script.js?v=14"></script>
 </body>
 </html>
