@@ -124,11 +124,6 @@ async function submitSignup(event){
  const form=$("#registerForm");
  const values=formObj(form);
  values.fullName=[values.firstName,values.lastName].filter(Boolean).join(" ");
- const lat=Number(values.latitude),lng=Number(values.longitude);
- if(!values.latitude||!values.longitude||!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180){
-  msg("Marca el punto exacto de entrega en el mapa antes de continuar.","error");return;
- }
- values.latitude=String(lat);values.longitude=String(lng);
  const password=form.elements.password.value;
  const button=$("#registerSubmit");
  button.disabled=true;button.textContent="Creando cuenta…";
@@ -139,17 +134,27 @@ async function submitSignup(event){
   const result=await client.auth.signUp({email:values.email,password,options:{data:metadata}});
   if(result.error)throw result.error;
   if(!result.data?.user)throw new Error("Supabase no devolvió una cuenta. Inténtalo de nuevo.");
-  if(Array.isArray(result.data.user.identities)&&result.data.user.identities.length===0){
-   throw new Error("Ese correo ya tiene una cuenta. Ve a Iniciar sesión o contacta por WhatsApp si necesitas recuperar el acceso.");
+  let signedUser=result.data.user;
+  let justCreated=true;
+  // Supabase puede devolver una lista de identidades vacía si este correo ya se registró en una prueba anterior.
+  // Intentar el inicio de sesión permite a la persona legítima terminar de guardar su perfil.
+  if(Array.isArray(signedUser.identities)&&signedUser.identities.length===0){
+   const existing=await client.auth.signInWithPassword({email:values.email,password});
+   if(existing.error||!existing.data?.user){
+    throw new Error("Este correo ya tiene una cuenta. Inicia sesión con su contraseña o contacta por WhatsApp si necesitas recuperar el acceso.");
+   }
+   signedUser=existing.data.user;
+   justCreated=false;
+  }else if(!result.data.session){
+   const existing=await client.auth.signInWithPassword({email:values.email,password});
+   if(existing.error||!existing.data?.user){
+    throw new Error("La cuenta se registró, pero Supabase aún no permite iniciar sesión. Comprueba que «Confirm email» esté desactivado en Authentication.");
+   }
+   signedUser=existing.data.user;
   }
-  createdUser=result.data.user;
-  if(!result.data.session){
-   msg("Supabase todavía exige confirmar el correo. Para activar el registro inmediato, desactiva «Confirm email» en Supabase: Authentication → Providers → Email. No vuelvas a registrar este mismo correo; puede haber quedado pendiente.", "error");
-   return;
-  }
-  await saveProfile(result.data.user,values);
-  msg("¡Cuenta creada correctamente! Te llevamos a la tienda para que puedas ver los productos.", "success");
-  location.replace("index.html");
+  createdUser=signedUser;
+  await saveProfile(signedUser,values);
+  location.replace("index.html?registro="+(justCreated?"creado":"acceso"));
  }catch(e){
   const text=String(e?.message||"");
   if(createdUser){
@@ -161,7 +166,7 @@ async function submitSignup(event){
   }
  }finally{
   authActionInProgress=false;
-  button.disabled=false;button.textContent="Crear cuenta y entrar";
+  button.disabled=false;button.textContent="Crear mi cuenta y entrar";
  }
 }
 
@@ -176,7 +181,6 @@ async function showDashboard(user){
  if(!error&&profile){
   const form=$("#profileForm");
   for(const [key,name] of [["full_name","fullName"],["phone","phone"],["email","email"],["address","address"],["neighborhood","neighborhood"],["city","city"],["department","department"],["postal_code","postalCode"],["delivery_reference","deliveryReference"],["latitude","latitude"],["longitude","longitude"]])if(form.elements[name])form.elements[name].value=profile[key]??"";
-  if(profile.latitude!=null&&profile.longitude!=null)mapState.profileMap?.put(profile.latitude,profile.longitude,16);
   $("#userEmail").textContent=profile.email||user.email||user.phone||"Cuenta verificada";
  }
  await loadOrders();
@@ -193,13 +197,10 @@ async function loadOrders(){
 }
 async function saveProfileHandler(event){
  event.preventDefault();if(!session?.user)return;const f=event.currentTarget;if(!f.reportValidity())return;
- if(!f.elements.latitude.value||!f.elements.longitude.value){msg("Marca la ubicación en el mapa para tener coordenadas precisas.","error");return;}
- const values={fullName:f.elements.fullName.value.trim(),phone:e164(f.elements.phone.value),email:f.elements.email.value.trim().toLowerCase(),address:f.elements.address.value.trim(),neighborhood:f.elements.neighborhood.value.trim(),city:f.elements.city.value.trim(),department:f.elements.department.value.trim(),postalCode:f.elements.postalCode.value.trim(),deliveryReference:f.elements.deliveryReference.value.trim(),latitude:f.elements.latitude.value,longitude:f.elements.longitude.value};
+ const values={fullName:f.elements.fullName.value.trim(),phone:e164(f.elements.phone.value),email:f.elements.email.value.trim().toLowerCase(),address:f.elements.address.value.trim(),neighborhood:f.elements.neighborhood.value.trim(),city:f.elements.city.value.trim(),department:f.elements.department.value.trim(),postalCode:f.elements.postalCode.value.trim(),deliveryReference:f.elements.deliveryReference.value.trim(),latitude:"",longitude:""};
  try{await saveProfile(session.user,values);msg("Tus datos de entrega se guardaron correctamente.","success");}catch(e){msg("No pudimos guardar el perfil: "+e.message,"error");}
 }
 function init(){
- createMap("registerMap","registerLat","registerLng","registerMapStatus","registerCoords","useLocationRegister");
- createMap("profileMap","profileLat","profileLng","profileMapStatus","profileCoords","useLocationProfile");
  const params=new URLSearchParams(location.search);
  setVisible(params.get("tab")==="login"?"login":"register");
  if(params.get("registered")==="1")msg("Tu cuenta se creó correctamente.", "success");
