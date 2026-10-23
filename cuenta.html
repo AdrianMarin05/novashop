@@ -3,7 +3,7 @@
 <meta name="description" content="Crea una cuenta gratuita en NovaShop o compra como invitado.">
 <title>Mi cuenta — NovaShop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=19"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="styles.css?v=21"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <style>
 .account-wrap{max-width:1160px;margin:36px auto 65px;padding:0 22px;display:grid;grid-template-columns:minmax(270px,.85fr) minmax(360px,1.15fr);gap:25px;align-items:start}
 .account-story{background:linear-gradient(135deg,#112239,#2b3f5d);color:#fff;border-radius:24px;padding:32px;min-height:430px;position:relative;overflow:hidden}.account-story:after{content:"";position:absolute;width:250px;height:250px;border-radius:50%;background:#ff5a3628;right:-90px;bottom:-90px}
@@ -20,12 +20,14 @@
 .register-step{border:0;margin:0;padding:0;min-width:0}.register-step[hidden]{display:none!important}.marketing-opt-in,.consent-checkbox{display:flex!important;align-items:flex-start;gap:9px;font-weight:500!important;line-height:1.5}.marketing-opt-in input,.consent-checkbox input{width:16px!important;height:16px!important;min-height:16px!important;flex:0 0 auto;margin:2px 0 0}.marketing-opt-in span,.consent-checkbox span{font-size:12px;color:#586672;font-weight:500}.register-step-actions{display:flex;gap:10px;justify-content:space-between;align-items:center}.register-step-actions .btn{flex:1}
 
 .whatsapp-pending{opacity:.58;cursor:not-allowed!important;background:#f7f8f9}.whatsapp-pending strong:after{content:" · Próximamente";font-size:10px;color:#a43f29;font-weight:800}
+
+.password-field{display:flex;position:relative;align-items:center;width:100%}.password-field input{width:100%;padding-right:48px!important}.password-toggle{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:38px;height:36px;border:0;border-radius:8px;background:transparent;color:#697783;cursor:pointer;font-size:17px;display:grid;place-items:center}.password-toggle:hover{background:#f0f3f5;color:#26394b}.verification-email-only{display:flex;padding:13px 14px;border:1px solid #dce7ee;border-radius:12px;background:#f7fafc}.verification-email-only span{display:grid;gap:4px}.verification-email-only strong{font-size:12px;color:#24384c}.verification-email-only small{font-size:11px;color:#687781}.account-tabs{margin-bottom:20px}.account-guest a{font-weight:700}
 </style></head>
 <body class="account-page">
 <div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
 <header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a>
 <nav class="main-nav"><a href="index.html">Inicio</a><a href="streaming.html">Streaming</a><a href="index.html#categorias">Categorías</a></nav>
-<div class="header-actions account-actions"><a class="account-btn auth-nav-link" data-auth-nav="login" href="cuenta.html?tab=login">Iniciar sesión</a><a class="account-btn auth-nav-link" data-auth-nav="register" href="cuenta.html?tab=register">Crear cuenta</a><a class="account-btn auth-nav-link" data-auth-nav="account" href="cuenta.html" hidden>Mi cuenta</a></div></div></header>
+<div class="header-actions account-actions"><a class="account-btn" href="index.html">Volver a la tienda</a></div></div></header>
 <main class="account-wrap">
 <section class="account-story"><span class="eyebrow" style="color:#ffb49f">TU ESPACIO EN NOVASHOP</span>
 <h1>Compra a tu manera.<br><span style="color:#ff967c">Tu historial siempre contigo.</span></h1>
@@ -53,15 +55,11 @@
       <label><span>Apellidos *</span><input name="lastName" required maxlength="60" autocomplete="family-name" placeholder="Tus apellidos"></label>
       <label class="full"><span>Teléfono móvil *</span><input name="phone" type="tel" required maxlength="24" autocomplete="tel" placeholder="+57 300 123 4567"></label>
       <label class="full"><span>Correo electrónico *</span><input name="email" type="email" required maxlength="120" autocomplete="email" placeholder="tu@correo.com"></label>
-      <label><span>Contraseña *</span><input name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Mínimo 8 caracteres"></label>
-      <label><span>Repetir contraseña *</span><input name="confirmPassword" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Escribe de nuevo"></label>
+      <label><span>Contraseña *</span><div class="password-field"><input name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Mínimo 8 caracteres"><button type="button" class="password-toggle" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false">👁</button></div></label>
+      <label><span>Repetir contraseña *</span><div class="password-field"><input name="confirmPassword" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Escribe de nuevo"><button type="button" class="password-toggle" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false">👁</button></div></label>
     </div>
-    <div class="form-section-title">¿Dónde quieres recibir el único código?</div>
-    <div class="verification-choices">
-      <label class="verification-choice"><input type="radio" name="verifyVia" value="email" checked><span><strong>📧 Correo electrónico</strong><small>Código de verificación de un solo uso.</small></span></label>
-      <label class="verification-choice whatsapp-pending"><input type="radio" name="verifyVia" value="whatsapp" disabled><span><strong>💬 WhatsApp</strong><small>Se activará al conectar Twilio Verify y WhatsApp Business.</small></span></label>
-    </div>
-    <p class="account-help">Por ahora puedes verificar por correo. La verificación por WhatsApp se habilitará cuando conectemos el proveedor y las credenciales comerciales.</p>
+    <input type="hidden" name="verifyVia" value="email">
+    <div class="verification-choice verification-email-only"><span><strong>📧 Verificación por correo electrónico</strong><small>Te enviaremos un código de un solo uso para activar tu cuenta.</small></span></div>
     <label class="marketing-opt-in"><input type="checkbox" name="marketingOptIn"><span>Quiero recibir ofertas, novedades y promociones por correo electrónico. Es opcional.</span></label>
     <button class="btn btn-primary wide" id="registerNext" type="button">Continuar con mi dirección →</button>
   </fieldset>
@@ -89,9 +87,9 @@
 
 <form id="loginForm" class="account-form" hidden>
   <h2>Bienvenido de nuevo</h2>
-  <p>Escribe tu correo electrónico o teléfono móvil y tu contraseña. No necesitas pedir otro código para iniciar sesión.</p>
-  <label><span>Correo o teléfono móvil *</span><input name="identity" type="text" required autocomplete="username" placeholder="tu@correo.com o +57 300 123 4567"></label>
-  <label><span>Contraseña *</span><input name="password" type="password" required autocomplete="current-password" placeholder="Tu contraseña"></label>
+  <p>Ingresa con tu correo, teléfono móvil o usuario administrativo y tu contraseña. No necesitas código al iniciar sesión.</p>
+  <label><span>Correo, teléfono o usuario *</span><input name="identity" type="text" required autocomplete="username" placeholder="tu@correo.com, +57 300… o ADMIN"></label>
+  <label><span>Contraseña *</span><div class="password-field"><input name="password" type="password" required autocomplete="current-password" placeholder="Tu contraseña"><button type="button" class="password-toggle" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false">👁</button></div></label>
   <button class="btn btn-primary wide" type="submit">Iniciar sesión</button>
   <button type="button" id="forgotPassword" class="account-ghost">¿Olvidaste tu contraseña?</button>
 </form>
@@ -110,5 +108,5 @@
 <p class="account-guest" id="guestHint">¿Prefieres no registrarte? <a href="index.html">Seguir comprando como invitado →</a></p>
 </section></main>
 <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Cuenta gratuita y opcional</span></div></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="supabase-config.js?v=19"></script><script src="supabase-client.js?v=20"></script><script src="auth-nav.js?v=19"></script><script src="account.js?v=19"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="supabase-config.js?v=21"></script><script src="supabase-client.js?v=21"></script><script src="auth-nav.js?v=21"></script><script src="account.js?v=21"></script>
 </body></html>
