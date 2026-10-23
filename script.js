@@ -11,26 +11,29 @@ function product(id){ return products.find(p=>p.id===id); }
 function renderFeaturedProduct(){
   const link=$('#featuredProductLink');
   if(!link || !Array.isArray(products) || !products.length)return;
+  const cta=$('#featuredProductCta');
   if(document.body.dataset.page==='streaming'){
-    const first=products.find(p=>p.category==='Streaming');
-    if(first)link.href='producto.html?id='+first.id;
+    link.href='streaming.html';
+    link.setAttribute('aria-label','Explorar el catálogo completo de Streaming');
     $('#featuredProductImage').src='https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=1100&q=85';
     $('#featuredProductImage').alt='Catálogo de plataformas y servicios digitales';
-    $('#featuredProductBadge').textContent='STREAMING';
-    $('#featuredProductName').textContent='Catálogo de servicios digitales';
-    $('#featuredProductDiscount').textContent='Explorar';
+    $('#featuredProductBadge').textContent='CATÁLOGO';
+    $('#featuredProductName').textContent='Explora las plataformas de Streaming';
+    $('#featuredProductDiscount').textContent='20 servicios';
+    if(cta)cta.textContent='Ver catálogo completo ↗';
     return;
   }
   const featured=products.find(p=>p.category!=='Streaming' && p.oldPrice) || products.find(p=>p.category!=='Streaming');
   if(!featured)return;
   const pct=featured.oldPrice?Math.round((1-(featured.price/featured.oldPrice))*100):0;
   link.href='producto.html?id='+featured.id;
-  link.setAttribute('aria-label','Ver detalles de '+featured.name);
+  link.setAttribute('aria-label','Ver detalles y comprar '+featured.name);
   $('#featuredProductImage').src=(featured.images&&featured.images[0])||'';
   $('#featuredProductImage').alt=featured.name;
   $('#featuredProductBadge').textContent=featured.oldPrice?'OFERTA':'DESTACADO';
   $('#featuredProductName').textContent=featured.name;
   $('#featuredProductDiscount').textContent=featured.oldPrice?(pct+'% OFF'):'Ver producto';
+  if(cta)cta.textContent='Ver detalles y comprar ↗';
 }
 
 function renderCategories(){
@@ -58,7 +61,7 @@ function renderProducts(){
   $('#emptyState').hidden=list.length!==0;
   $('#productGrid').innerHTML=list.map(p=>`<article class="product-card">
     <a class="product-link" href="producto.html?id=${p.id}" aria-label="Ver ${p.name}">
-      <div class="product-media"><img src="${p.images[0]}" alt="${p.name}" loading="lazy"><span class="tag">${p.tag}</span></div>
+      <div class="product-media"><img src="${p.images[0]}" alt="${p.name}" loading="lazy">${p.category==='Streaming'?'':(p.oldPrice?'<span class="tag">OFERTA</span>':(p.tag?'<span class="tag">'+p.tag+'</span>':''))}</div>
       <div class="product-body"><div class="category-label">${p.category}</div><div class="product-title">${p.name}</div>
         <div class="price-row"><span class="price">${money(p.price)}</span>${p.oldPrice?`<span class="old-price">${money(p.oldPrice)}</span>`:''}</div>
       </div>
