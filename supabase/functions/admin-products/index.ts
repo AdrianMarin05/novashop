@@ -223,9 +223,12 @@ Deno.serve(async (req: Request) => {
       if (nextStatus === "pending_payment" && ["approved","refunded"].includes(currentOrder.payment_status)) {
         return json({error:"Este pedido ya tiene un pago aprobado o reembolsado y no puede volver a pendiente de pago."},409,origin);
       }
-      if (nextStatus === "shipped" && currentOrder.payment_provider === "cash_on_delivery" &&
+      if (nextStatus === "paid" && currentOrder.payment_provider === "cash_on_delivery") {
+        return json({error:"En contraentrega, el producto se paga al recibirlo. Marca el pedido como Entregado cuando hayas confirmado la entrega y el cobro del producto."},409,origin);
+      }
+      if (["shipped","delivered"].includes(nextStatus) && currentOrder.payment_provider === "cash_on_delivery" &&
           (!(Number(currentOrder.shipping_fee_cop)>0) || currentOrder.shipping_payment_status !== "approved")) {
-        return json({error:"No se puede despachar un pedido contraentrega hasta registrar el costo del flete y verificar que fue pagado por anticipado a la transportadora."},409,origin);
+        return json({error:"No se puede despachar o marcar como entregado un pedido contraentrega hasta registrar el costo del flete y verificar que fue pagado por anticipado a la transportadora."},409,origin);
       }
       const now=new Date().toISOString();
       const update:any = {status:nextStatus,updated_at:now};
