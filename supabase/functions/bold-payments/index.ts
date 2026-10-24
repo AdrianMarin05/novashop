@@ -87,6 +87,9 @@ Deno.serve(async (req: Request) => {
       if (order.user_id && (!requester || requester.id !== order.user_id)) {
         return json({ error: "Inicia sesión con la cuenta que realizó este pedido para pagar en línea." }, 403);
       }
+      if (order.payment_provider !== "bold") {
+        return json({ error: "Este pedido se registró para contraentrega y no puede convertirse a pago Bold. Si quieres pagar en línea, crea un nuevo pedido y elige Bold." }, 409);
+      }
       if (order.status !== "pending_payment" || !["pending", "rejected"].includes(order.payment_status)) {
         return json({ error: "Este pedido ya no está pendiente de pago. Consulta su estado antes de crear otro pago." }, 409);
       }
