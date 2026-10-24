@@ -105,6 +105,7 @@ function renderProducts(){
       <div class="product-media"><img src="${p.images[0]}" alt="${p.name}" loading="lazy">${p.category==='Streaming'?'':(p.oldPrice?'<span class="tag">OFERTA</span>':(p.tag?'<span class="tag">'+p.tag+'</span>':''))}</div>
       <div class="product-body"><div class="category-label">${p.category}</div>${renderLiveRating(p.id)}<div class="product-title">${p.name}</div>
         <div class="price-row"><span class="price">${money(p.price)}</span>${p.oldPrice?`<span class="old-price">${money(p.oldPrice)}</span>`:''}</div>
+        <div class="product-fulfillment-note ${p.category==='Streaming'?'is-digital':'is-physical'}"><span aria-hidden="true">${p.category==='Streaming'?'💻':'🚚'}</span><span>${p.category==='Streaming'?'Servicio digital · sin envío físico':'Envío gratis pagando con Bold'}</span></div>
       </div>
     </a>
     <div class="product-actions"><button class="add-btn" data-id="${p.id}">Añadir al carrito</button></div>
@@ -400,6 +401,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   const streamingPage = document.body.dataset.page === 'streaming';
   const pageCategories = [...new Set(products.filter(p=>streamingPage ? p.category==='Streaming' : p.category!=='Streaming').map(p=>p.category))];
   $('#categoryFilter').innerHTML='<option value="all">'+(streamingPage?'Todas las plataformas':'Todas las categorías')+'</option>'+pageCategories.map(c=>`<option>${c}</option>`).join('');
+  const requestedCategory=new URLSearchParams(window.location.search).get('category');
+  if(!streamingPage&&requestedCategory&&pageCategories.includes(requestedCategory))$('#categoryFilter').value=requestedCategory;
   if(streamingPage){ $('#categorias')?.setAttribute('hidden',''); const h=$('.product-heading h2'); if(h) h.textContent='Plataformas de Streaming'; const eye=$('.product-heading .eyebrow'); if(eye) eye.textContent='SERVICIOS DIGITALES'; }
   renderFeaturedProduct(); renderCategories(); renderProducts(); renderCart();
   loadCatalogReviewStats();
