@@ -29,6 +29,7 @@
  }
  async function createBoldCheckout(orderId){return callBold("create-checkout",orderId);}
  async function verifyBoldPayment(orderId){return callBold("verify-checkout",orderId);}
+ async function checkBoldConfigured(){const result=await callBold("status","");return result.configured===true;}
  async function syncCatalog(localProducts){
   if(!client||!Array.isArray(localProducts))return localProducts;
   const {data,error}=await client.from("products").select("id,name,category,price_cop,delivery_type,is_active,updated_at,old_price_cop,description,images,video_url,features,rating,reviews,tag,shipping,sort_order,stock_quantity").eq("is_active",true).order("sort_order");
@@ -150,5 +151,5 @@
   const {data,error}=await client.functions.invoke("admin-products",{body,headers:{Authorization:"Bearer "+session.access_token}});
   if(error)throw error;if(data?.error)throw new Error(data.error);return data;
  }
- window.NovaShopDB={isConfigured:()=>configured&&!!client,client,getSession:async()=>client?(await client.auth.getSession()).data.session:null,createOrder,createBoldCheckout,verifyBoldPayment,syncCatalog,prefillCheckout,adminCall,loginWithIdentifier,getFavoriteIds,toggleFavorite};
+ window.NovaShopDB={isConfigured:()=>configured&&!!client,client,getSession:async()=>client?(await client.auth.getSession()).data.session:null,createOrder,createBoldCheckout,verifyBoldPayment,checkBoldConfigured,syncCatalog,prefillCheckout,adminCall,loginWithIdentifier,getFavoriteIds,toggleFavorite};
 })();
