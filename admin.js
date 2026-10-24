@@ -173,7 +173,7 @@ async function loadProducts(){
  try{
   const r=await call({action:"list"});products=r.products||[];renderProducts();
   if(["owner","admin","analyst"].includes(currentRole)){
-   try{const m=await call({action:"metrics"});metrics=m.metrics||null;renderMetrics(metrics);}
+   try{await loadAdminMetrics();}
    catch(e){status("Catálogo cargado, pero las métricas no están disponibles: "+(e.message||""),"error");}
   }else{metrics=null;renderMetrics(null);}
   if(!["owner","admin","catalog_manager","analyst"].includes(currentRole))status("Permiso insuficiente.","error");
@@ -288,6 +288,27 @@ async function saveOrderShipping(orderId,button){
  }catch(error){orderStatusNotice(error.message||"No pudimos guardar el seguimiento.","error");}
  finally{button.disabled=false;button.textContent="Guardar envío";}
 }
+
+function csvCell(value){
+ const text=String(value??"");
+ return '"'+text.replace(/"/g,'""')+'"';
+}
+function exportAdminOrdersCsv(){
+ if(!["owner","admin"].includes(currentRole)){orderStatusNotice("No tienes permiso para exportar pedidos.","error");return;}
+ if(!adminOrders.length){orderStatusNotice("No hay pedidos cargados para exportar.","error");return;}
+ const headers=["Pedido","Creado","Estado","Pago","Nombres","Apellidos","Correo","Teléfono","Dirección","Barrio","Ciudad","Departamento","Código postal","Referencia","Transportadora","Número de guía","Entrega estimada","Productos","Subtotal COP","Descuento COP","Total COP","Cupón","Método de pago"];
+ const rows=adminOrders.map(o=>[
+  o.order_number,o.created_at,orderStateLabel(o.status),paymentLabel(o.payment_status),o.customer_first_name,o.customer_last_name,o.customer_email,o.customer_phone,
+  o.address,o.neighborhood,o.city,o.department,o.postal_code,o.delivery_reference,o.shipping_carrier,o.tracking_number,o.estimated_delivery_date,
+  (o.order_items||[]).map(it=>(it.product_name||"Producto")+" x"+Number(it.quantity||0)).join(" | "),
+  Number(o.subtotal_cop||0),Number(o.discount_cop||0),Number(o.total_cop??(Number(o.subtotal_cop||0)-Number(o.discount_cop||0))),o.coupon_code,o.preferred_payment_method
+ ]);
+ const csv="\uFEFF"+[headers,...rows].map(row=>row.map(csvCell).join(",")).join("\r\n");
+ const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
+ const link=document.createElement("a");link.href=url;link.download="novashop-pedidos-"+new Date().toISOString().slice(0,10)+".csv";
+ document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
+ orderStatusNotice("CSV exportado con "+adminOrders.length+" pedidos cargados. Usa «Cargar más» para incluir más registros.","success");
+}
 async function updateOrderStatus(orderId,button){
  if(!["owner","admin"].includes(currentRole)){orderStatusNotice("No tienes permiso para actualizar pedidos.","error");return;}
  const select=document.querySelector('[data-order-status="'+CSS.escape(orderId)+'"]');
@@ -309,10 +330,49 @@ async function updateOrderStatus(orderId,button){
   orderStatusNotice(error.message||"No se pudo actualizar el pedido.","error");select.value=order.status;
  }finally{button.disabled=false;button.textContent="Guardar estado";}
 }
+function metricDateRange(){
+ const from=$("#adminMetricsStartDate")?.value||"",to=$("#adminMetricsEndDate")?.value||"";
+ if(from&&to&&from>to)throw new Error("La fecha inicial no puede ser posterior a la fecha final.");
+ return {
+  ...(from?{start_date:new Date(from+"T00:00:00").toISOString()}:{}),
+  ...(to?{end_date:new Date(to+"T23:59:59.999").toISOString()}: {})
+ };
+}
+async function loadAdminMetrics(){
+ if(!["owner","admin","analyst"].includes(currentRole))return;
+ const refresh=$("#refreshAdminMetrics");
+ if(refresh){refresh.disabled=true;refresh.textContent="Cargando…";}
+ try{
+  const result=await call({action:"metrics",...metricDateRange()});
+  metrics=result.metrics||null;renderMetrics(metrics);
+  if(metrics){
+   const p=metrics.periodStart&&metrics.periodEnd?" Período aplicado: "+new Date(metrics.periodStart).toLocaleDateString("es-CO")+" – "+new Date(metrics.periodEnd).toLocaleDateString("es-CO")+".":" Período: todos los registros.";
+   status("Métricas actualizadas."+p,"success");
+  }
+  return metrics;
+ }finally{if(refresh){refresh.disabled=false;refresh.textContent="Aplicar fechas";}}
+}
 function renderMetrics(m){
  const box=$("#adminMetrics");if(!box)return;
- if(!m){box.innerHTML='<div class="admin-metric"><span>Ventas confirmadas</span><strong>—</strong></div><div class="admin-metric"><span>Pedidos pagados</span><strong>—</strong></div><div class="admin-metric"><span>Unidades vendidas</span><strong>—</strong></div><div class="admin-metric"><span>Pedidos pendientes</span><strong>—</strong></div>';$("#adminInventoryMetrics").textContent="No se pudieron cargar las métricas.";$("#adminSalesMix").textContent="No se pudieron cargar las ventas.";return;}
- box.innerHTML='<div class="admin-metric"><span>Ventas confirmadas</span><strong>'+money(m.revenueCop)+'</strong></div><div class="admin-metric"><span>Pedidos pagados</span><strong>'+Number(m.paidOrders||0)+'</strong></div><div class="admin-metric"><span>Unidades vendidas</span><strong>'+Number(m.unitsSold||0)+'</strong></div><div class="admin-metric"><span>Pedidos pendientes</span><strong>'+Number(m.pendingOrders||0)+'</strong></div>';
+ if(!m){
+  box.innerHTML=[
+   ["Ingresos netos","—"],["Pedidos pagados","—"],["Unidades vendidas","—"],["Pedidos pendientes","—"],
+   ["Pedidos cancelados","—"],["Clientes recurrentes","—"],["Descuentos aplicados","—"]
+  ].map(([label,value])=>'<div class="admin-metric"><span>'+esc(label)+'</span><strong>'+value+'</strong></div>').join("");
+  $("#adminInventoryMetrics").textContent="No se pudieron cargar las métricas.";
+  $("#adminSalesMix").textContent="No se pudieron cargar las ventas.";
+  if($("#adminCategoryMix"))$("#adminCategoryMix").textContent="No se pudieron cargar las categorías.";
+  return;
+ }
+ box.innerHTML=[
+  ["Ingresos netos",money(m.revenueCop)],
+  ["Pedidos pagados",Number(m.paidOrders||0)],
+  ["Unidades vendidas",Number(m.unitsSold||0)],
+  ["Pedidos pendientes",Number(m.pendingOrders||0)],
+  ["Pedidos cancelados",Number(m.cancelledOrders||0)],
+  ["Clientes recurrentes",Number(m.repeatCustomers||0)],
+  ["Descuentos aplicados",money(m.discountsCop||0)]
+ ].map(([label,value])=>'<div class="admin-metric"><span>'+esc(label)+'</span><strong>'+value+'</strong></div>').join("");
  const inv=m.inventory||{};
  $("#adminInventoryMetrics").innerHTML=[
   ["Productos activos",inv.activeProducts||0],
@@ -342,6 +402,9 @@ function renderMetrics(m){
  }
  const mix=Array.isArray(m.salesMix)?m.salesMix:[];
  $("#adminSalesMix").innerHTML=mix.length?mix.map(p=>'<div class="admin-sales-row"><span class="name" title="'+esc(p.name)+'">'+esc(p.name)+'</span><div class="admin-sales-bar"><span style="width:'+Math.min(100,Math.max(0,Number(p.percentage)||0))+'%"></span></div><span class="admin-sales-pct">'+(Number(p.percentage)||0).toLocaleString("es-CO",{maximumFractionDigits:1})+'%</span></div>').join(""):'<p class="admin-help">Todavía no hay ventas con pago confirmado. Los pedidos pendientes por WhatsApp no cuentan como ventas pagadas.</p>';
+ const categories=Array.isArray(m.categoryMix)?m.categoryMix:[];
+ const categoryBox=$("#adminCategoryMix");
+ if(categoryBox)categoryBox.innerHTML=categories.length?categories.map(c=>'<div class="admin-category-row"><span class="name" title="'+esc(c.category)+'">'+esc(c.category)+'</span><div class="admin-category-bar"><span style="width:'+Math.min(100,Math.max(0,Number(c.percentage)||0))+'%"></span></div><span class="admin-sales-pct">'+(Number(c.percentage)||0).toLocaleString("es-CO",{maximumFractionDigits:1})+'%</span></div>').join(""):'<p class="admin-help">Todavía no hay ventas pagadas para agrupar por categoría.</p>';
 }
 function renderProducts(){
  const box=$("#adminProductList");if(!products.length){box.innerHTML='<p class="admin-help">No hay productos o tu cuenta no está autorizada. Inicia sesión y solicita el permiso de administrador al propietario de la tienda.</p>';return;}
@@ -472,8 +535,9 @@ async function init(){
  });
  $("#closeProductEditor")?.addEventListener("click",()=>closeProductEditor());
  $("#productEditorModal")?.addEventListener("click",event=>{if(event.target.id==="productEditorModal")closeProductEditor();});
- document.addEventListener("keydown",event=>{if(event.key==="Escape")closeProductEditor();});$("#resetAdminForm").addEventListener("click",resetForm);$("#refreshAdminProducts").addEventListener("click",loadProducts);$("#refreshAdminMetrics")?.addEventListener("click",loadProducts);
+ document.addEventListener("keydown",event=>{if(event.key==="Escape")closeProductEditor();});$("#resetAdminForm").addEventListener("click",resetForm);$("#refreshAdminProducts").addEventListener("click",loadProducts);$("#refreshAdminMetrics")?.addEventListener("click",()=>loadAdminMetrics().catch(e=>status(e.message||"No se pudieron cargar las métricas.","error")));
  $("#refreshAdminOrders")?.addEventListener("click",()=>loadAdminOrders(true));
+ $("#exportAdminOrders")?.addEventListener("click",exportAdminOrdersCsv);
  $("#refreshAdminCoupons")?.addEventListener("click",loadAdminCoupons);
  $("#adminCouponForm")?.addEventListener("submit",saveAdminCoupon);
  $("#resetAdminCoupon")?.addEventListener("click",()=>{const f=$("#adminCouponForm");f.reset();f.elements.id.value="";f.elements.minimum_subtotal_cop.value="0";f.elements.is_active.checked=true;couponNotice("Formulario listo para crear un nuevo cupón.");});
