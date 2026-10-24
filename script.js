@@ -168,7 +168,11 @@ function cleanField(value){
   return String(value||'').trim().replace(/\s+/g,' ');
 }
 
-function buildWhatsAppMessage(data, orderNumber=''){
+function buildWhatsAppMessage(data, orderInfo={}){
+  const order=typeof orderInfo==='string'?{order_number:orderInfo}:(orderInfo||{});
+  const orderNumber=order.order_number||'';
+  const discount=Math.max(0,Number(order.discount_cop)||0);
+  const finalTotal=Number.isFinite(Number(order.total_cop))&&order.total_cop!=null?Number(order.total_cop):Math.max(0,cartTotal()-discount);
   const lines=cart.map((i,index)=>[
     `${index+1}. ${i.name}`,
     `   Cantidad: ${i.qty}`,
@@ -202,6 +206,9 @@ function buildWhatsAppMessage(data, orderNumber=''){
     lines,
     '',
     `${I.package} *Subtotal:* ${money(cartTotal())}`,
+    order.coupon_code ? `🎟️ Cupón aplicado: ${order.coupon_code}` : null,
+    discount>0 ? `Descuento: -${money(discount)}` : null,
+    `*Total tras descuento:* ${money(finalTotal)}`,
     '',
     '━━━━━━━━━━━━━━━━━━━━',
     `${I.user} *DATOS DEL CLIENTE*`,
@@ -246,6 +253,7 @@ async function submitCheckoutForm(event){
     city:cleanField(raw.get('city')), department:cleanField(raw.get('department')),
     postalCode:cleanField(raw.get('postalCode')), reference:cleanField(raw.get('reference')),
     paymentMethod:cleanField(raw.get('paymentMethod')),
+    couponCode:cleanField(raw.get('couponCode')).toUpperCase(),
     latitude:cleanField(raw.get('latitude')),
     longitude:cleanField(raw.get('longitude'))
   };
@@ -269,7 +277,7 @@ async function submitCheckoutForm(event){
       return;
     }finally{if(button){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}}
   }
-  const text=buildWhatsAppMessage(data,savedOrder?.order_number||'');
+  const text=buildWhatsAppMessage(data,savedOrder||{});
   const url=`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
   closeCheckoutModal();
   if(whatsappTab) whatsappTab.location.href=url;
