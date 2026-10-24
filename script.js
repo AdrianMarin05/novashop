@@ -1,6 +1,7 @@
 let cart = JSON.parse(localStorage.getItem('novashop-cart') || '[]');
 const $ = (s) => document.querySelector(s);
 let favoriteIds = new Set((()=>{try{return JSON.parse(localStorage.getItem("novashop-favorites-v1")||"[]").map(Number);}catch(_){return [];}})());
+let liveReviewStats = new Map();
 function refreshFavoriteIds(){window.NovaShopDB?.getFavoriteIds?.().then(ids=>{favoriteIds=new Set(ids.map(Number));if($("#productGrid"))renderProducts();}).catch(err=>console.warn("Favoritos:",err));}
 async function toggleFavoriteFromButton(button){
  const id=Number(button.dataset.favorite);if(!id)return;
@@ -60,6 +61,29 @@ function renderCategories(){
   document.querySelectorAll('.category-card').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.cat==='Streaming'){location.href='streaming.html';return;}$('#categoryFilter').value=btn.dataset.cat;renderProducts();document.querySelector('#productos').scrollIntoView({behavior:'smooth'});}));
 }
 
+function renderLiveRating(productId){
+ const stats=liveReviewStats.get(Number(productId));
+ if(!stats||!stats.count)return "";
+ const filled=Math.max(0,Math.min(5,Math.round(stats.average)));
+ const stars="★".repeat(filled)+"☆".repeat(5-filled);
+ return '<div class="product-card-rating" aria-label="Calificación promedio '+stats.average.toFixed(1)+' de 5 estrellas, '+stats.count+' '+(stats.count===1?'reseña':'reseñas')+'"><span class="product-card-stars" aria-hidden="true">'+stars+'</span><strong>'+stats.average.toFixed(1)+'</strong><small>'+stats.count+' '+(stats.count===1?'reseña':'reseñas')+'</small></div>';
+}
+async function loadCatalogReviewStats(){
+ const client=window.NovaShopDB?.client;if(!client)return;
+ try{
+  const {data,error}=await client.from("product_reviews").select("product_id,rating").eq("is_approved",true).limit(1000);
+  if(error)throw error;
+  const aggregate=new Map();
+  (data||[]).forEach(row=>{
+   const id=Number(row.product_id),rating=Number(row.rating);
+   if(!Number.isInteger(id)||rating<1||rating>5)return;
+   const stats=aggregate.get(id)||{sum:0,count:0};
+   stats.sum+=rating;stats.count+=1;aggregate.set(id,stats);
+  });
+  liveReviewStats=new Map([...aggregate.entries()].map(([id,stats])=>[id,{average:stats.sum/stats.count,count:stats.count}]));
+  if($("#productGrid"))renderProducts();
+ }catch(error){console.warn("No se pudieron cargar las calificaciones reales del catálogo:",error.message);}
+}
 function renderProducts(){
   const query = $('#searchInput').value.trim().toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const cat = $('#categoryFilter').value;
@@ -79,7 +103,7 @@ function renderProducts(){
   $('#productGrid').innerHTML=list.map(p=>`<article class="product-card">
     <a class="product-link" href="producto.html?id=${p.id}" aria-label="Ver ${p.name}">
       <div class="product-media"><img src="${p.images[0]}" alt="${p.name}" loading="lazy">${p.category==='Streaming'?'':(p.oldPrice?'<span class="tag">OFERTA</span>':(p.tag?'<span class="tag">'+p.tag+'</span>':''))}</div>
-      <div class="product-body"><div class="category-label">${p.category}</div><div class="product-title">${p.name}</div>
+      <div class="product-body"><div class="category-label">${p.category}</div>${renderLiveRating(p.id)}<div class="product-title">${p.name}</div>
         <div class="price-row"><span class="price">${money(p.price)}</span>${p.oldPrice?`<span class="old-price">${money(p.oldPrice)}</span>`:''}</div>
       </div>
     </a>
@@ -308,7 +332,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('#categoryFilter').innerHTML='<option value="all">'+(streamingPage?'Todas las plataformas':'Todas las categorías')+'</option>'+pageCategories.map(c=>`<option>${c}</option>`).join('');
   if(streamingPage){ $('#categorias')?.setAttribute('hidden',''); const h=$('.product-heading h2'); if(h) h.textContent='Plataformas de Streaming'; const eye=$('.product-heading .eyebrow'); if(eye) eye.textContent='SERVICIOS DIGITALES'; }
   renderFeaturedProduct(); renderCategories(); renderProducts(); renderCart();
-  window.NovaShopDB?.syncCatalog?.(products).then(()=>{renderCategories();renderProducts();renderFeaturedProduct();}).catch(err=>console.warn('Catálogo Supabase:',err));
+  loadCatalogReviewStats();
+  window.NovaShopDB?.syncCatalog?.(products).then(()=>{renderCategories();renderProducts();renderFeaturedProduct();loadCatalogReviewStats();}).catch(err=>console.warn('Catálogo Supabase:',err));
   $('#categoryFilter').addEventListener('change',renderProducts); $('#sortSelect').addEventListener('change',renderProducts); $('#searchInput').addEventListener('input',renderProducts);
   $('#minPriceFilter')?.addEventListener('input',renderProducts);$('#maxPriceFilter')?.addEventListener('input',renderProducts);$('#hideSoldOut')?.addEventListener('change',renderProducts);$('#onlyOffers')?.addEventListener('change',renderProducts);
   refreshFavoriteIds();
