@@ -412,7 +412,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('#checkoutForm').addEventListener('submit',submitCheckoutForm);
   $('#checkoutClose').addEventListener('click',closeCheckoutModal);
   $('#checkoutModal').addEventListener('click',e=>{if(e.target.id==='checkoutModal') closeCheckoutModal();});
-  $('#newsletterForm').addEventListener('submit',e=>{e.preventDefault();toast('La suscripción por correo estará disponible próximamente. Tu correo no se ha guardado.');});
+  $('#newsletterForm')?.addEventListener('submit',e=>{e.preventDefault();toast('La suscripción por correo estará disponible próximamente. Tu correo no se ha guardado.');});
   if(window.location.hash==='#carrito') openCart();
   $('#infoModal').addEventListener('click',e=>{if(e.target.id==='infoModal') closeModal();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCheckoutModal(); closeModal(); if($('#cartDrawer').classList.contains('open')) closeCart();}});
