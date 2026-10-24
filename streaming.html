@@ -143,7 +143,7 @@
     <div class="cart-footer">
       <div class="subtotal"><span>Subtotal</span><strong id="cartSubtotal">$0</strong></div>
       <button class="btn btn-primary wide" id="whatsappCheckout">Continuar con mi pedido</button>
-      <small>Revisa tu pedido y continúa por WhatsApp. El costo de envío, el plazo y el pago se confirman contigo.</small>
+      <small>Elige pago en línea con Bold para tener envío gratis o contraentrega, con el flete pagado por anticipado a la transportadora.</small>
     </div>
   </aside>
 
@@ -157,7 +157,7 @@
       <div class="checkout-head">
         <span class="eyebrow">FINALIZAR PEDIDO</span>
         <h2 id="checkoutTitle">Completa tu pedido</h2>
-        <p>Completa tus datos y revisa el resumen. Por WhatsApp confirmaremos contigo la disponibilidad, el costo de envío, el plazo y la forma de pago antes de cerrar la compra.</p>
+        <p>Completa tus datos y elige cómo pagar. Con Bold el envío es gratis y en su pasarela podrás seleccionar uno de los medios habilitados. Con contraentrega pagarás el producto al recibirlo, pero el flete debe pagarse antes a la transportadora.</p>
       </div>
 
       <div class="checkout-account-hint">✨ ¿Quieres consultar tus compras más adelante? <a href="cuenta.html" target="_blank" rel="noopener">Crea una cuenta gratis</a>. También puedes comprar como invitado.</div>
@@ -229,15 +229,13 @@
           <label class="full">
             <span>Método de pago preferido *</span>
             <select name="paymentMethod" required>
-              <option value="">Selecciona una opción</option>
-              <option value="bold">Pago en línea con Bold</option>
-              <option>Contraentrega (si está disponible)</option>
-              <option>Transferencia bancaria</option>
-              <option>Nequi / Daviplata</option>
-              <option>Otro / por confirmar</option>
+              <option value="">Selecciona cómo quieres pagar</option>
+              <option value="bold">Pagar en línea con Bold · envío gratis</option>
+              <option value="cash_on_delivery">Contraentrega · flete prepagado</option>
             </select>
           </label>
         </div>
+        <p class="checkout-privacy" data-payment-policy>Con Bold puedes escoger entre los medios de pago habilitados por el comercio. Si eliges contraentrega, el flete no es gratis y debe pagarse por adelantado a la transportadora antes del despacho.</p>
 
         <label class="consent-row">
           <input name="consent" type="checkbox" required>
@@ -245,8 +243,8 @@
         </label>
 
         <div class="checkout-summary" id="checkoutSummary"></div>
-        <button class="btn btn-primary wide checkout-submit" type="submit">💬 Continuar a WhatsApp</button>
-        <p class="checkout-privacy">El pago en línea cubre el total de los productos mostrado. El costo y el plazo de envío se confirman por WhatsApp y podrían cobrarse aparte. No ingreses datos de tarjeta en este formulario.</p>
+        <button class="btn btn-primary wide checkout-submit" type="submit">Confirmar pedido</button>
+        <p class="checkout-privacy">Bold: envío gratis; el cliente elige entre los medios que Bold tenga habilitados para el comercio. Contraentrega: el producto se paga al recibirlo y el flete se paga por anticipado a la transportadora; su valor se cotiza según destino.</p>
       </form>
     </div>
   </div>
@@ -257,7 +255,7 @@
   <script src="supabase-client.js?v=27"></script><script src="auth-nav.js?v=16"></script>
   <script src="products.js?v=17"></script>
   <script src="bold-checkout.js?v=2"></script>
-  <script src="script.js?v=25"></script>
+  <script src="script.js?v=26"></script>
   <script src="storefront-enhancements.js?v=2"></script>
 </body>
 </html>
