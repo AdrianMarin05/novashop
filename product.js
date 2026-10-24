@@ -76,6 +76,54 @@ async function toggleCurrentProductFavorite(){
   refreshProductFavorite();showToast(productFavoriteIds.has(Number(currentProduct.id))?"Añadido a favoritos":"Quitado de favoritos");
  }catch(e){showToast(e.message||"No pudimos actualizar favoritos.");}
 }
+const reviewRatingCopy={1:"Mala",2:"Regular",3:"Buena",4:"Muy buena",5:"Excelente"};
+function drawReviewStars(preview=0){
+ const picker=$("#reviewStarPicker"),input=$("#productReviewForm [name=rating]"),label=$("#reviewRatingLabel");
+ if(!picker||!input)return;
+ const selected=Number(input.value)||0,display=Number(preview)||selected;
+ picker.querySelectorAll("[data-rating]").forEach(button=>{
+  const value=Number(button.dataset.rating);
+  button.classList.toggle("is-filled",value<=display);
+  button.classList.toggle("is-selected",value===selected);
+  button.setAttribute("aria-checked",String(value===selected));
+  button.tabIndex=value===selected||(!selected&&value===1)?0:-1;
+ });
+ if(label)label.textContent=display?display+" de 5 estrellas · "+reviewRatingCopy[display]:"Selecciona una calificación de 1 a 5 estrellas.";
+}
+function initReviewStarPicker(){
+ const picker=$("#reviewStarPicker"),input=$("#productReviewForm [name=rating]");
+ if(!picker||!input)return;
+ const buttons=[...picker.querySelectorAll("[data-rating]")];
+ buttons.forEach(button=>{
+  button.addEventListener("click",()=>{input.value=button.dataset.rating;drawReviewStars();});
+  button.addEventListener("pointerenter",()=>drawReviewStars(button.dataset.rating));
+ });
+ picker.addEventListener("pointerleave",()=>drawReviewStars());
+ picker.addEventListener("focusout",event=>{if(!picker.contains(event.relatedTarget))drawReviewStars();});
+ picker.addEventListener("keydown",event=>{
+  const current=Number(event.target?.dataset?.rating)||Number(input.value)||1;
+  let next=null;
+  if(event.key==="ArrowRight"||event.key==="ArrowUp")next=Math.min(5,current+1);
+  if(event.key==="ArrowLeft"||event.key==="ArrowDown")next=Math.max(1,current-1);
+  if(event.key==="Home")next=1;
+  if(event.key==="End")next=5;
+  if(next===null)return;
+  event.preventDefault();input.value=String(next);drawReviewStars();buttons[next-1]?.focus();
+ });
+ drawReviewStars();
+}
+function renderReviewStats(published,mean){
+ const box=$("#productReviewStats");if(!box)return;
+ if(!published.length){box.hidden=true;box.innerHTML="";return;}
+ const fullStars="★".repeat(Math.round(mean))+"☆".repeat(5-Math.round(mean));
+ const bars=[5,4,3,2,1].map(star=>{
+  const count=published.filter(review=>Number(review.rating)===star).length;
+  const percent=Math.round(count/published.length*100);
+  return '<div class="review-distribution-row"><span>'+star+' <span aria-hidden="true">★</span></span><div class="review-distribution-track"><span style="width:'+percent+'%"></span></div><b>'+count+'</b></div>';
+ }).join("");
+ box.innerHTML='<div class="review-score"><strong>'+mean.toFixed(1)+'</strong><div class="review-score-stars" aria-label="'+mean.toFixed(1)+' de 5 estrellas">'+fullStars+'</div><p>'+published.length+' '+(published.length===1?'opinión publicada':'opiniones publicadas')+'</p><small>Calificación de clientes</small></div><div class="review-distribution">'+bars+'</div>';
+ box.hidden=false;
+}
 function reviewHint(text,kind="info"){const el=$("#productReviewHint");if(!el)return;el.textContent=text;el.className="account-message "+kind;el.hidden=!text;}
 async function loadProductReviews(){
  const client=window.NovaShopDB?.client,box=$("#productReviewsList"),form=$("#productReviewForm"),summary=$("#productReviewSummary");
@@ -85,8 +133,12 @@ async function loadProductReviews(){
  let reviews=[];
  if(client){
   const {data,error}=await client.from("product_reviews").select("id,user_id,rating,title,body,is_approved,created_at").eq("product_id",Number(currentProduct.id)).order("created_at",{ascending:false}).limit(100);
-  if(error){box.innerHTML='<div class="favorites-empty">No pudimos cargar las reseñas. Inténtalo de nuevo más tarde.</div>';console.warn("Reseñas:",error.message);}
-  else reviews=data||[];
+  if(error){
+   box.innerHTML='<div class="favorites-empty"><h2>No pudimos cargar las reseñas</h2><p>Inténtalo de nuevo más tarde.</p></div>';
+   if(form)form.hidden=true;
+   reviewHint("No pudimos consultar las reseñas de este producto. Inténtalo de nuevo más tarde.","error");
+   console.warn("Reseñas:",error.message);return;
+  }else reviews=data||[];
  }
  const published=reviews.filter(r=>r.is_approved);
  const own=session?.user?reviews.find(r=>r.user_id===session.user.id):null;
@@ -99,6 +151,7 @@ async function loadProductReviews(){
   $("#productRatingStars").textContent=published.length?("★".repeat(Math.round(mean))+"☆".repeat(5-Math.round(mean))):"";
  }
  if(summary)summary.textContent=published.length?published.length+" reseñas publicadas · Promedio "+mean.toFixed(1)+" de 5 estrellas.":"Todavía no hay reseñas publicadas de este producto.";
+ renderReviewStats(published,mean);
  box.innerHTML=reviews.length?reviews.filter(r=>r.is_approved||(session?.user&&r.user_id===session.user.id)).map(r=>'<article class="product-review-card"><div class="product-review-card-head"><div><strong>'+escProduct(r.title||"Opinión de comprador")+'</strong><div class="product-review-meta">'+escProduct(r.user_id===session?.user?.id?"Tu reseña":"Comprador verificado")+' · '+escProduct(new Date(r.created_at).toLocaleDateString("es-CO"))+'</div></div><span class="product-review-stars">'+("★".repeat(Number(r.rating)||0))+("☆".repeat(5-(Number(r.rating)||0)))+'</span></div><p>'+escProduct(r.body)+'</p>'+(r.user_id===session?.user?.id&&!r.is_approved?'<small class="admin-help">Pendiente de revisión antes de publicarse.</small>':"")+'</article>').join(""):'<div class="favorites-empty"><h2>Tu opinión puede ser la primera</h2><p>Cuando haya reseñas aprobadas aparecerán aquí.</p></div>';
  if(!form)return;
  if(!session?.user){form.hidden=true;reviewHint("Inicia sesión con tu cuenta para escribir una reseña. Solo se aceptan reseñas de pedidos entregados.");return;}
@@ -117,7 +170,12 @@ async function loadProductReviews(){
 }
 async function submitProductReview(event){
  event.preventDefault();
- const form=event.currentTarget;if(!form.reportValidity())return;
+ const form=event.currentTarget;
+ if(!Number(form.elements.rating?.value)){
+  reviewHint("Selecciona una calificación de 1 a 5 estrellas antes de enviar tu reseña.","error");
+  $("#reviewStarPicker [data-rating='1']")?.focus();return;
+ }
+ if(!form.reportValidity())return;
  const session=await window.NovaShopDB?.getSession?.(),client=window.NovaShopDB?.client;
  if(!session?.user||!client){reviewHint("Inicia sesión para dejar una reseña.","error");return;}
  const raw=new FormData(form),button=form.querySelector('[type="submit"]');
@@ -125,7 +183,7 @@ async function submitProductReview(event){
  try{
   const {error}=await client.from("product_reviews").insert({product_id:Number(currentProduct.id),user_id:session.user.id,rating:Number(raw.get("rating")),title:cleanField(raw.get("title")),body:cleanField(raw.get("body"))});
   if(error){if(error.code==="23505")throw new Error("Ya enviaste una reseña para este producto.");throw error;}
-  form.reset();reviewHint("Gracias. Tu reseña quedó pendiente de revisión y se mostrará cuando sea aprobada.","success");await loadProductReviews();
+  form.reset();drawReviewStars();reviewHint("Gracias. Tu reseña quedó pendiente de revisión y se mostrará cuando sea aprobada.","success");await loadProductReviews();
  }catch(e){reviewHint(e.message||"No se pudo enviar la reseña. Verifica que el pedido esté entregado.","error");}
  finally{button.disabled=false;button.textContent="Enviar reseña";}
 }
@@ -280,11 +338,11 @@ function renderProduct() {
 
   $('#productCategory').textContent = currentProduct.category.toUpperCase();
   $('#productName').textContent = currentProduct.name;
-  const hasRatings = Number.isFinite(currentProduct.rating) && Number(currentProduct.reviews) > 0;
+  // Public ratings are calculated only from actual approved customer reviews.
   const ratingRow = document.querySelector('.rating-row');
-  if(ratingRow) ratingRow.hidden = !hasRatings;
-  $('#productRating').textContent = hasRatings ? Number(currentProduct.rating).toFixed(1) : '';
-  $('#productReviews').textContent = hasRatings ? `(${currentProduct.reviews} reseñas)` : '';
+  if(ratingRow) ratingRow.hidden = true;
+  $('#productRating').textContent = '';
+  $('#productReviews').textContent = '';
   $('#productPrice').textContent = money(currentProduct.price);
   $('#productOldPrice').textContent = currentProduct.oldPrice ? money(currentProduct.oldPrice) : '';
   $('#productDiscount').textContent = currentProduct.oldPrice ? currentProduct.tag : '';
@@ -293,8 +351,7 @@ function renderProduct() {
   $('#productShipping').textContent = currentProduct.shipping;
   $('#productTag').textContent = currentProduct.category === 'Streaming' ? 'SERVICIO DIGITAL' : currentProduct.tag;
 
-  const stars = '★'.repeat(Math.round(currentProduct.rating)) + '☆'.repeat(5 - Math.round(currentProduct.rating));
-  $('#productRatingStars').textContent = stars;
+  $('#productRatingStars').textContent = '';
 
   const mainImage=$('#productMainImage'),mainVideo=$('#productMainVideo');
   mainImage.hidden=false;mainImage.src=currentProduct.images?.[0]||'images/streaming-placeholder.svg';mainImage.alt=currentProduct.name;
@@ -334,6 +391,7 @@ $('#qtyPlus').addEventListener('click', () => {
 $('#addProductToCart').addEventListener('click', () => addCurrentProduct());
 $('#toggleProductFavorite')?.addEventListener('click',toggleCurrentProductFavorite);
 $('#productReviewForm')?.addEventListener('submit',submitProductReview);
+initReviewStarPicker();
 $('#buyNow').addEventListener('click', openProductCheckout);
 $('#productCheckoutClose').addEventListener('click', closeProductCheckout);
 $('#productCheckoutModal').addEventListener('click', (event) => {
