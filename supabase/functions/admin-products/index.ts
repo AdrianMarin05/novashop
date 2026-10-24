@@ -86,6 +86,85 @@ Deno.serve(async (req: Request) => {
 
     if (action === "whoami") return json({ok:true,isAdmin:true,userId:user.id,email:user.email || null,role},200,origin);
 
+    if (action === "list-coupons") {
+      if (!canManageUsers) return json({error:"Solo propietario y administrador pueden gestionar cupones."},403,origin);
+      const {data,error} = await admin.from("coupons").select("*").order("created_at",{ascending:false}).limit(200);
+      if (error) throw error;
+      return json({ok:true,coupons:data||[]},200,origin);
+    }
+
+    if (action === "save-coupon") {
+      if (!canManageUsers) return json({error:"Solo propietario y administrador pueden gestionar cupones."},403,origin);
+      const id = clean(body.id,50);
+      const code = clean(body.code,32).toUpperCase();
+      const description = clean(body.description,180);
+      const discountType = clean(body.discount_type,20);
+      const discountValue = Number(body.discount_value);
+      const minimum = Number(body.minimum_subtotal_cop||0);
+      const maxUses = body.max_uses==null || body.max_uses==="" ? null : Number(body.max_uses);
+      const startsAt = body.starts_at ? new Date(body.starts_at) : new Date();
+      const endsAt = body.ends_at ? new Date(body.ends_at) : null;
+      const isActive = body.is_active !== false;
+      if (!/^[A-Z0-9_-]{3,32}$/.test(code)) return json({error:"El código debe tener entre 3 y 32 caracteres: letras, números, guion o guion bajo."},400,origin);
+      if (!["percent","fixed"].includes(discountType) || !Number.isSafeInteger(discountValue) || discountValue<1 || (discountType==="percent"&&discountValue>100) || (discountType==="fixed"&&discountValue>100000000)) {
+        return json({error:"El descuento no es válido. Usa un porcentaje entre 1 y 100 o un valor fijo en pesos."},400,origin);
+      }
+      if (!Number.isSafeInteger(minimum)||minimum<0||minimum>100000000) return json({error:"El mínimo de compra no es válido."},400,origin);
+      if (maxUses!==null&&(!Number.isSafeInteger(maxUses)||maxUses<1||maxUses>100000000)) return json({error:"El límite de usos debe ser un entero positivo o quedar vacío."},400,origin);
+      if (Number.isNaN(startsAt.getTime())||(endsAt&&Number.isNaN(endsAt.getTime()))||(endsAt&&endsAt<=startsAt)) return json({error:"Revisa las fechas de inicio y vencimiento del cupón."},400,origin);
+      const payload = {code,description,discount_type:discountType,discount_value:discountValue,minimum_subtotal_cop:minimum,max_uses:maxUses,starts_at:startsAt.toISOString(),ends_at:endsAt?endsAt.toISOString():null,is_active:isActive,updated_at:new Date().toISOString()};
+      const query = id
+        ? admin.from("coupons").update(payload).eq("id",id).select("*").single()
+        : admin.from("coupons").insert(payload).select("*").single();
+      const {data,error}=await query;
+      if(error) {
+        if(error.code==="23505") return json({error:"Ya existe un cupón con ese código."},409,origin);
+        throw error;
+      }
+      return json({ok:true,coupon:data},200,origin);
+    }
+
+    if (action === "list-reviews") {
+      if (!canManageUsers) return json({error:"Solo propietario y administrador pueden moderar reseñas."},403,origin);
+      const {data,error}=await admin.from("product_reviews").select("id,product_id,user_id,rating,title,body,is_approved,created_at,products(name)").order("created_at",{ascending:false}).limit(200);
+      if(error) throw error;
+      const ids=[...new Set((data||[]).map((r:any)=>r.user_id))];
+      const {data:profiles,error:profileError}=ids.length
+        ? await admin.from("profiles").select("id,full_name,email").in("id",ids)
+        : {data:[],error:null};
+      if(profileError) throw profileError;
+      const map=new Map((profiles||[]).map((p:any)=>[p.id,p]));
+      return json({ok:true,reviews:(data||[]).map((r:any)=>({...r,customer_name:map.get(r.user_id)?.full_name||map.get(r.user_id)?.email||"Cliente"}))},200,origin);
+    }
+
+    if (action === "set-review-status") {
+      if (!canManageUsers) return json({error:"Solo propietario y administrador pueden moderar reseñas."},403,origin);
+      const id=clean(body.id,50);
+      if(!/^[0-9a-f-]{36}$/i.test(id))return json({error:"Identificador de reseña no válido."},400,origin);
+      const isApproved=body.is_approved===true;
+      const {data,error}=await admin.from("product_reviews").update({is_approved:isApproved,updated_at:new Date().toISOString()}).eq("id",id).select("id,is_approved").single();
+      if(error)throw error;
+      return json({ok:true,review:data},200,origin);
+    }
+
+    if (action === "update-order-shipping") {
+      if (!canManageUsers) return json({error:"Solo propietario y administrador pueden gestionar envíos."},403,origin);
+      const orderId=clean(body.order_id,50);
+      const carrier=clean(body.shipping_carrier,80);
+      const tracking=clean(body.tracking_number,100);
+      const eta=clean(body.estimated_delivery_date,10);
+      if(!/^[0-9a-f-]{36}$/i.test(orderId))return json({error:"Identificador de pedido no válido."},400,origin);
+      if(carrier.length>80||tracking.length>100||(eta&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(eta)))return json({error:"Revisa la transportadora, guía y fecha estimada."},400,origin);
+      const {data:updated,error}=await admin.from("orders").update({
+        shipping_carrier:carrier||null,
+        tracking_number:tracking||null,
+        estimated_delivery_date:eta||null,
+        updated_at:new Date().toISOString()
+      }).eq("id",orderId).select("id,order_number,shipping_carrier,tracking_number,estimated_delivery_date,updated_at").single();
+      if(error)throw error;
+      return json({ok:true,order:updated,message:"Datos de envío guardados."},200,origin);
+    }
+
     if (action === "list-orders") {
       if (!canManageUsers) return json({error:"Solo propietario y administrador pueden consultar pedidos."},403,origin);
       const allowedStatuses = new Set(["pending_payment","paid","preparing","shipped","delivered","cancelled","payment_failed","refunded"]);
@@ -96,7 +175,7 @@ Deno.serve(async (req: Request) => {
         return json({error:"Filtro de estado no válido."},400,origin);
       }
       let query = admin.from("orders").select(
-        "id,order_number,user_id,status,payment_status,currency,subtotal_cop,delivery_type,customer_first_name,customer_last_name,customer_email,customer_phone,address,neighborhood,city,department,postal_code,delivery_reference,preferred_payment_method,customer_note,created_at,updated_at,latitude,longitude,order_items(id,product_id,product_name,quantity,unit_price_cop,line_total_cop,delivery_type)"
+        "id,order_number,user_id,status,payment_status,payment_provider,payment_reference,currency,subtotal_cop,discount_cop,total_cop,coupon_code,delivery_type,customer_first_name,customer_last_name,customer_email,customer_phone,address,neighborhood,city,department,postal_code,delivery_reference,preferred_payment_method,customer_note,shipping_carrier,tracking_number,estimated_delivery_date,shipped_at,delivered_at,created_at,updated_at,latitude,longitude,order_items(id,product_id,product_name,quantity,unit_price_cop,line_total_cop,delivery_type)"
       ).order("created_at",{ascending:false}).range(offset,offset+limit-1);
       if (requestedStatus && requestedStatus !== "all") query = query.eq("status",requestedStatus);
       const {data,error} = await query;
@@ -113,13 +192,16 @@ Deno.serve(async (req: Request) => {
       if (!/^[0-9a-f-]{36}$/i.test(orderId)) return json({error:"Identificador de pedido no válido."},400,origin);
       if (!allowedStatuses.has(nextStatus)) return json({error:"Selecciona un estado válido."},400,origin);
       const {data:currentOrder,error:lookupError} = await admin.from("orders")
-        .select("id,status,payment_status,order_number").eq("id",orderId).maybeSingle();
+        .select("id,status,payment_status,order_number,shipped_at,delivered_at").eq("id",orderId).maybeSingle();
       if (lookupError) throw lookupError;
       if (!currentOrder) return json({error:"No encontramos ese pedido."},404,origin);
       if (nextStatus === "pending_payment" && ["approved","refunded"].includes(currentOrder.payment_status)) {
         return json({error:"Este pedido ya tiene un pago aprobado o reembolsado y no puede volver a pendiente de pago."},409,origin);
       }
-      const update:any = {status:nextStatus,updated_at:new Date().toISOString()};
+      const now=new Date().toISOString();
+      const update:any = {status:nextStatus,updated_at:now};
+      if (nextStatus==="shipped"&&!currentOrder.shipped_at) update.shipped_at=now;
+      if (nextStatus==="delivered"&&!currentOrder.delivered_at) update.delivered_at=now;
       if (["paid","preparing","shipped","delivered"].includes(nextStatus)) update.payment_status = "approved";
       else if (nextStatus === "payment_failed") update.payment_status = "rejected";
       else if (nextStatus === "refunded") update.payment_status = "refunded";
@@ -145,7 +227,7 @@ Deno.serve(async (req: Request) => {
       if (!ids.length) return json({ok:true,users:[]},200,origin);
       const [rolesResult,profilesResult,legacyResult] = await Promise.all([
         admin.from("store_user_roles").select("user_id,role,created_at").in("user_id",ids),
-        admin.from("profiles").select("id,full_name,username,phone").in("id",ids),
+        admin.from("profiles").select("id,full_name,username,phone,email,address,neighborhood,city,department,postal_code").in("id",ids),
         admin.from("store_admins").select("user_id").in("user_id",ids)
       ]);
       if (rolesResult.error) throw rolesResult.error;
