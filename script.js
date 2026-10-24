@@ -61,7 +61,7 @@ function renderCategories(){
 }
 
 function renderProducts(){
-  const query = $('#searchInput').value.trim().toLowerCase();
+  const query = $('#searchInput').value.trim().toLocaleLowerCase('es').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');
   const cat = $('#categoryFilter').value;
   const sort = $('#sortSelect').value;
   const streamingPage = document.body.dataset.page === 'streaming';
@@ -69,7 +69,7 @@ function renderProducts(){
   const maxValue=maxRaw==null||maxRaw===''?Infinity:Number(maxRaw);
   const hideSoldOut=!!$('#hideSoldOut')?.checked,onlyOffers=!!$('#onlyOffers')?.checked;
   let list = products.filter(p=>{
-    const searchText=[p.name,p.category,p.description,p.tag,...(Array.isArray(p.features)?p.features:[])].filter(Boolean).join(' ').toLocaleLowerCase('es');
+    const searchText=[p.name,p.category,p.description,p.tag,...(Array.isArray(p.features)?p.features:[])].filter(Boolean).join(' ').toLocaleLowerCase('es').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');
     return (streamingPage ? p.category==='Streaming' : p.category!=='Streaming')&&(cat==='all'||p.category===cat)&&searchText.includes(query)&&Number(p.price)>=minValue&&Number(p.price)<=maxValue&&(!hideSoldOut||p.stockQuantity==null||Number(p.stockQuantity)>0)&&(!onlyOffers||(Number(p.oldPrice)>Number(p.price)));
   });
   if(sort==='priceAsc') list.sort((a,b)=>a.price-b.price);
