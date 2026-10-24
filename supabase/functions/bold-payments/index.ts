@@ -101,13 +101,14 @@ Deno.serve(async (req: Request) => {
       const description = ("NovaShop pedido " + clean(order.order_number, 40)).slice(0, 120);
       const redirectionUrl = siteUrl + "/pago.html";
 
-      const { error: updateError } = await admin.from("orders").update({
+      const { data: payableOrder, error: updateError } = await admin.from("orders").update({
         payment_provider: "bold",
         payment_reference: orderReference,
         preferred_payment_method: "Pago en línea con Bold",
         updated_at: new Date().toISOString(),
-      }).eq("id", order.id).eq("status", "pending_payment");
+      }).eq("id", order.id).eq("status", "pending_payment").select("id").maybeSingle();
       if (updateError) throw updateError;
+      if (!payableOrder) return json({ error: "El pedido ya no está pendiente de pago. Actualiza la tienda y revisa su estado." }, 409);
 
       const customerData: Record<string, string> = {};
       const fullName = clean([order.customer_first_name, order.customer_last_name].filter(Boolean).join(" "), 100);
