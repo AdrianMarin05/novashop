@@ -13,8 +13,10 @@
   $('#heroSearchSubmit')?.addEventListener('click',()=>{headerSearch.value=heroSearch.value;fire(headerSearch,'input');scrollToCatalog();});
   if(chipBox){
    const options=[...category.options].filter(option=>option.value!=='all').map(option=>({value:option.value,label:option.textContent.trim()}));
+   const onlyStreaming=options.length===1&&options[0].value==='Streaming';
    const shortlist=options.slice(0,4);
-   chipBox.innerHTML='<button type="button" class="hero-category-chip" data-quick-category="all">Ver todo</button>'+shortlist.map(option=>'<button type="button" class="hero-category-chip" data-quick-category="'+option.value.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+option.label.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</button>').join('');
+   chipBox.hidden=onlyStreaming;
+   chipBox.innerHTML=onlyStreaming?'':'<button type="button" class="hero-category-chip" data-quick-category="all">Ver todo</button>'+shortlist.map(option=>'<button type="button" class="hero-category-chip" data-quick-category="'+option.value.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+option.label.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</button>').join('');
    chipBox.querySelectorAll('[data-quick-category]').forEach(button=>button.addEventListener('click',()=>{
     category.value=button.dataset.quickCategory;fire(category,'change');scrollToCatalog();
    }));
