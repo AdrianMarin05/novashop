@@ -143,6 +143,7 @@ Deno.serve(async (req: Request) => {
         .eq("id", orderId).maybeSingle();
       if (orderError) throw orderError;
       if (!order) return json({ error: "No encontramos el pedido asociado a esta transacción." }, 404);
+      if (order.payment_provider !== "bold") return json({ error: "Este pedido no tiene un intento de pago Bold registrado." }, 409);
       const localStatus = statusFromOrder(order);
       if (localStatus === "approved" || localStatus === "refunded" || localStatus === "cancelled") {
         return json({ ok: true, status: localStatus, order_number: order.order_number, message: localStatus === "approved" ? "El pedido figura con pago aprobado." : "El pedido está cerrado; consulta con NovaShop si necesitas ayuda." });
