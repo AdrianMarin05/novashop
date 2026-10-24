@@ -126,7 +126,7 @@ function renderReviewStats(published,mean){
 }
 function reviewHint(text,kind="info"){const el=$("#productReviewHint");if(!el)return;el.textContent=text;el.className="account-message "+kind;el.hidden=!text;}
 async function loadProductReviews(){
- const client=window.NovaShopDB?.client,box=$("#productReviewsList"),form=$("#productReviewForm"),summary=$("#productReviewSummary");
+ const client=window.NovaShopDB?.client,box=$("#productReviewsList"),form=$("#productReviewForm"),summary=$("#productReviewSummary"),authLinks=$("#productReviewAuthLinks");
  if(!box)return;
  let session=null;
  try{session=await window.NovaShopDB?.getSession?.();}catch(_){}
@@ -136,6 +136,7 @@ async function loadProductReviews(){
   if(error){
    box.innerHTML='<div class="favorites-empty"><h2>No pudimos cargar las reseñas</h2><p>Inténtalo de nuevo más tarde.</p></div>';
    if(form)form.hidden=true;
+   if(authLinks)authLinks.hidden=true;
    reviewHint("No pudimos consultar las reseñas de este producto. Inténtalo de nuevo más tarde.","error");
    console.warn("Reseñas:",error.message);return;
   }else reviews=data||[];
@@ -154,7 +155,8 @@ async function loadProductReviews(){
  renderReviewStats(published,mean);
  box.innerHTML=reviews.length?reviews.filter(r=>r.is_approved||(session?.user&&r.user_id===session.user.id)).map(r=>'<article class="product-review-card"><div class="product-review-card-head"><div><strong>'+escProduct(r.title||"Opinión de comprador")+'</strong><div class="product-review-meta">'+escProduct(r.user_id===session?.user?.id?"Tu reseña":"Comprador verificado")+' · '+escProduct(new Date(r.created_at).toLocaleDateString("es-CO"))+'</div></div><span class="product-review-stars">'+("★".repeat(Number(r.rating)||0))+("☆".repeat(5-(Number(r.rating)||0)))+'</span></div><p>'+escProduct(r.body)+'</p>'+(r.user_id===session?.user?.id&&!r.is_approved?'<small class="admin-help">Pendiente de revisión antes de publicarse.</small>':"")+'</article>').join(""):'<div class="favorites-empty"><h2>Tu opinión puede ser la primera</h2><p>Cuando haya reseñas aprobadas aparecerán aquí.</p></div>';
  if(!form)return;
- if(!session?.user){form.hidden=true;reviewHint("Inicia sesión con tu cuenta para escribir una reseña. Solo se aceptan reseñas de pedidos entregados.");return;}
+ if(!session?.user){form.hidden=true;if(authLinks)authLinks.hidden=false;reviewHint("Inicia sesión o crea una cuenta para valorar este producto. Solo se aceptan reseñas de compras entregadas.");return;}
+ if(authLinks)authLinks.hidden=true;
  if(own){form.hidden=true;reviewHint(own.is_approved?"Ya publicaste una reseña de este producto.":"Ya recibimos tu reseña; está pendiente de revisión.","success");return;}
  let eligible=false;
  try{
