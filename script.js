@@ -313,9 +313,9 @@ async function submitCheckoutForm(event){
 
 window.openModal=function(type){
   const content={
-    shipping:['Envíos','Los tiempos y costos de envío se confirman por WhatsApp según la ciudad de destino. Esta plantilla está preparada para que reemplaces esta información por tus condiciones reales.'],
-    returns:['Cambios y devoluciones','Personaliza esta sección con tus políticas reales de cambios, retracto, garantías y devoluciones antes de publicar.'],
-    privacy:['Privacidad','No almacenes datos de tarjeta o contraseñas en esta web. Si implementas pagos, envía al cliente a un proveedor de pagos externo y utiliza su página segura.']
+    shipping:['Envíos','El costo y el tiempo de entrega dependen del destino y de los productos. Consulta ambos datos por WhatsApp antes de confirmar tu pedido.'],
+    returns:['Cambios y devoluciones','Si tienes dudas sobre cambios, devoluciones o garantía, consulta por WhatsApp las condiciones aplicables al producto antes de comprar. Esto no limita los derechos que te reconoce la normativa vigente.'],
+    privacy:['Privacidad','Los datos que compartes se utilizan para gestionar tu cuenta y coordinar los pedidos. No ingreses números de tarjeta, contraseñas ni códigos de seguridad en esta página. Para consultas sobre tus datos, escríbenos a hola@novashop.co.']
   }[type];
   $('#modalContent').innerHTML=`<span class="eyebrow">INFORMACIÓN</span><h2>${content[0]}</h2><p>${content[1]}</p>`;
   $('#infoModal').classList.add('show'); $('#infoModal').setAttribute('aria-hidden','false');
@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('#checkoutForm').addEventListener('submit',submitCheckoutForm);
   $('#checkoutClose').addEventListener('click',closeCheckoutModal);
   $('#checkoutModal').addEventListener('click',e=>{if(e.target.id==='checkoutModal') closeCheckoutModal();});
-  $('#newsletterForm').addEventListener('submit',e=>{e.preventDefault();e.target.reset();toast('Gracias. Suscripción registrada en modo demo.');});
+  $('#newsletterForm').addEventListener('submit',e=>{e.preventDefault();toast('La suscripción por correo estará disponible próximamente. Tu correo no se ha guardado.');});
   if(window.location.hash==='#carrito') openCart();
   $('#infoModal').addEventListener('click',e=>{if(e.target.id==='infoModal') closeModal();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCheckoutModal(); closeModal(); if($('#cartDrawer').classList.contains('open')) closeCart();}});
