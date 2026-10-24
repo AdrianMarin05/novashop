@@ -326,6 +326,15 @@ async function submitProductCheckout(event) {
     showToast('Para productos físicos, completa dirección, barrio, ciudad y departamento.');
     return;
   }
+  if(useBold){
+    try{
+      const configured=await window.NovaShopDB?.checkBoldConfigured?.();
+      if(!configured){showToast('El pago en línea con Bold todavía está en configuración. Puedes elegir otra forma de pago o intentarlo cuando la tienda termine la configuración.');return;}
+    }catch(error){
+      showToast(error?.message||'No pudimos comprobar la configuración de Bold. Inténtalo de nuevo más tarde.');
+      return;
+    }
+  }
   // Pre-open WhatsApp only for the existing assisted checkout. Bold opens on a dedicated click.
   const whatsappTab=useBold?null:window.open('about:blank','_blank');
   let savedOrder=null;
