@@ -216,6 +216,80 @@ Deno.serve(async (req: Request) => {
       return json({ok:true,order:updated,message:"Estado del pedido actualizado."},200,origin);
     }
 
+    if (action === "update-user") {
+      if (!canManageUsers) return json({error:"Solo owner/admin pueden editar usuarios."},403,origin);
+      const targetId = clean(body.user_id,50);
+      if (!/^[0-9a-f-]{36}$/i.test(targetId)) return json({error:"Identificador de usuario no válido."},400,origin);
+      if (targetId === user.id) return json({error:"Edita tus propios datos desde Mi perfil para evitar cambios de acceso accidentales."},409,origin);
+      const [targetRoleResult,targetLegacyResult,targetAuthResult] = await Promise.all([
+        admin.from("store_user_roles").select("role").eq("user_id",targetId).maybeSingle(),
+        admin.from("store_admins").select("user_id").eq("user_id",targetId).maybeSingle(),
+        admin.auth.admin.getUserById(targetId)
+      ]);
+      if (targetRoleResult.error) throw targetRoleResult.error;
+      if (targetLegacyResult.error) throw targetLegacyResult.error;
+      if (targetAuthResult.error || !targetAuthResult.data?.user) return json({error:"La cuenta ya no existe en Supabase Authentication. Actualiza la lista."},404,origin);
+      const targetRole = targetRoleResult.data?.role || (targetLegacyResult.data ? "owner" : "customer");
+      if (targetRole === "owner") return json({error:"La cuenta propietaria está protegida."},409,origin);
+      if (targetRole === "admin" && !isOwner) return json({error:"Solo el propietario puede editar la cuenta de otro administrador."},403,origin);
+      const fullName = clean(body.full_name,100);
+      const email = clean(body.email,120).toLowerCase();
+      const username = clean(body.username,60);
+      const phone = clean(body.phone,30);
+      const address = clean(body.address,250);
+      const neighborhood = clean(body.neighborhood,120);
+      const city = clean(body.city,100);
+      const department = clean(body.department,100);
+      const postalCode = clean(body.postal_code,20);
+      if (!fullName) return json({error:"El nombre completo es obligatorio."},400,origin);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({error:"Introduce un correo electrónico válido."},400,origin);
+      if (username && !/^[a-zA-Z0-9._-]{3,60}$/.test(username)) return json({error:"El usuario debe tener entre 3 y 60 caracteres: letras, números, punto, guion o guion bajo."},400,origin);
+      const currentAuthUser = targetAuthResult.data.user;
+      const currentEmail = String(currentAuthUser.email || "").toLowerCase();
+      if (email !== currentEmail && !isOwner) return json({error:"Solo el propietario puede cambiar el correo de acceso."},403,origin);
+      const meta = {...(currentAuthUser.user_metadata || {}), full_name:fullName};
+      const authPatch:any = {user_metadata:meta};
+      if (email !== currentEmail) authPatch.email = email;
+      const {error:authUpdateError} = await admin.auth.admin.updateUserById(targetId,authPatch);
+      if (authUpdateError) {
+        const msg = String(authUpdateError.message || "").toLowerCase();
+        if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) return json({error:"Ese correo ya está asociado a otra cuenta."},409,origin);
+        throw authUpdateError;
+      }
+      const profilePayload = {id:targetId,full_name:fullName,email,username:username || null,phone,
+        address:address || null,neighborhood:neighborhood || null,city:city || null,
+        department:department || null,postal_code:postalCode || null,updated_at:new Date().toISOString()};
+      const {data:profile,error:profileError} = await admin.from("profiles")
+        .upsert(profilePayload,{onConflict:"id"}).select("id,full_name,email,username,phone,address,neighborhood,city,department,postal_code").single();
+      if (profileError) throw profileError;
+      return json({ok:true,user:{id:targetId,...profile,auth_email:email},message:"Datos del usuario actualizados."},200,origin);
+    }
+
+    if (action === "delete-user") {
+      if (!isOwner) return json({error:"Solo el propietario puede eliminar cuentas de usuario."},403,origin);
+      const targetId = clean(body.user_id,50);
+      if (!/^[0-9a-f-]{36}$/i.test(targetId)) return json({error:"Identificador de usuario no válido."},400,origin);
+      if (targetId === user.id) return json({error:"No puedes eliminar la cuenta con la que has iniciado sesión."},409,origin);
+      const [targetRoleResult,targetLegacyResult,targetAuthResult] = await Promise.all([
+        admin.from("store_user_roles").select("role").eq("user_id",targetId).maybeSingle(),
+        admin.from("store_admins").select("user_id").eq("user_id",targetId).maybeSingle(),
+        admin.auth.admin.getUserById(targetId)
+      ]);
+      if (targetRoleResult.error) throw targetRoleResult.error;
+      if (targetLegacyResult.error) throw targetLegacyResult.error;
+      if (targetAuthResult.error || !targetAuthResult.data?.user) return json({error:"La cuenta ya no existe en Supabase Authentication. Actualiza la lista; si solo borraste el perfil, la cuenta de acceso sigue activa."},404,origin);
+      const targetRole = targetRoleResult.data?.role || (targetLegacyResult.data ? "owner" : "customer");
+      if (targetRole === "owner") return json({error:"La cuenta propietaria está protegida y no se puede eliminar desde este panel."},409,origin);
+      const {error:deleteError} = await admin.auth.admin.deleteUser(targetId,false);
+      if (deleteError) {
+        const msg = String(deleteError.message || "").toLowerCase();
+        if (msg.includes("storage") || msg.includes("object")) return json({error:"No se pudo eliminar la cuenta porque todavía es propietaria de archivos en Supabase Storage. Reasigna o elimina esos archivos y vuelve a intentarlo."},409,origin);
+        throw deleteError;
+      }
+      return json({ok:true,user_id:targetId,removed_email:targetAuthResult.data.user.email || null,
+        message:"Cuenta eliminada de Supabase Authentication. El perfil, los roles, los favoritos y las reseñas asociados se eliminan por sus relaciones; los pedidos históricos se conservan sin vincularlos a esta cuenta."},200,origin);
+    }
+
     if (action === "list-users") {
       if (!canManageUsers) return json({error:"Solo owner/admin pueden administrar usuarios y roles."},403,origin);
       const allUsers:any[] = [];
@@ -255,7 +329,7 @@ Deno.serve(async (req: Request) => {
       const users = allUsers.map((u:any)=>{
         const p:any = profileMap.get(u.id) || {};
         const stats:any=orderMap.get(u.id)||{order_count:0,paid_orders:0,lifetime_spend_cop:0};
-        return {id:u.id,email:u.email || p.email || null,phone:u.phone || p.phone || null,
+        return {id:u.id,email:u.email || p.email || null,phone:p.phone || u.phone || null,
           full_name:p.full_name || u.user_metadata?.full_name || "",
           username:p.username || "",address:p.address || "",neighborhood:p.neighborhood || "",
           city:p.city || "",department:p.department || "",postal_code:p.postal_code || "",
