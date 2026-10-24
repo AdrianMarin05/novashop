@@ -256,8 +256,9 @@ Deno.serve(async (req: Request) => {
         if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) return json({error:"Ese correo ya está asociado a otra cuenta."},409,origin);
         throw authUpdateError;
       }
+      const deliveryReference = clean(body.delivery_reference,220);
       const profilePayload = {id:targetId,full_name:fullName,email,username:username || null,phone,
-        address:address || null,neighborhood:neighborhood || null,city:city || null,
+        address:address || null,delivery_reference:deliveryReference || null,neighborhood:neighborhood || null,city:city || null,
         department:department || null,postal_code:postalCode || null,updated_at:new Date().toISOString()};
       const {data:profile,error:profileError} = await admin.from("profiles")
         .upsert(profilePayload,{onConflict:"id"}).select("id,full_name,email,username,phone,address,neighborhood,city,department,postal_code").single();
@@ -304,7 +305,7 @@ Deno.serve(async (req: Request) => {
       if (!ids.length) return json({ok:true,users:[]},200,origin);
       const [rolesResult,profilesResult,legacyResult,ordersResult] = await Promise.all([
         admin.from("store_user_roles").select("user_id,role,created_at").in("user_id",ids),
-        admin.from("profiles").select("id,full_name,username,phone,email,address,neighborhood,city,department,postal_code").in("id",ids),
+        admin.from("profiles").select("id,full_name,username,phone,email,address,neighborhood,city,department,postal_code,delivery_reference,latitude,longitude").in("id",ids),
         admin.from("store_admins").select("user_id").in("user_id",ids),
         admin.from("orders").select("user_id,status,payment_status,subtotal_cop,discount_cop,total_cop").in("user_id",ids).limit(50000)
       ]);
@@ -333,6 +334,7 @@ Deno.serve(async (req: Request) => {
           full_name:p.full_name || u.user_metadata?.full_name || "",
           username:p.username || "",address:p.address || "",neighborhood:p.neighborhood || "",
           city:p.city || "",department:p.department || "",postal_code:p.postal_code || "",
+          delivery_reference:p.delivery_reference || "",latitude:p.latitude ?? null,longitude:p.longitude ?? null,
           order_count:stats.order_count,paid_orders:stats.paid_orders,lifetime_spend_cop:stats.lifetime_spend_cop,
           role:roleMap.get(u.id) || (legacy.has(u.id)?"owner":"customer"),
           created_at:u.created_at,last_sign_in_at:u.last_sign_in_at || null,
