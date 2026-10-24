@@ -89,7 +89,7 @@ function renderAdminUsers(){
  }));
  box.querySelectorAll("[data-password-reset-form]").forEach(form=>form.addEventListener("submit",event=>setUserPassword(event,form)));
 }
-async function saveAdminUserProfile(event,form){
+let lastAdminUsersFocusSync=0;\nfunction syncAdminUsersWhenFocused(){\n if(!["owner","admin"].includes(currentRole)||document.visibilityState!=="visible")return;\n const now=Date.now();if(now-lastAdminUsersFocusSync<5000)return;lastAdminUsersFocusSync=now;loadAdminUsers();\n}\nasync function saveAdminUserProfile(event,form){
  event.preventDefault();if(!form.reportValidity())return;
  const userId=form.dataset.userEditForm;
  const button=form.querySelector('[type="submit"]');
@@ -101,7 +101,7 @@ async function saveAdminUserProfile(event,form){
   city:String(data.get("city")||"").trim(),department:String(data.get("department")||"").trim(),
   postal_code:String(data.get("postal_code")||"").trim()};
  button.disabled=true;button.textContent="Guardando…";
- try{const result=await call(payload);userStatus(result.message||"Datos del usuario actualizados.","success");await loadAdminUsers();}
+ try{const result=await call(payload);await loadAdminUsers();userStatus(result.message||"Datos del usuario actualizados.","success");}
  catch(error){userStatus(error.message||"No se pudieron guardar los datos del usuario.","error");}
  finally{button.disabled=false;button.textContent="Guardar datos del usuario";}
 }
@@ -113,7 +113,7 @@ async function deleteAdminUser(userId){
  if(!confirmed)return;
  const button=$('[data-user-delete="'+CSS.escape(userId)+'"]');
  if(button){button.disabled=true;button.textContent="Eliminando…";}
- try{const result=await call({action:"delete-user",user_id:userId});userStatus(result.message||"Cuenta eliminada correctamente.","success");await loadAdminUsers();}
+ try{const result=await call({action:"delete-user",user_id:userId});await loadAdminUsers();userStatus(result.message||"Cuenta eliminada correctamente.","success");}
  catch(error){userStatus(error.message||"No se pudo eliminar la cuenta.","error");if(button){button.disabled=false;button.innerHTML='<span aria-hidden="true">×</span> Eliminar cuenta';}}
 }
 
@@ -138,7 +138,7 @@ async function setUserPassword(event,form){
 async function saveUserRole(userId){
  const select=$('[data-role-select="'+CSS.escape(userId)+'"]');if(!select)return;
  const button=$('[data-role-save="'+CSS.escape(userId)+'"]');if(button){button.disabled=true;button.textContent="Guardando…";}
- try{await call({action:"set-role",user_id:userId,role:select.value});userStatus("Rol actualizado correctamente.","success");await loadAdminUsers();}
+ try{await call({action:"set-role",user_id:userId,role:select.value});await loadAdminUsers();userStatus("Rol actualizado correctamente.","success");}
  catch(e){userStatus(e.message||"No se pudo cambiar el rol.","error");}
  finally{if(button){button.disabled=false;button.textContent="Guardar rol";}}
 }
@@ -606,7 +606,7 @@ async function init(){
  $("#adminOrderStatusFilter")?.addEventListener("change",()=>loadAdminOrders(true));
  $("#adminOrderSearch")?.addEventListener("input",renderAdminOrders);
  $("#loadMoreOrders")?.addEventListener("click",()=>loadAdminOrders(false));
- $("#adminInviteForm")?.addEventListener("submit",inviteUser);$("#refreshAdminUsers")?.addEventListener("click",loadAdminUsers);$("#adminUserSearch")?.addEventListener("input",renderAdminUsers);$("#adminUserRoleFilter")?.addEventListener("change",renderAdminUsers);
+ $("#adminInviteForm")?.addEventListener("submit",inviteUser);$("#refreshAdminUsers")?.addEventListener("click",loadAdminUsers);window.addEventListener("focus",syncAdminUsersWhenFocused);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syncAdminUsersWhenFocused();});$("#adminUserSearch")?.addEventListener("input",renderAdminUsers);$("#adminUserRoleFilter")?.addEventListener("change",renderAdminUsers);
  if(!db?.isConfigured?.()){status("Supabase no está conectado.","error");return;}
  const {data}=await db.client.auth.getSession();
  if(!data.session){status("Inicia sesión con una cuenta autorizada para administrar NovaShop.","error");return;}
