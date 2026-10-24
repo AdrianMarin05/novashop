@@ -327,10 +327,33 @@ function renderAdminOrders(){
    const email=order.customer_email?'<div>Correo: <a href="mailto:'+esc(order.customer_email)+'">'+esc(order.customer_email)+'</a></div>':"";
    const phone=order.customer_phone?'<div>Teléfono: <a href="tel:'+esc(String(order.customer_phone).replace(/[^+\d]/g,""))+'">'+esc(order.customer_phone)+'</a> '+(wa?'<a target="_blank" rel="noopener noreferrer" href="'+wa+'">WhatsApp ↗</a>':"")+'</div>':"";
    const subtotal=Number(order.subtotal_cop)||0,discount=Number(order.discount_cop)||0,total=Number(order.total_cop??(subtotal-discount));
+   const shippingSummary=order.payment_provider==="bold"
+    ?'<div class="admin-order-meta">Envío: <strong>Gratis con pago Bold</strong></div>'
+    :(order.delivery_type!=="digital"?'<div class="admin-order-meta">Flete transportadora: <strong>'+(order.shipping_fee_cop==null?'Pendiente de cotizar':money(order.shipping_fee_cop))+'</strong> · '+(order.shipping_payment_status==="approved"?'Pagado por anticipado':'Pendiente de pago previo')+'</div>':"");
    const priceInfo=(order.coupon_code?'<div class="admin-order-meta">Cupón: <strong>'+esc(order.coupon_code)+'</strong> · Descuento: '+money(discount)+'</div>':(discount>0?'<div class="admin-order-meta">Descuento: '+money(discount)+'</div>':""));
    const isShippable=order.delivery_type!=="digital";
-   const shipping=isShippable?'<div class="admin-shipping-editor" data-shipping-editor="'+esc(order.id)+'"><label>Transportadora<input type="text" maxlength="80" data-shipping-carrier="'+esc(order.id)+'" value="'+esc(order.shipping_carrier||"")+'" placeholder="Ej. Inter Rapidísimo"></label><label>Número de guía<input type="text" maxlength="100" data-tracking-number="'+esc(order.id)+'" value="'+esc(order.tracking_number||"")+'" placeholder="Guía de envío"></label><label>Entrega estimada<input type="date" data-estimated-date="'+esc(order.id)+'" value="'+esc(String(order.estimated_delivery_date||"").slice(0,10))+'"></label><div class="admin-shipping-current">'+(order.tracking_number?'Guía guardada: <strong>'+esc(order.tracking_number)+'</strong> · ':'')+(order.shipping_carrier?'Transportadora: '+esc(order.shipping_carrier)+' · ':'')+(order.estimated_delivery_date?'Fecha estimada: '+esc(String(order.estimated_delivery_date).slice(0,10)):'')+'</div><div class="admin-shipping-actions"><button type="button" data-shipping-save="'+esc(order.id)+'">Guardar envío</button>'+(wa&&order.tracking_number?'<a class="admin-order-open-link admin-shipping-notify" target="_blank" rel="noopener noreferrer" href="'+whatsappShippingHref(order)+'">Avisar por WhatsApp ↗</a>':"")+'</div></div>':'<div class="admin-shipping-current">Este pedido es digital; no requiere seguimiento de transportadora.</div>';
-   return '<article class="admin-order-card" data-order-card="'+esc(order.id)+'"><div class="admin-order-top"><div><div class="admin-order-id">'+esc(order.order_number||order.id)+'</div><div class="admin-order-date">'+esc(formatDate(order.created_at))+'</div></div><div class="admin-order-badges">'+badges+'</div></div><div class="admin-order-grid"><section><div class="admin-order-label">Datos del comprador</div><div class="admin-order-customer">'+esc(customer)+'</div><div class="admin-order-meta">'+email+phone+(address?'<div>Dirección: '+esc(address)+'</div>':'<div>Dirección: No indicada</div>')+(order.delivery_reference?'<div>Referencia: '+esc(order.delivery_reference)+'</div>':"")+(order.preferred_payment_method?'<div>Pago elegido: '+esc(order.preferred_payment_method)+'</div>':"")+(coords?'<div>'+coords+'</div>':"")+(order.customer_note?'<div>Nota: '+esc(order.customer_note)+'</div>':"")+'</div></section><section><div class="admin-order-label">Resumen del pedido · '+esc(order.delivery_type||"")+'</div><ul class="admin-order-lines">'+(itemRows||'<li>Detalle de productos no disponible.</li>')+'</ul>'+priceInfo+'<div class="admin-order-total"><span>'+(discount?'Total con descuento':'Total del pedido')+'</span><strong>'+money(total)+'</strong></div></section></div><div class="admin-order-foot"><div class="admin-order-meta">Última actualización: '+esc(formatDate(order.updated_at||order.created_at))+'</div><div class="admin-order-update"><label>Actualizar estado<select data-order-status="'+esc(order.id)+'">'+options+'</select></label><button type="button" data-order-update="'+esc(order.id)+'">Guardar estado</button></div></div>'+shipping+'</article>';
+   const isBoldOrder=order.payment_provider==="bold";
+   const shippingFeeValue=order.shipping_fee_cop==null?"":String(Number(order.shipping_fee_cop));
+   const shippingStatusText=isBoldOrder
+    ?"Envío gratis: pago en línea con Bold."
+    :(order.shipping_fee_cop==null
+      ?"Flete pendiente de cotizar. No despachar hasta registrar el pago anticipado."
+      :(order.shipping_payment_status==="approved"
+        ?"Flete "+money(order.shipping_fee_cop)+" pagado a la transportadora."
+        :"Flete "+money(order.shipping_fee_cop)+" cotizado; falta su pago anticipado."));
+   const shipping=isShippable?`<div class="admin-shipping-editor" data-shipping-editor="${esc(order.id)}">
+     <div class="admin-shipping-freight">
+       <label>Flete de la transportadora (COP)<input type="number" min="1" max="100000000" step="1" data-shipping-fee="${esc(order.id)}" value="${esc(shippingFeeValue)}" placeholder="${isBoldOrder?"0 · gratis con Bold":"Cotizar flete"}" ${isBoldOrder?"readonly":""}></label>
+       <label class="admin-shipping-paid-control"><span>Verificación del flete</span><span><input type="checkbox" data-shipping-paid="${esc(order.id)}" ${order.shipping_payment_status==="approved"?"checked":""} ${isBoldOrder?"disabled":""}> Flete pagado por anticipado</span></label>
+     </div>
+     <div class="admin-shipping-current">${shippingStatusText}</div>
+     <label>Transportadora<input type="text" maxlength="80" data-shipping-carrier="${esc(order.id)}" value="${esc(order.shipping_carrier||"")}" placeholder="Ej. Inter Rapidísimo"></label>
+     <label>Número de guía<input type="text" maxlength="100" data-tracking-number="${esc(order.id)}" value="${esc(order.tracking_number||"")}" placeholder="Guía de envío"></label>
+     <label>Entrega estimada<input type="date" data-estimated-date="${esc(order.id)}" value="${esc(String(order.estimated_delivery_date||"").slice(0,10))}"></label>
+     <div class="admin-shipping-current">${order.tracking_number?'Guía guardada: <strong>'+esc(order.tracking_number)+'</strong> · ':''}${order.shipping_carrier?'Transportadora: '+esc(order.shipping_carrier)+' · ':''}${order.estimated_delivery_date?'Fecha estimada: '+esc(String(order.estimated_delivery_date).slice(0,10)):''}</div>
+     <div class="admin-shipping-actions"><button type="button" data-shipping-save="${esc(order.id)}">Guardar flete y envío</button>${(wa&&order.tracking_number)?'<a class="admin-order-open-link admin-shipping-notify" target="_blank" rel="noopener noreferrer" href="'+whatsappShippingHref(order)+'">Avisar por WhatsApp ↗</a>':""}</div>
+   </div>`:'<div class="admin-shipping-current">Este pedido es digital; no requiere seguimiento de transportadora.</div>';
+   return '<article class="admin-order-card" data-order-card="'+esc(order.id)+'"><div class="admin-order-top"><div><div class="admin-order-id">'+esc(order.order_number||order.id)+'</div><div class="admin-order-date">'+esc(formatDate(order.created_at))+'</div></div><div class="admin-order-badges">'+badges+'</div></div><div class="admin-order-grid"><section><div class="admin-order-label">Datos del comprador</div><div class="admin-order-customer">'+esc(customer)+'</div><div class="admin-order-meta">'+email+phone+(address?'<div>Dirección: '+esc(address)+'</div>':'<div>Dirección: No indicada</div>')+(order.delivery_reference?'<div>Referencia: '+esc(order.delivery_reference)+'</div>':"")+(order.preferred_payment_method?'<div>Pago elegido: '+esc(order.preferred_payment_method)+'</div>':"")+(coords?'<div>'+coords+'</div>':"")+(order.customer_note?'<div>Nota: '+esc(order.customer_note)+'</div>':"")+'</div></section><section><div class="admin-order-label">Resumen del pedido · '+esc(order.delivery_type||"")+'</div><ul class="admin-order-lines">'+(itemRows||'<li>Detalle de productos no disponible.</li>')+'</ul>'+priceInfo+shippingSummary+'<div class="admin-order-total"><span>'+(discount?'Total con descuento':'Total del pedido')+'</span><strong>'+money(total)+'</strong></div></section></div><div class="admin-order-foot"><div class="admin-order-meta">Última actualización: '+esc(formatDate(order.updated_at||order.created_at))+'</div><div class="admin-order-update"><label>Actualizar estado<select data-order-status="'+esc(order.id)+'">'+options+'</select></label><button type="button" data-order-update="'+esc(order.id)+'">Guardar estado</button></div></div>'+shipping+'</article>';
   }).join("");
  }
  const more=$("#loadMoreOrders");if(more){more.hidden=!ordersHasMore;more.disabled=ordersLoading;}
@@ -347,17 +370,21 @@ function whatsappShippingHref(order){
 }
 async function saveOrderShipping(orderId,button){
  if(!["owner","admin"].includes(currentRole)){orderStatusNotice("No tienes permiso para gestionar envíos.","error");return;}
- const id=CSS.escape(orderId),carrier=document.querySelector('input[data-shipping-carrier="'+id+'"]'),tracking=document.querySelector('input[data-tracking-number="'+id+'"]'),date=document.querySelector('input[data-estimated-date="'+id+'"]');
- if(!carrier||!tracking||!date)return;
+ const id=CSS.escape(orderId);
+ const carrier=document.querySelector('input[data-shipping-carrier="'+id+'"]');
+ const tracking=document.querySelector('input[data-tracking-number="'+id+'"]');
+ const date=document.querySelector('input[data-estimated-date="'+id+'"]');
+ const fee=document.querySelector('input[data-shipping-fee="'+id+'"]');
+ const paid=document.querySelector('input[data-shipping-paid="'+id+'"]');
+ if(!carrier||!tracking||!date||!fee||!paid)return;
  button.disabled=true;button.textContent="Guardando…";
  try{
-  const result=await call({action:"update-order-shipping",order_id:orderId,shipping_carrier:carrier.value.trim(),tracking_number:tracking.value.trim(),estimated_delivery_date:date.value||null});
+  const result=await call({action:"update-order-shipping",order_id:orderId,shipping_carrier:carrier.value.trim(),tracking_number:tracking.value.trim(),estimated_delivery_date:date.value||null,shipping_fee_cop:fee.value.trim()===""?null:Number(fee.value),shipping_paid:paid.checked});
   const order=adminOrders.find(x=>x.id===orderId);if(order&&result.order)Object.assign(order,result.order);
-  orderStatusNotice("Datos de envío guardados. Puedes avisar al cliente por WhatsApp.","success");renderAdminOrders();
+  orderStatusNotice(result.message||"Datos de envío guardados.","success");renderAdminOrders();
  }catch(error){orderStatusNotice(error.message||"No pudimos guardar el seguimiento.","error");}
- finally{button.disabled=false;button.textContent="Guardar envío";}
+ finally{button.disabled=false;button.textContent="Guardar flete y envío";}
 }
-
 function csvCell(value){
  const text=String(value??"");
  return '"'+text.replace(/"/g,'""')+'"';
@@ -365,10 +392,10 @@ function csvCell(value){
 function exportAdminOrdersCsv(){
  if(!["owner","admin"].includes(currentRole)){orderStatusNotice("No tienes permiso para exportar pedidos.","error");return;}
  if(!adminOrders.length){orderStatusNotice("No hay pedidos cargados para exportar.","error");return;}
- const headers=["Pedido","Creado","Estado","Pago","Nombres","Apellidos","Correo","Teléfono","Dirección","Barrio","Ciudad","Departamento","Código postal","Referencia","Transportadora","Número de guía","Entrega estimada","Productos","Subtotal COP","Descuento COP","Total COP","Cupón","Método de pago"];
+ const headers=["Pedido","Creado","Estado","Pago producto","Nombres","Apellidos","Correo","Teléfono","Dirección","Barrio","Ciudad","Departamento","Código postal","Referencia","Flete COP","Estado del flete","Transportadora","Número de guía","Entrega estimada","Productos","Subtotal COP","Descuento COP","Total productos COP","Cupón","Método de pago"];
  const rows=adminOrders.map(o=>[
   o.order_number,o.created_at,orderStateLabel(o.status),paymentLabel(o.payment_status),o.customer_first_name,o.customer_last_name,o.customer_email,o.customer_phone,
-  o.address,o.neighborhood,o.city,o.department,o.postal_code,o.delivery_reference,o.shipping_carrier,o.tracking_number,o.estimated_delivery_date,
+  o.address,o.neighborhood,o.city,o.department,o.postal_code,o.delivery_reference,o.shipping_fee_cop,o.shipping_payment_status,o.shipping_carrier,o.tracking_number,o.estimated_delivery_date,
   (o.order_items||[]).map(it=>(it.product_name||"Producto")+" x"+Number(it.quantity||0)).join(" | "),
   Number(o.subtotal_cop||0),Number(o.discount_cop||0),Number(o.total_cop??(Number(o.subtotal_cop||0)-Number(o.discount_cop||0))),o.coupon_code,o.preferred_payment_method
  ]);
