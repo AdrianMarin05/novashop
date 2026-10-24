@@ -62,7 +62,7 @@ Replace the example text with your own verified account UUID. Never give this ro
 
 ## Current payment status
 
-Orders are persisted in Supabase and start as `pending_payment`. The store currently continues to WhatsApp after creating the order. It does **not** yet create a Mercado Pago checkout or mark payments approved automatically. Confirm payment independently before fulfilling an order until a payment-provider webhook has been implemented and tested.
+NovaShop has a Bold custom checkout integration in place. Orders are created on the server and start as `pending_payment`. The shopper can select Bold in either the cart checkout or product checkout. The checkout signature is generated server-side; the return page queries Bold's transaction API and a separate Edge Function validates Bold webhook signatures and payment amounts before updating an order. The integration still requires the merchant's own Bold integration keys and webhook registration before it can accept real payments; it must be tested with Bold's test keys first. Do not dispatch orders solely because the customer returns to the store.
 
 
 ## Admin panel de productos
@@ -147,6 +147,13 @@ El panel administrativo está protegido por roles validados en el servidor. No g
 - **CRM y métricas:** el panel muestra dirección guardada, conteos de pedidos y gasto confirmado por cliente; incluye ingresos netos, descuentos, cancelaciones, compradores recurrentes, ventas por categoría y filtros por fecha. Los pedidos cargados se pueden exportar a CSV.
 - **Perfil y checkout:** perfil y checkout leen la información guardada; el checkout usa metadatos como respaldo para campos de perfil que aún estén vacíos.
 
-## Pago en línea: estado actual
+## Integración de Bold
 
-NovaShop **todavía no procesa pagos con tarjeta ni confirma automáticamente transferencias**. El flujo actual registra el pedido como pendiente y continúa a WhatsApp. Para activar pagos reales hace falta escoger un proveedor (por ejemplo, Mercado Pago o Wompi), disponer de sus credenciales de comercio y configurar la notificación/webhook segura que confirme pagos. No se deben publicar claves secretas ni marcar un pedido como pagado solo porque el cliente regresó al sitio.
+- `bold-payments`: prepara el checkout de Bold usando el total registrado en `orders`, genera la firma SHA-256 en el servidor y permite consultar el estado de la transacción.
+- `bold-webhook`: valida la cabecera `x-bold-signature` (HMAC-SHA256 sobre el cuerpo codificado en Base64) y comprueba referencia, moneda e importe antes de aplicar el estado recibido.
+- `bold-checkout.js` abre la pasarela desde el botón propio de NovaShop; `pago.html` consulta el estado en el servidor y no confía en `bold-tx-status` como prueba de pago.
+- Configura como secretos de Edge Functions `BOLD_API_KEY` (llave de identidad del botón de pagos) y `BOLD_SECRET_KEY` (llave secreta de ese mismo ambiente). Opcionalmente define `NOVASHOP_SITE_URL` con la URL pública completa del sitio.
+- Configura `BOLD_ENVIRONMENT=test` para la llave secreta de pruebas (el webhook de pruebas se firma con una clave vacía según Bold). En producción usa la pareja de llaves de producción y `BOLD_ENVIRONMENT=live`.
+- Registra en el panel de Bold el endpoint `https://fbcffmhcypsprvgdbtas.supabase.co/functions/v1/bold-webhook` como webhook de Botón de pagos. Prueba primero con el ambiente de pruebas y verifica una transacción antes de habilitar ventas reales.
+- El monto que se cobra en Bold corresponde al total de productos menos descuentos. El costo de envío todavía se confirma por WhatsApp y puede cobrarse aparte, tal como se indica en el checkout.
+- No guardes llaves privadas en GitHub ni en archivos públicos del frontend.
