@@ -73,11 +73,19 @@
  function localFavoriteIds(){try{const value=JSON.parse(localStorage.getItem(FAVORITES_KEY)||"[]");return Array.isArray(value)?value.map(Number).filter(Number.isFinite):[];}catch(_){return [];}}
  function saveLocalFavoriteIds(ids){try{localStorage.setItem(FAVORITES_KEY,JSON.stringify([...new Set(ids.map(Number).filter(Number.isFinite))]));}catch(_){}}
  async function getFavoriteIds(){
+  const localIds=localFavoriteIds();
   const {data:{session}}=client?await client.auth.getSession():{data:{session:null}};
-  if(!session?.user)return localFavoriteIds();
+  if(!session?.user)return localIds;
   const {data,error}=await client.from("customer_favorites").select("product_id").eq("user_id",session.user.id);
-  if(error){console.warn("No se pudieron sincronizar los favoritos; se usarán los guardados en este dispositivo.",error.message);return localFavoriteIds();}
-  const ids=(data||[]).map(row=>Number(row.product_id)).filter(Number.isFinite);
+  if(error){console.warn("No se pudieron sincronizar los favoritos; se usarán los guardados en este dispositivo.",error.message);return localIds;}
+  const merged=new Set((data||[]).map(row=>Number(row.product_id)).filter(Number.isFinite));
+  // Transfer guest favorites to the account once the customer signs in; keep existing cloud favorites.
+  for(const id of localIds){
+   if(merged.has(id))continue;
+   const {error:insertError}=await client.from("customer_favorites").insert({user_id:session.user.id,product_id:id});
+   if(!insertError||insertError.code==="23505")merged.add(id);
+  }
+  const ids=[...merged];
   saveLocalFavoriteIds(ids);return ids;
  }
  async function toggleFavorite(productId){
@@ -86,8 +94,14 @@
   if(session?.user){
    const {data:existing,error:readError}=await client.from("customer_favorites").select("product_id").eq("user_id",session.user.id).eq("product_id",id).maybeSingle();
    if(readError)throw readError;
-   if(existing){const {error}=await client.from("customer_favorites").delete().eq("user_id",session.user.id).eq("product_id",id);if(error)throw error;}
-   else{const {error}=await client.from("customer_favorites").insert({user_id:session.user.id,product_id:id});if(error)throw error;}
+   const local=localFavoriteIds();
+   if(existing){
+    const {error}=await client.from("customer_favorites").delete().eq("user_id",session.user.id).eq("product_id",id);if(error)throw error;
+    saveLocalFavoriteIds(local.filter(value=>value!==id));
+   }else{
+    const {error}=await client.from("customer_favorites").insert({user_id:session.user.id,product_id:id});if(error)throw error;
+    saveLocalFavoriteIds([...local,id]);
+   }
    return await getFavoriteIds();
   }
   const ids=localFavoriteIds(),exists=ids.includes(id),next=exists?ids.filter(x=>x!==id):[...ids,id];
