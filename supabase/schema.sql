@@ -396,3 +396,75 @@ on table public.profiles to authenticated;
 -- Explicit deny policy documents that staff-role assignments must only be changed by the trusted server.
 drop policy if exists "No direct access to store_user_roles" on public.store_user_roles;
 create policy "No direct access to store_user_roles" on public.store_user_roles for all to anon,authenticated using(false) with check(false);
+
+
+-- Track stock only once payment is confirmed, and restore it for cancellations before shipment.
+alter table public.orders
+  add column if not exists stock_committed boolean not null default false;
+
+create table if not exists public.order_stock_adjustments (
+  order_id uuid not null references public.orders(id) on delete cascade,
+  product_id integer not null references public.products(id),
+  quantity integer not null check (quantity > 0),
+  created_at timestamptz not null default now(),
+  primary key(order_id,product_id)
+);
+alter table public.order_stock_adjustments enable row level security;
+revoke all on public.order_stock_adjustments from public,anon,authenticated;
+grant all on public.order_stock_adjustments to service_role;
+
+create or replace function private.apply_order_stock()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  item record;
+  affected integer;
+  available integer;
+begin
+  if not old.stock_committed and new.status in ('paid','preparing','shipped','delivered') then
+    for item in
+      select oi.product_id, sum(oi.quantity)::integer as quantity
+      from public.order_items oi where oi.order_id=new.id
+      group by oi.product_id order by oi.product_id
+    loop
+      update public.products p set stock_quantity=p.stock_quantity-item.quantity,updated_at=now()
+      where p.id=item.product_id and p.stock_quantity is not null and p.stock_quantity>=item.quantity;
+      get diagnostics affected=row_count;
+      if affected=1 then
+        insert into public.order_stock_adjustments(order_id,product_id,quantity)
+        values(new.id,item.product_id,item.quantity)
+        on conflict(order_id,product_id) do update set quantity=excluded.quantity;
+      else
+        select p.stock_quantity into available from public.products p where p.id=item.product_id;
+        if available is not null then
+          raise exception 'NOVASHOP_STOCK_INSUFFICIENT product=% available=%',item.product_id,available using errcode='P0001';
+        end if;
+      end if;
+    end loop;
+    new.stock_committed:=true;
+  elsif old.stock_committed
+    and new.status in ('cancelled','payment_failed')
+    and old.status not in ('shipped','delivered')
+    and old.shipped_at is null then
+    for item in
+      select a.product_id,a.quantity from public.order_stock_adjustments a
+      where a.order_id=new.id order by a.product_id
+    loop
+      update public.products p set stock_quantity=p.stock_quantity+item.quantity,updated_at=now()
+      where p.id=item.product_id and p.stock_quantity is not null;
+    end loop;
+    delete from public.order_stock_adjustments where order_id=new.id;
+    new.stock_committed:=false;
+  end if;
+  return new;
+end;
+$$;
+revoke all on function private.apply_order_stock() from public,anon,authenticated;
+drop trigger if exists apply_novashop_order_stock on public.orders;
+create trigger apply_novashop_order_stock
+before update of status on public.orders
+for each row when (old.status is distinct from new.status)
+execute function private.apply_order_stock();
