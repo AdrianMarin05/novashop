@@ -512,7 +512,11 @@ Deno.serve(async (req: Request) => {
 
     return json({error:"Acción no reconocida."},400,origin);
   } catch (e) {
+    const errorText=String((e as any)?.message||"");
     console.error("admin-products error:",e);
+    if (errorText.includes("NOVASHOP_STOCK_INSUFFICIENT")) {
+      return json({error:"No se puede confirmar este pedido: el inventario disponible ya no alcanza. Revisa el stock o contacta al cliente."},409,origin);
+    }
     return json({error:"No pudimos completar la operación administrativa. Revisa la configuración y vuelve a intentarlo."},500,origin);
   }
 });
