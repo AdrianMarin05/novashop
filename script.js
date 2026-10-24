@@ -68,7 +68,10 @@ function renderProducts(){
   const minValue=Number($('#minPriceFilter')?.value||0),maxRaw=$('#maxPriceFilter')?.value;
   const maxValue=maxRaw==null||maxRaw===''?Infinity:Number(maxRaw);
   const hideSoldOut=!!$('#hideSoldOut')?.checked,onlyOffers=!!$('#onlyOffers')?.checked;
-  let list = products.filter(p=>(streamingPage ? p.category==='Streaming' : p.category!=='Streaming')&&(cat==='all'||p.category===cat)&&(p.name.toLowerCase().includes(query)||p.category.toLowerCase().includes(query))&&Number(p.price)>=minValue&&Number(p.price)<=maxValue&&(!hideSoldOut||p.stockQuantity==null||Number(p.stockQuantity)>0)&&(!onlyOffers||(Number(p.oldPrice)>Number(p.price))));
+  let list = products.filter(p=>{
+    const searchText=[p.name,p.category,p.description,p.tag,...(Array.isArray(p.features)?p.features:[])].filter(Boolean).join(' ').toLocaleLowerCase('es');
+    return (streamingPage ? p.category==='Streaming' : p.category!=='Streaming')&&(cat==='all'||p.category===cat)&&searchText.includes(query)&&Number(p.price)>=minValue&&Number(p.price)<=maxValue&&(!hideSoldOut||p.stockQuantity==null||Number(p.stockQuantity)>0)&&(!onlyOffers||(Number(p.oldPrice)>Number(p.price)));
+  });
   if(sort==='priceAsc') list.sort((a,b)=>a.price-b.price);
   if(sort==='priceDesc') list.sort((a,b)=>b.price-a.price);
   if(sort==='name') list.sort((a,b)=>a.name.localeCompare(b.name,'es'));
