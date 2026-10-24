@@ -295,7 +295,7 @@ async function loadAdminOrders(reset=false){
   ordersOffset=Number(result.offset||0)+rows.length;
   ordersHasMore=!!result.hasMore;
   renderAdminOrders();
-  orderStatusNotice("Se cargaron "+adminOrders.length+" pedidos. Los pedidos gestionados por WhatsApp siguen pendientes hasta que confirmes su estado.","success");
+  orderStatusNotice("Se cargaron "+adminOrders.length+" pedidos. Los pendientes de pago no cuentan como ventas pagadas hasta confirmar el pago del producto.","success");
  }catch(error){
   orderStatusNotice(error.message||"No pudimos consultar los pedidos. Vuelve a intentarlo.","error");
   if(reset)adminOrders=[];
@@ -327,9 +327,10 @@ function renderAdminOrders(){
    const email=order.customer_email?'<div>Correo: <a href="mailto:'+esc(order.customer_email)+'">'+esc(order.customer_email)+'</a></div>':"";
    const phone=order.customer_phone?'<div>Teléfono: <a href="tel:'+esc(String(order.customer_phone).replace(/[^+\d]/g,""))+'">'+esc(order.customer_phone)+'</a> '+(wa?'<a target="_blank" rel="noopener noreferrer" href="'+wa+'">WhatsApp ↗</a>':"")+'</div>':"";
    const subtotal=Number(order.subtotal_cop)||0,discount=Number(order.discount_cop)||0,total=Number(order.total_cop??(subtotal-discount));
-   const shippingSummary=order.payment_provider==="bold"
-    ?'<div class="admin-order-meta">Envío: <strong>Gratis con pago Bold</strong></div>'
-    :(order.delivery_type!=="digital"?'<div class="admin-order-meta">Flete transportadora: <strong>'+(order.shipping_fee_cop==null?'Pendiente de cotizar':money(order.shipping_fee_cop))+'</strong> · '+(order.shipping_payment_status==="approved"?'Pagado por anticipado':'Pendiente de pago previo')+'</div>':"");
+   const shippingSummary=order.delivery_type==="digital"?""
+    :(order.payment_provider==="bold"
+      ?'<div class="admin-order-meta">Envío: <strong>Gratis con pago Bold</strong></div>'
+      :'<div class="admin-order-meta">Flete transportadora: <strong>'+(order.shipping_fee_cop==null?'Pendiente de cotizar':money(order.shipping_fee_cop))+'</strong> · '+(order.shipping_payment_status==="approved"?'Pagado por anticipado':'Pendiente de pago previo')+'</div>');
    const priceInfo=(order.coupon_code?'<div class="admin-order-meta">Cupón: <strong>'+esc(order.coupon_code)+'</strong> · Descuento: '+money(discount)+'</div>':(discount>0?'<div class="admin-order-meta">Descuento: '+money(discount)+'</div>':""));
    const isShippable=order.delivery_type!=="digital";
    const isBoldOrder=order.payment_provider==="bold";
