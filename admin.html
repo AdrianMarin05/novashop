@@ -2,7 +2,7 @@
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Área privada de gestión de NovaShop"><meta name="robots" content="noindex,nofollow"><title>Panel de administración — NovaShop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=27">
+<link rel="stylesheet" href="styles.css?v=31">
 <style>
 .admin-page-wrap{max-width:1180px;margin:32px auto 70px;padding:0 20px}
 .admin-title{display:flex;justify-content:space-between;align-items:end;gap:18px;flex-wrap:wrap;margin-bottom:22px}.admin-title h1{margin:6px 0;font-size:34px;letter-spacing:-.05em}.admin-title p{margin:0;color:#697783;font-size:13px}
@@ -97,6 +97,8 @@ body.product-editor-open{overflow:hidden}
 .admin-current-video button:hover{background:#ffece7}
 .product-editor-slot .admin-form input[type="file"]{height:auto;min-height:43px;padding:8px;background:#f8fafb}
 @media(max-width:600px){.product-editor-modal{padding:0;align-items:end}.product-editor-dialog{width:100%;max-height:96vh;border-radius:20px 20px 0 0}.product-editor-modal-head{padding:14px 16px}.product-editor-modal-head h2{font-size:17px}.product-editor-slot{padding:10px}.product-editor-slot>.admin-card{padding:13px}.admin-current-media{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.admin-current-image img{height:84px}}
+.admin-coupon-layout{display:grid;grid-template-columns:minmax(260px,.75fr) minmax(300px,1.25fr);gap:16px;align-items:start}.admin-coupon-form{border:1px solid #e4e9ed;border-radius:14px;padding:15px;background:#fbfcfd}.admin-coupon-active{display:flex!important;align-items:center;gap:9px!important}.admin-coupon-active input{width:16px!important;height:16px!important}.admin-coupons-list,.admin-reviews-list{display:grid;gap:9px}.admin-coupon-row,.admin-review-row{border:1px solid #e1e7ec;border-radius:12px;padding:13px;display:grid;gap:8px;background:white}.admin-coupon-top,.admin-review-top{display:flex;justify-content:space-between;align-items:start;gap:10px}.admin-coupon-code{font-size:15px;font-weight:850;letter-spacing:.04em;overflow-wrap:anywhere}.admin-coupon-info,.admin-review-meta{font-size:11px;color:#687681;line-height:1.6}.admin-coupon-actions,.admin-review-actions{display:flex;gap:7px;flex-wrap:wrap}.admin-coupon-actions button,.admin-review-actions button{border:1px solid #dce3e9;background:#fff;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:800;cursor:pointer}.admin-review-body{font-size:12px;line-height:1.65;color:#40505d;white-space:pre-wrap;overflow-wrap:anywhere}.admin-shipping-editor{border-top:1px solid #edf0f3;padding-top:12px;margin-top:12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.admin-shipping-editor label{display:grid;gap:5px;font-size:10px;font-weight:800;color:#586672}.admin-shipping-editor input{min-width:0;width:100%;height:37px;border:1px solid #dce3e9;border-radius:8px;padding:7px 9px;font:inherit;font-size:11px}.admin-shipping-editor button{border:1px solid #dce3e9;border-radius:8px;background:#fff;padding:8px 10px;font-size:11px;font-weight:800;cursor:pointer}.admin-shipping-editor .admin-shipping-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:end;grid-column:1/-1}.admin-shipping-editor .admin-shipping-notify{color:#b94327}.admin-shipping-current{font-size:11px;color:#536570;line-height:1.6;grid-column:1/-1}.admin-review-stars{color:#dc8b11;letter-spacing:2px;white-space:nowrap}
+@media(max-width:800px){.admin-coupon-layout{grid-template-columns:1fr}.admin-shipping-editor{grid-template-columns:1fr 1fr}}@media(max-width:520px){.admin-shipping-editor{grid-template-columns:1fr}.admin-coupon-form{padding:12px}}
 </style></head><body>
 <div class="announcement" role="region" aria-label="Administración NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🔐 Panel de administración</span><b>•</b><span>Gestiona tu catálogo</span><b>•</b><span>Solo usuarios autorizados</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🔐 Panel de administración</span><b>•</b><span>Gestiona tu catálogo</span><b>•</b><span>Solo usuarios autorizados</span><b>•</b></div></div></div></div>
 <header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a><nav class="main-nav"><a href="index.html">Tienda</a><a href="streaming.html">Streaming</a></nav><div class="header-actions account-actions"><a class="account-btn auth-nav-link" data-auth-nav="login" href="cuenta.html?tab=login">Iniciar sesión</a><a class="account-btn auth-nav-link" data-auth-nav="register" href="cuenta.html?tab=register">Crear cuenta</a><a class="account-btn auth-nav-link" data-auth-nav="account" href="cuenta.html" hidden>Mi cuenta</a></div></div></header>
@@ -118,6 +120,31 @@ body.product-editor-open{overflow:hidden}
  <div id="adminOrdersStatus" class="admin-status" role="status">Los pedidos aparecerán aquí cuando se registren compras.</div>
  <div id="adminOrdersList" class="admin-orders-list"><div class="admin-orders-empty">Inicia sesión como administrador para consultar pedidos.</div></div>
  <button type="button" class="btn btn-ghost admin-orders-loadmore" id="loadMoreOrders" hidden>Cargar más pedidos</button>
+</section>
+
+<section id="adminCouponsWrap" class="admin-coupons-wrap admin-card" hidden>
+ <div class="admin-orders-heading"><div><h2>Cupones y promociones</h2><p>Crea códigos de descuento. La validez se vuelve a comprobar en el servidor al registrar cada pedido.</p></div><button type="button" class="btn btn-ghost" id="refreshAdminCoupons">Actualizar cupones</button></div>
+ <div id="adminCouponsStatus" class="admin-status" role="status">Carga los cupones para gestionarlos.</div>
+ <div class="admin-coupon-layout">
+  <form id="adminCouponForm" class="admin-form admin-coupon-form">
+   <input name="id" type="hidden">
+   <label>Código del cupón *<input name="code" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_-]{3,32}" placeholder="NOVASHOP10"></label>
+   <label>Descripción<input name="description" maxlength="180" placeholder="Descuento de bienvenida"></label>
+   <div class="admin-cols"><label>Tipo de descuento<select name="discount_type" required><option value="percent">Porcentaje (%)</option><option value="fixed">Valor fijo (COP)</option></select></label><label>Valor *<input name="discount_value" type="number" required min="1" step="1" placeholder="10"></label></div>
+   <label>Compra mínima (COP)<input name="minimum_subtotal_cop" type="number" min="0" step="1000" value="0"></label>
+   <div class="admin-cols"><label>Límite de usos<input name="max_uses" type="number" min="1" step="1" placeholder="Sin límite"></label><label>Empieza<input name="starts_at" type="datetime-local"></label></div>
+   <label>Vence (opcional)<input name="ends_at" type="datetime-local"></label>
+   <label class="admin-coupon-active"><input name="is_active" type="checkbox" checked> Cupón activo</label>
+   <div class="admin-buttons"><button class="btn btn-primary" type="submit">Guardar cupón</button><button class="btn btn-ghost" type="button" id="resetAdminCoupon">Nuevo cupón</button></div>
+  </form>
+  <div id="adminCouponsList" class="admin-coupons-list"><p class="admin-help">Los cupones aparecerán aquí.</p></div>
+ </div>
+</section>
+
+<section id="adminReviewsWrap" class="admin-card admin-reviews-wrap" hidden>
+ <div class="admin-orders-heading"><div><h2>Reseñas de productos</h2><p>Las reseñas nuevas quedan pendientes hasta que las apruebes. Solo clientes con un pedido entregado pueden enviarlas.</p></div><button type="button" class="btn btn-ghost" id="refreshAdminReviews">Actualizar reseñas</button></div>
+ <div id="adminReviewsStatus" class="admin-status" role="status">Carga las reseñas para moderarlas.</div>
+ <div id="adminReviewsList" class="admin-reviews-list"><p class="admin-help">Todavía no hay reseñas.</p></div>
 </section>
 
 <section class="admin-metrics-wrap">
@@ -194,5 +221,5 @@ body.product-editor-open{overflow:hidden}
  </div>
 </div>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=25"></script><script src="supabase-client.js?v=25"></script><script src="auth-nav.js?v=22"></script><script src="admin.js?v=30"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=26"></script><script src="supabase-client.js?v=26"></script><script src="auth-nav.js?v=23"></script><script src="admin.js?v=31"></script>
 </body></html>
