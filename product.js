@@ -235,7 +235,7 @@ function closeProductCheckout() {
   if(form?.dataset.boldOrderId){
     delete form.dataset.boldOrderId;
     form.querySelectorAll('input,select,textarea').forEach(field=>{field.disabled=false;});
-    const button=form.querySelector('button[data-bold-ready],button[type="button"]');
+    const button=form.querySelector('button[data-bold-ready')||form.querySelector('button[type="submit"]');
     if(button){button.type='submit';button.onclick=null;delete button.dataset.boldReady;button.disabled=false;button.textContent='Confirmar pedido';}
     form.querySelector('[data-bold-payment-status]')?.remove();
   }
