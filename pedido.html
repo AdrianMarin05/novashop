@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Confirmación de pedido contraentrega en NovaShop.">
+  <title>Pedido recibido — NovaShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=36">
+  <link rel="stylesheet" href="storefront-enhancements.css?v=4">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html" aria-label="NovaShop inicio"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a>
+      <nav class="main-nav" aria-label="Navegación principal"><a href="index.html">Inicio</a><a href="index.html#productos">Productos</a><a href="cuenta.html">Mi cuenta</a></nav>
+    </div>
+  </header>
+  <main class="section">
+    <div class="container" style="max-width:760px">
+      <section class="modal-card" style="position:relative;margin:28px auto;padding:clamp(24px,5vw,44px);border-radius:22px">
+        <span class="eyebrow">CONTRAENTREGA</span>
+        <h1 id="orderTitle" style="margin:12px 0;font-size:clamp(28px,5vw,40px)">Pedido recibido</h1>
+        <p id="orderNumber" class="checkout-summary" aria-live="polite">Número de pedido</p>
+        <p>El pedido está registrado, pero todavía no se ha despachado. El producto lo pagarás al recibirlo.</p>
+        <div class="checkout-account-hint" style="margin:18px 0">
+          <strong>Importante: el flete no es gratis con contraentrega.</strong>
+          <p>Antes de despachar, debe cotizarse el costo de la transportadora y pagarse por adelantado. El envío no se enviará hasta que ese pago quede verificado. El valor exacto depende del destino y del paquete.</p>
+        </div>
+        <p>Para recibir el valor exacto y las instrucciones para pagar el flete por anticipado, escríbenos por correo e incluye tu número de pedido.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px">
+          <a id="freightEmail" class="btn btn-primary" href="mailto:hola@novashop.co">Consultar flete por correo</a>
+          <a class="btn btn-ghost" href="index.html">Volver a NovaShop</a>
+          <a class="btn btn-ghost" href="cuenta.html">Mi cuenta</a>
+        </div>
+        <p class="checkout-privacy" style="margin-top:24px">No pagues un flete que no corresponda al valor y las instrucciones confirmadas para tu pedido.</p>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Contraentrega con flete prepagado</span></div></footer>
+  <script src="pedido.js?v=1"></script>
+</body>
+</html>
