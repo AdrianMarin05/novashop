@@ -296,3 +296,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
  .product-review-card p{font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
+
+
+/* Review sign-in actions — visible without obscuring the customer guidance. */
+.review-auth-links{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:-5px 0 20px}
+.review-auth-links[hidden]{display:none!important}
+.review-auth-links a{display:inline-flex;align-items:center;gap:10px;min-height:40px;padding:0 14px;border:1px solid #dde6ec;border-radius:11px;background:#fff;color:#284358;font-size:11px;font-weight:850;transition:background .16s,border-color .16s,transform .16s}
+.review-auth-links a:first-child{border-color:#ed5b3d;background:#ed5b3d;color:#fff;box-shadow:0 5px 14px rgba(237,91,61,.14)}
+.review-auth-links a:hover{transform:translateY(-1px);border-color:#efaa99}
+.review-auth-links a:first-child:hover{background:#d8482b}
