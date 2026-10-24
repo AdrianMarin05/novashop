@@ -58,6 +58,11 @@ Deno.serve(async (req: Request) => {
     let postalCode = clean(c.postalCode, 16);
     let reference = clean(c.reference, 220);
     const paymentMethod = clean(c.paymentMethod, 80);
+    const allowedPaymentMethods = new Set(["Pago en línea con Bold", "Contraentrega"]);
+    if (!allowedPaymentMethods.has(paymentMethod)) {
+      return json({ error: "Selecciona Pago en línea con Bold o Contraentrega." }, 400);
+    }
+    const isBoldPayment = paymentMethod === "Pago en línea con Bold";
     let latitude = c.latitude == null || c.latitude === "" ? null : Number(c.latitude);
     let longitude = c.longitude == null || c.longitude === "" ? null : Number(c.longitude);
     const itemsInput = body?.items;
@@ -226,6 +231,9 @@ Deno.serve(async (req: Request) => {
       user_id: userId,
       status: "pending_payment",
       payment_status: "pending",
+      payment_provider: isBoldPayment ? "bold" : "cash_on_delivery",
+      shipping_fee_cop: isBoldPayment ? 0 : null,
+      shipping_payment_status: isBoldPayment ? "not_required" : "pending",
       currency: "COP",
       subtotal_cop: subtotal,
       discount_cop: discountCop,
@@ -247,7 +255,7 @@ Deno.serve(async (req: Request) => {
       postal_code: postalCode || null,
       delivery_reference: reference || null,
       preferred_payment_method: paymentMethod || null,
-    }).select("id,order_number,status,payment_status,subtotal_cop,discount_cop,total_cop,coupon_code,created_at").single();
+    }).select("id,order_number,status,payment_status,payment_provider,shipping_fee_cop,shipping_payment_status,subtotal_cop,discount_cop,total_cop,coupon_code,created_at").single();
     if (orderError) throw orderError;
 
     const orderLines = lines.map((line: any) => ({ ...line, order_id: order.id }));
@@ -307,11 +315,14 @@ Deno.serve(async (req: Request) => {
       ok: true,
       order: {
         id: order.id, order_number: order.order_number, status: order.status,
-        payment_status: order.payment_status, subtotal_cop: order.subtotal_cop,
-        discount_cop: order.discount_cop, total_cop: order.total_cop, coupon_code: order.coupon_code,
-        created_at: order.created_at,
+        payment_status: order.payment_status, payment_provider: order.payment_provider,
+        shipping_fee_cop: order.shipping_fee_cop, shipping_payment_status: order.shipping_payment_status,
+        subtotal_cop: order.subtotal_cop, discount_cop: order.discount_cop,
+        total_cop: order.total_cop, coupon_code: order.coupon_code, created_at: order.created_at,
       },
-      message: "Pedido guardado con estado pendiente de pago. El pedido no se considera pagado hasta integrar y verificar el proveedor de pagos.",
+      message: isBoldPayment
+        ? "Pedido creado para pago en línea con Bold. El envío es gratis y el pedido solo se considera pagado al verificar la transacción."
+        : "Pedido de contraentrega registrado. El producto se paga al recibirlo; el flete debe cotizarse y pagarse por adelantado a la transportadora antes del despacho.",
     }, 201);
   } catch (error) {
     console.error("create-order error:", error);
