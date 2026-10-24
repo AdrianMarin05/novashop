@@ -76,7 +76,7 @@ Deno.serve(async (req: Request) => {
       .select("id,order_number,status,payment_status,currency,total_cop,payment_provider,payment_reference")
       .eq("id", reference).maybeSingle();
     if (orderError) throw orderError;
-    if (!order) return json({ ok: true, ignored: true });
+    if (!order || order.payment_provider !== "bold") return json({ ok: true, ignored: true });
 
     if (String(data?.amount?.currency ?? "") !== String(order.currency) ||
         Number(data?.amount?.total) !== Number(order.total_cop)) {
