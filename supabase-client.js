@@ -17,7 +17,7 @@
  }
  async function syncCatalog(localProducts){
   if(!client||!Array.isArray(localProducts))return localProducts;
-  const {data,error}=await client.from("products").select("id,name,category,price_cop,delivery_type,is_active,updated_at,old_price_cop,description,images,video_url,features,rating,reviews,tag,shipping,sort_order").eq("is_active",true).order("sort_order");
+  const {data,error}=await client.from("products").select("id,name,category,price_cop,delivery_type,is_active,updated_at,old_price_cop,description,images,video_url,features,rating,reviews,tag,shipping,sort_order,stock_quantity").eq("is_active",true).order("sort_order");
   if(error||!data)return localProducts;
   for(const row of data){
    let local=localProducts.find(p=>Number(p.id)===Number(row.id));
@@ -28,14 +28,14 @@
     if(row.old_price_cop!=null)local.oldPrice=Number(row.old_price_cop);
     else if(row.category==="Streaming")local.oldPrice=null;
     local.tag=row.category==="Streaming"?"DIGITAL":(row.old_price_cop!=null?(row.tag||"OFERTA"):(row.tag||local.tag||"DESTACADO"));
-    local.sortOrder=row.sort_order;
+    local.sortOrder=row.sort_order;local.stockQuantity=row.stock_quantity==null?null:Number(row.stock_quantity);
    }else{
     localProducts.push({id:Number(row.id),name:row.name,category:row.category,price:Number(row.price_cop),
      oldPrice:row.old_price_cop==null?null:Number(row.old_price_cop),rating:row.rating==null?null:Number(row.rating),
      reviews:Number(row.reviews)||0,tag:row.category==="Streaming"?"DIGITAL":(row.old_price_cop!=null?(row.tag||"OFERTA"):(row.tag||"NUEVO")),
      images:images.length?images:["images/streaming-placeholder.svg"],description:row.description||"",
      features:row.features||[],shipping:row.shipping||"",videoUrl:row.video_url||null,
-     deliveryType:row.delivery_type,sortOrder:row.sort_order});
+     deliveryType:row.delivery_type,sortOrder:row.sort_order,stockQuantity:row.stock_quantity==null?null:Number(row.stock_quantity)});
    }
   }
   return localProducts;
@@ -69,6 +69,30 @@
   form.dispatchEvent(new Event("novashop:profile-prefilled"));
  }
 
+ const FAVORITES_KEY="novashop-favorites-v1";
+ function localFavoriteIds(){try{const value=JSON.parse(localStorage.getItem(FAVORITES_KEY)||"[]");return Array.isArray(value)?value.map(Number).filter(Number.isFinite):[];}catch(_){return [];}}
+ function saveLocalFavoriteIds(ids){try{localStorage.setItem(FAVORITES_KEY,JSON.stringify([...new Set(ids.map(Number).filter(Number.isFinite))]));}catch(_){}}
+ async function getFavoriteIds(){
+  const {data:{session}}=client?await client.auth.getSession():{data:{session:null}};
+  if(!session?.user)return localFavoriteIds();
+  const {data,error}=await client.from("customer_favorites").select("product_id").eq("user_id",session.user.id);
+  if(error){console.warn("No se pudieron sincronizar los favoritos; se usarán los guardados en este dispositivo.",error.message);return localFavoriteIds();}
+  const ids=(data||[]).map(row=>Number(row.product_id)).filter(Number.isFinite);
+  saveLocalFavoriteIds(ids);return ids;
+ }
+ async function toggleFavorite(productId){
+  const id=Number(productId);if(!Number.isInteger(id)||id<=0)throw new Error("Producto no válido.");
+  const {data:{session}}=client?await client.auth.getSession():{data:{session:null}};
+  if(session?.user){
+   const {data:existing,error:readError}=await client.from("customer_favorites").select("product_id").eq("user_id",session.user.id).eq("product_id",id).maybeSingle();
+   if(readError)throw readError;
+   if(existing){const {error}=await client.from("customer_favorites").delete().eq("user_id",session.user.id).eq("product_id",id);if(error)throw error;}
+   else{const {error}=await client.from("customer_favorites").insert({user_id:session.user.id,product_id:id});if(error)throw error;}
+   return await getFavoriteIds();
+  }
+  const ids=localFavoriteIds(),exists=ids.includes(id),next=exists?ids.filter(x=>x!==id):[...ids,id];
+  saveLocalFavoriteIds(next);return next;
+ }
  async function loginWithIdentifier(identifier,password){
   if(!client)throw new Error("Supabase no está conectado.");
   const value=String(identifier||"").trim();
@@ -98,5 +122,5 @@
   const {data,error}=await client.functions.invoke("admin-products",{body,headers:{Authorization:"Bearer "+session.access_token}});
   if(error)throw error;if(data?.error)throw new Error(data.error);return data;
  }
- window.NovaShopDB={isConfigured:()=>configured&&!!client,client,getSession:async()=>client?(await client.auth.getSession()).data.session:null,createOrder,syncCatalog,prefillCheckout,adminCall,loginWithIdentifier};
+ window.NovaShopDB={isConfigured:()=>configured&&!!client,client,getSession:async()=>client?(await client.auth.getSession()).data.session:null,createOrder,syncCatalog,prefillCheckout,adminCall,loginWithIdentifier,getFavoriteIds,toggleFavorite};
 })();
