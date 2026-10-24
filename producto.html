@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=16"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="styles.css?v=34"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body class="product-page">
   <div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
@@ -83,6 +83,7 @@
               <button class="btn btn-primary product-add-btn" id="addProductToCart">Añadir al carrito</button>
             </div>
             <button class="btn btn-ghost wide" id="buyNow">💬 Comprar por WhatsApp</button>
+            <button class="btn btn-ghost wide" type="button" id="toggleProductFavorite" aria-pressed="false">♡ Guardar en favoritos</button>
 
             <div class="detail-note">
               <strong>Envíos</strong>
@@ -105,6 +106,24 @@
           <h2>Características</h2>
           <ul id="productFeatures" class="feature-list"></ul>
         </div>
+      </div>
+    </section>
+
+    <section class="section product-reviews-section" id="productReviewsSection">
+      <div class="container">
+        <div class="section-head"><div><span class="eyebrow">OPINIONES</span><h2>Reseñas de clientes</h2><p id="productReviewSummary">Opiniones de compradores sobre este producto.</p></div></div>
+        <div id="productReviewHint" class="account-message" role="status" hidden></div>
+        <form id="productReviewForm" class="product-review-form" hidden>
+          <h3>Cuéntanos tu experiencia</h3>
+          <label>Calificación *
+            <select name="rating" required><option value="">Selecciona de 1 a 5 estrellas</option><option value="5">★★★★★ — Excelente</option><option value="4">★★★★☆ — Muy bueno</option><option value="3">★★★☆☆ — Bueno</option><option value="2">★★☆☆☆ — Regular</option><option value="1">★☆☆☆☆ — Malo</option></select>
+          </label>
+          <label>Título (opcional)<input name="title" maxlength="100" placeholder="Resume tu experiencia"></label>
+          <label>Tu reseña *<textarea name="body" required minlength="5" maxlength="1500" rows="4" placeholder="¿Qué te gustó? ¿Cómo fue tu experiencia?"></textarea></label>
+          <button class="btn btn-primary" type="submit">Enviar reseña</button>
+          <p class="admin-help">Para proteger la calidad de las opiniones, la reseña se publicará después de la revisión de NovaShop.</p>
+        </form>
+        <div id="productReviewsList" class="product-reviews-list"><div class="favorites-empty">Cargando reseñas…</div></div>
       </div>
     </section>
   </main>
@@ -199,6 +218,7 @@
           <span>Acepto que mis datos se utilicen para gestionar este pedido y coordinar la entrega. *</span>
         </label>
 
+        <label class="coupon-code-field"><span>Código promocional (opcional)</span><input name="couponCode" type="text" maxlength="32" autocomplete="off" placeholder="Ej. NOVASHOP10"><small>El descuento se confirma cuando se valide el pedido.</small></label>
         <div class="checkout-summary" id="productCheckoutSummary"></div>
         <button class="btn btn-primary wide checkout-submit" type="submit">💬 Continuar a WhatsApp</button>
         <p class="checkout-privacy">No introduzcas datos de tarjetas, contraseñas ni códigos de seguridad en este formulario.</p>
@@ -209,9 +229,9 @@
   <div class="toast" id="productToast" role="status"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="delivery-map.js?v=16"></script><script src="supabase-config.js?v=16"></script>
-  <script src="supabase-client.js?v=20"></script><script src="auth-nav.js?v=16"></script>
-  <script src="products.js?v=16"></script>
-  <script src="product.js?v=16"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="delivery-map.js?v=16"></script><script src="supabase-config.js?v=19"></script>
+  <script src="supabase-client.js?v=25"></script><script src="auth-nav.js?v=19"></script>
+  <script src="products.js?v=19"></script>
+  <script src="product.js?v=17"></script>
 </body>
 </html>
