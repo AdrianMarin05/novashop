@@ -195,6 +195,9 @@ Deno.serve(async (req: Request) => {
         .select("id,status,payment_status,order_number,shipped_at,delivered_at").eq("id",orderId).maybeSingle();
       if (lookupError) throw lookupError;
       if (!currentOrder) return json({error:"No encontramos ese pedido."},404,origin);
+      if (["cancelled","refunded","payment_failed"].includes(currentOrder.status) && nextStatus !== currentOrder.status) {
+        return json({error:"Este pedido ya está cerrado y no se puede reactivar. Si el cliente quiere comprar de nuevo, crea un nuevo pedido."},409,origin);
+      }
       if (nextStatus === "pending_payment" && ["approved","refunded"].includes(currentOrder.payment_status)) {
         return json({error:"Este pedido ya tiene un pago aprobado o reembolsado y no puede volver a pendiente de pago."},409,origin);
       }
