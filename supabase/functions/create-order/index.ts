@@ -158,7 +158,7 @@ Deno.serve(async (req: Request) => {
 
     const ids = items.map((x: any) => x.product_id);
     const { data: catalog, error: catalogError } = await admin
-      .from("products").select("id,name,price_cop,delivery_type,is_active")
+      .from("products").select("id,name,price_cop,delivery_type,is_active,stock_quantity")
       .in("id", ids).eq("is_active", true);
     if (catalogError) throw catalogError;
     if (!catalog || catalog.length !== ids.length) {
@@ -166,6 +166,15 @@ Deno.serve(async (req: Request) => {
     }
 
     const catalogById = new Map(catalog.map((p: any) => [p.id, p]));
+    const outOfStock = items.find((item: any) => {
+      const product: any = catalogById.get(item.product_id);
+      return product && product.stock_quantity !== null && product.stock_quantity !== undefined
+        && Number(item.quantity) > Number(product.stock_quantity);
+    });
+    if (outOfStock) {
+      const product: any = catalogById.get(outOfStock.product_id);
+      return json({ error: "Stock insuficiente para " + clean(product?.name || "uno de los productos", 140) + ". Disponibles: " + Number(product?.stock_quantity || 0) + "." }, 409);
+    }
     let subtotal = 0;
     const lines = items.map((item: any) => {
       const p: any = catalogById.get(item.product_id);
