@@ -316,7 +316,7 @@ async function submitCheckoutForm(event){
     }catch(error){
       whatsappTab?.close();
       toast(error?.message||'No pudimos guardar el pedido. Inténtalo de nuevo.');
-      if(button){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}
+      if(button){button.disabled=false;button.type='submit';button.textContent=useBold?'Reintentar pago con Bold':'💬 Continuar a WhatsApp';}
       return;
     }finally{if(button&&!useBold){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}}
   }
