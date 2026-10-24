@@ -44,7 +44,6 @@
               <span class="tag product-detail-tag" id="productTag">OFERTA</span>
               <img id="productMainImage" src="" alt="" class="product-main-image">
               <video id="productMainVideo" class="product-main-video" controls playsinline preload="metadata" hidden></video>
-              <video id="productMainVideo" class="product-main-video" controls playsinline preload="metadata" hidden></video>
             </div>
             <div class="product-thumbnails" id="productThumbnails"></div>
           </div>
@@ -113,12 +112,22 @@
     <section class="section product-reviews-section" id="productReviewsSection">
       <div class="container">
         <div class="section-head"><div><span class="eyebrow">OPINIONES</span><h2>Reseñas de clientes</h2><p id="productReviewSummary">Opiniones de compradores sobre este producto.</p></div></div>
+        <div id="productReviewStats" class="review-stats-overview" hidden></div>
         <div id="productReviewHint" class="account-message" role="status" hidden></div>
         <form id="productReviewForm" class="product-review-form" hidden>
           <h3>Cuéntanos tu experiencia</h3>
-          <label>Calificación *
-            <select name="rating" required><option value="">Selecciona de 1 a 5 estrellas</option><option value="5">★★★★★ — Excelente</option><option value="4">★★★★☆ — Muy bueno</option><option value="3">★★★☆☆ — Bueno</option><option value="2">★★☆☆☆ — Regular</option><option value="1">★☆☆☆☆ — Malo</option></select>
-          </label>
+          <fieldset class="review-rating-field">
+            <legend>Calificación *</legend>
+            <input type="hidden" name="rating" value="">
+            <div class="review-star-picker" id="reviewStarPicker" role="radiogroup" aria-label="Calificación de 1 a 5 estrellas" aria-required="true">
+              <button type="button" class="review-star-btn" data-rating="1" role="radio" aria-checked="false" tabindex="0" aria-label="1 estrella">★</button>
+              <button type="button" class="review-star-btn" data-rating="2" role="radio" aria-checked="false" tabindex="-1" aria-label="2 estrellas">★</button>
+              <button type="button" class="review-star-btn" data-rating="3" role="radio" aria-checked="false" tabindex="-1" aria-label="3 estrellas">★</button>
+              <button type="button" class="review-star-btn" data-rating="4" role="radio" aria-checked="false" tabindex="-1" aria-label="4 estrellas">★</button>
+              <button type="button" class="review-star-btn" data-rating="5" role="radio" aria-checked="false" tabindex="-1" aria-label="5 estrellas">★</button>
+            </div>
+            <p id="reviewRatingLabel" class="review-rating-label" aria-live="polite">Selecciona una calificación de 1 a 5 estrellas.</p>
+          </fieldset>
           <label>Título (opcional)<input name="title" maxlength="100" placeholder="Resume tu experiencia"></label>
           <label>Tu reseña *<textarea name="body" required minlength="5" maxlength="1500" rows="4" placeholder="¿Qué te gustó? ¿Cómo fue tu experiencia?"></textarea></label>
           <button class="btn btn-primary" type="submit">Enviar reseña</button>
