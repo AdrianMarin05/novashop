@@ -225,23 +225,38 @@ Deno.serve(async (req: Request) => {
       }
       const ids = allUsers.map((u:any)=>u.id);
       if (!ids.length) return json({ok:true,users:[]},200,origin);
-      const [rolesResult,profilesResult,legacyResult] = await Promise.all([
+      const [rolesResult,profilesResult,legacyResult,ordersResult] = await Promise.all([
         admin.from("store_user_roles").select("user_id,role,created_at").in("user_id",ids),
         admin.from("profiles").select("id,full_name,username,phone,email,address,neighborhood,city,department,postal_code").in("id",ids),
-        admin.from("store_admins").select("user_id").in("user_id",ids)
+        admin.from("store_admins").select("user_id").in("user_id",ids),
+        admin.from("orders").select("user_id,status,payment_status,subtotal_cop,discount_cop,total_cop").in("user_id",ids).limit(50000)
       ]);
       if (rolesResult.error) throw rolesResult.error;
       if (profilesResult.error) throw profilesResult.error;
       if (legacyResult.error) throw legacyResult.error;
+      if (ordersResult.error) throw ordersResult.error;
       const roleMap = new Map((rolesResult.data||[]).map((x:any)=>[x.user_id,x.role]));
       const profileMap = new Map((profilesResult.data||[]).map((x:any)=>[x.id,x]));
       const legacy = new Set((legacyResult.data||[]).map((x:any)=>x.user_id));
+      const orderMap = new Map<string,any>();
+      for (const order of ordersResult.data||[]) {
+        if (!order.user_id) continue;
+        const row:any=orderMap.get(order.user_id)||{order_count:0,paid_orders:0,lifetime_spend_cop:0};
+        row.order_count++;
+        if (order.payment_status==="approved" || ["paid","preparing","shipped","delivered"].includes(order.status)) {
+          row.paid_orders++;
+          row.lifetime_spend_cop+=Number(order.total_cop ?? (Number(order.subtotal_cop||0)-Number(order.discount_cop||0)));
+        }
+        orderMap.set(order.user_id,row);
+      }
       const users = allUsers.map((u:any)=>{
         const p:any = profileMap.get(u.id) || {};
+        const stats:any=orderMap.get(u.id)||{order_count:0,paid_orders:0,lifetime_spend_cop:0};
         return {id:u.id,email:u.email || p.email || null,phone:u.phone || p.phone || null,
           full_name:p.full_name || u.user_metadata?.full_name || "",
           username:p.username || "",address:p.address || "",neighborhood:p.neighborhood || "",
           city:p.city || "",department:p.department || "",postal_code:p.postal_code || "",
+          order_count:stats.order_count,paid_orders:stats.paid_orders,lifetime_spend_cop:stats.lifetime_spend_cop,
           role:roleMap.get(u.id) || (legacy.has(u.id)?"owner":"customer"),
           created_at:u.created_at,last_sign_in_at:u.last_sign_in_at || null,
           email_confirmed:!!u.email_confirmed_at,phone_confirmed:!!u.phone_confirmed_at};
