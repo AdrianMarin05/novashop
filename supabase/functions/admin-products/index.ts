@@ -287,7 +287,7 @@ Deno.serve(async (req: Request) => {
         throw deleteError;
       }
       return json({ok:true,user_id:targetId,removed_email:targetAuthResult.data.user.email || null,
-        message:"Cuenta eliminada de Supabase Authentication. El perfil, los roles, los favoritos y las reseñas asociados se eliminan por sus relaciones; los pedidos históricos se conservan sin vincularlos a esta cuenta."},200,origin);
+        message:"Cuenta eliminada de Supabase Authentication. El perfil, los roles, los favoritos y las reseñas asociados se eliminan; los pedidos históricos se conservan sin vincularlos al usuario y pueden mantener los datos necesarios para respaldar esas compras."},200,origin);
     }
 
     if (action === "list-users") {
@@ -329,7 +329,7 @@ Deno.serve(async (req: Request) => {
       const users = allUsers.map((u:any)=>{
         const p:any = profileMap.get(u.id) || {};
         const stats:any=orderMap.get(u.id)||{order_count:0,paid_orders:0,lifetime_spend_cop:0};
-        return {id:u.id,email:u.email || p.email || null,phone:p.phone || u.phone || null,
+        return {id:u.id,email:u.email || p.email || null,phone:p.phone ?? u.phone ?? null,
           full_name:p.full_name || u.user_metadata?.full_name || "",
           username:p.username || "",address:p.address || "",neighborhood:p.neighborhood || "",
           city:p.city || "",department:p.department || "",postal_code:p.postal_code || "",
