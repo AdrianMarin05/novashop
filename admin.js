@@ -89,7 +89,12 @@ function renderAdminUsers(){
  }));
  box.querySelectorAll("[data-password-reset-form]").forEach(form=>form.addEventListener("submit",event=>setUserPassword(event,form)));
 }
-let lastAdminUsersFocusSync=0;\nfunction syncAdminUsersWhenFocused(){\n if(!["owner","admin"].includes(currentRole)||document.visibilityState!=="visible")return;\n const now=Date.now();if(now-lastAdminUsersFocusSync<5000)return;lastAdminUsersFocusSync=now;loadAdminUsers();\n}\nasync function saveAdminUserProfile(event,form){
+let lastAdminUsersFocusSync=0;
+function syncAdminUsersWhenFocused(){
+ if(!["owner","admin"].includes(currentRole)||document.visibilityState!=="visible")return;
+ const now=Date.now();if(now-lastAdminUsersFocusSync<5000)return;lastAdminUsersFocusSync=now;loadAdminUsers();
+}
+async function saveAdminUserProfile(event,form){
  event.preventDefault();if(!form.reportValidity())return;
  const userId=form.dataset.userEditForm;
  const button=form.querySelector('[type="submit"]');
