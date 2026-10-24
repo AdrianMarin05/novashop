@@ -62,6 +62,10 @@ Deno.serve(async (req: Request) => {
 
     let event: any;
     try { event = JSON.parse(rawBody); } catch { return json({ error: "JSON de notificación no válido." }, 400); }
+    if (mode === "test") {
+      // Test notifications use an empty signing key per Bold's docs; acknowledge them but never mutate production orders.
+      return json({ ok: true, test_mode: true, ignored: true });
+    }
     const eventType = clean(event?.type, 40).toUpperCase();
     const data = event?.data ?? {};
     const reference = clean(data?.metadata?.reference, 60);
