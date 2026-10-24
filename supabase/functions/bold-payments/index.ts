@@ -59,8 +59,19 @@ Deno.serve(async (req: Request) => {
     let body: any;
     try { body = JSON.parse(rawBody); } catch { return json({ error: "El formato de la solicitud no es válido." }, 400); }
     const action = clean(body.action, 40);
-    // This public preflight reveals only whether configuration exists; it never returns credentials.
-    if (action === "status") return json({ ok: true, configured: Boolean(boldApiKey && boldSecretKey && validBoldEnvironment) });
+    // Public preflight returns missing variable names only, never credential values.
+    if (action === "status") {
+      const missing: string[] = [];
+      if (!boldApiKey) missing.push("BOLD_API_KEY");
+      if (!boldSecretKey) missing.push("BOLD_SECRET_KEY");
+      if (!validBoldEnvironment) missing.push("BOLD_ENVIRONMENT");
+      return json({
+        ok: true,
+        configured: missing.length === 0,
+        missing,
+        environment: validBoldEnvironment ? boldEnvironment : null
+      });
+    }
     if (!validBoldEnvironment) {
       return json({ error: "Configura BOLD_ENVIRONMENT como test o live en los secretos de Supabase." }, 503);
     }
