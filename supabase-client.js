@@ -15,6 +15,20 @@
   if(!response.ok||!result.ok)throw new Error(result.error||"No se pudo registrar el pedido.");
   return result.order;
  }
+ async function callBold(action,orderId){
+  if(!client)throw new Error("Supabase no está conectado.");
+  const {data:{session}}=await client.auth.getSession();
+  const token=session?.access_token||key;
+  const response=await fetch(cfg.url.replace(/\/$/,"")+"/functions/v1/bold-payments",{
+   method:"POST",headers:{"Content-Type":"application/json","apikey":key,"Authorization":"Bearer "+token},
+   body:JSON.stringify({action,order_id:String(orderId||"")})
+  });
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok||!result.ok)throw new Error(result.error||"No pudimos conectar con la pasarela de Bold.");
+  return result;
+ }
+ async function createBoldCheckout(orderId){return callBold("create-checkout",orderId);}
+ async function verifyBoldPayment(orderId){return callBold("verify-checkout",orderId);}
  async function syncCatalog(localProducts){
   if(!client||!Array.isArray(localProducts))return localProducts;
   const {data,error}=await client.from("products").select("id,name,category,price_cop,delivery_type,is_active,updated_at,old_price_cop,description,images,video_url,features,rating,reviews,tag,shipping,sort_order,stock_quantity").eq("is_active",true).order("sort_order");
@@ -136,5 +150,5 @@
   const {data,error}=await client.functions.invoke("admin-products",{body,headers:{Authorization:"Bearer "+session.access_token}});
   if(error)throw error;if(data?.error)throw new Error(data.error);return data;
  }
- window.NovaShopDB={isConfigured:()=>configured&&!!client,client,getSession:async()=>client?(await client.auth.getSession()).data.session:null,createOrder,syncCatalog,prefillCheckout,adminCall,loginWithIdentifier,getFavoriteIds,toggleFavorite};
+ window.NovaShopDB={isConfigured:()=>configured&&!!client,client,getSession:async()=>client?(await client.auth.getSession()).data.session:null,createOrder,createBoldCheckout,verifyBoldPayment,syncCatalog,prefillCheckout,adminCall,loginWithIdentifier,getFavoriteIds,toggleFavorite};
 })();
