@@ -25,6 +25,15 @@ function updateCartCount() {
   $('#productCartCount').textContent = count;
 }
 
+function refreshProductQuantityControls() {
+  const stockKnown=currentProduct?.stockQuantity!=null&&Number.isFinite(Number(currentProduct.stockQuantity));
+  const stock=stockKnown?Number(currentProduct.stockQuantity):null;
+  const soldOut=stockKnown&&stock<=0;
+  $('#quantityValue').textContent=String(quantity);
+  $('#qtyMinus').disabled=soldOut||quantity<=1;
+  $('#qtyPlus').disabled=soldOut||(stockKnown&&quantity>=stock);
+}
+
 function showToast(message) {
   const toast = $('#productToast');
   toast.textContent = message;
@@ -402,10 +411,11 @@ async function submitProductCheckout(event) {
 
 function renderProduct() {
   document.title = `${currentProduct.name} — ${CONFIG.storeName}`;
+  const isDigitalProduct=currentProduct.category==='Streaming'||currentProduct.deliveryType==='digital';
 
   $('#breadcrumbCategory').textContent = currentProduct.category;
   $('#breadcrumbProduct').textContent = currentProduct.name;
-  $('#breadcrumbCategory').href = currentProduct.category === 'Streaming' ? 'streaming.html' : `index.html?category=${encodeURIComponent(currentProduct.category)}#productos`;
+  $('#breadcrumbCategory').href = isDigitalProduct ? 'streaming.html' : `index.html?category=${encodeURIComponent(currentProduct.category)}#productos`;
 
   $('#productCategory').textContent = currentProduct.category.toUpperCase();
   $('#productName').textContent = currentProduct.name;
@@ -419,14 +429,45 @@ function renderProduct() {
   $('#productDiscount').textContent = currentProduct.oldPrice ? currentProduct.tag : '';
   $('#productDescription').textContent = currentProduct.description;
   $('#longDescription').textContent = currentProduct.description;
+  $('#longDescriptionHeading').textContent = isDigitalProduct ? 'Sobre este servicio' : 'Descripción del producto';
+  $('#productFeaturesHeading').textContent = isDigitalProduct ? 'Qué debes saber' : 'Características';
+
+  const fulfillmentPanel=$('#productFulfillmentPanel');
+  fulfillmentPanel.className='product-fulfillment-panel '+(isDigitalProduct?'is-digital':'is-physical');
+  $('#productFulfillmentIcon').textContent=isDigitalProduct?'✦':'✓';
+  $('#productFulfillmentTitle').textContent=isDigitalProduct?'Antes de pagar, confirma los detalles':'Entrega clara, sin sorpresas';
+  $('#productFulfillmentText').textContent=isDigitalProduct
+    ? 'Es un servicio digital y no necesita envío físico. Confirma disponibilidad, duración, modalidad de acceso y condiciones con NovaShop antes de pagar.'
+    : 'Con Bold, el envío del producto físico es gratis. Si consultas contraentrega, el flete se cotiza según tu destino y se paga por anticipado a la transportadora.';
+  $('#productTrust1').textContent=isDigitalProduct?'No requiere envío físico':'Envío gratis pagando con Bold';
+  $('#productTrust2').textContent=isDigitalProduct?'Pago en línea con Bold':'Consulta contraentrega según tu destino';
+  $('#productTrust3').textContent=isDigitalProduct?'Confirma disponibilidad y condiciones antes de comprar':'Consulta dudas sobre el producto por WhatsApp';
+  $('#productShippingTitle').textContent=isDigitalProduct?'Entrega digital':'Envíos y entrega';
   $('#productShipping').textContent = currentProduct.shipping;
+
+  const stockNote=$('#productAvailabilityNote');
+  const stockKnown=currentProduct.stockQuantity!=null&&Number.isFinite(Number(currentProduct.stockQuantity));
+  const stock=stockKnown?Number(currentProduct.stockQuantity):null;
+  const soldOut=stockKnown&&stock<=0;
+  if(stockNote){
+    stockNote.hidden=!stockKnown;
+    stockNote.className='product-availability-note'+(soldOut?' is-sold-out':'');
+    stockNote.textContent=soldOut?'Agotado por ahora':stock===1?'Disponible · 1 unidad':`Disponible · ${stock} unidades`;
+  }
+  $('#addProductToCart').disabled=soldOut;
+  $('#addProductToCart').textContent=soldOut?'Agotado':'Agregar al carrito';
+  $('#buyNow').disabled=soldOut;
+  $('#buyNow').textContent=soldOut?'Agotado':'Comprar ahora';
+  if(stockKnown&&stock>0)quantity=Math.min(quantity,stock);
+  if(soldOut)quantity=1;
+  refreshProductQuantityControls();
   const askProduct=$('#askProductWhatsApp');
   if(askProduct){
     const question="Hola, tengo una consulta sobre "+currentProduct.name+". ¿Me pueden ayudar con información del producto?";
     askProduct.href="https://wa.me/"+CONFIG.whatsapp+"?text="+encodeURIComponent(question);
     askProduct.setAttribute("aria-label","Consultar por WhatsApp sobre "+currentProduct.name);
   }
-  $('#productTag').textContent = currentProduct.category === 'Streaming' ? 'SERVICIO DIGITAL' : currentProduct.tag;
+  $('#productTag').textContent = isDigitalProduct ? 'SERVICIO DIGITAL' : (currentProduct.tag||'PRODUCTO');
 
   $('#productRatingStars').textContent = '';
 
@@ -451,18 +492,18 @@ function renderProduct() {
     });
   });
 
-  $('#productFeatures').innerHTML = currentProduct.features.map(item => `<li>✓ ${item}</li>`).join('');
+  $('#productFeatures').innerHTML = (Array.isArray(currentProduct.features)?currentProduct.features:[]).map(item => `<li>✓ ${escProduct(item)}</li>`).join('');
 }
 
 $('#qtyMinus').addEventListener('click', () => {
   quantity = Math.max(1, quantity - 1);
-  $('#quantityValue').textContent = quantity;
+  refreshProductQuantityControls();
 });
 
 $('#qtyPlus').addEventListener('click', () => {
   if(currentProduct.stockQuantity!=null&&quantity>=Number(currentProduct.stockQuantity)){showToast('No hay más unidades disponibles');return;}
   quantity += 1;
-  $('#quantityValue').textContent = quantity;
+  refreshProductQuantityControls();
 });
 
 $('#addProductToCart').addEventListener('click', () => addCurrentProduct());
