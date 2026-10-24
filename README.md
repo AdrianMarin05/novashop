@@ -136,3 +136,17 @@ El panel administrativo está protegido por roles validados en el servidor. No g
 - Cada pedido muestra los productos, cantidades, total, contacto, dirección y ubicación si está disponible. El acceso a los datos de compradores está restringido a los roles `owner` y `admin`.
 - El inventario muestra alertas de productos agotados, con stock bajo y sin cantidad configurada; desde la alerta se puede abrir directamente la edición del producto.
 - Los pedidos se muestran en orden cronológico descendente. No se crean pedidos ficticios para pruebas; si no hay compras reales, el panel muestra un estado vacío.
+
+## Funciones comerciales recientes
+
+- **Envíos:** el panel de pedidos permite guardar transportadora, número de guía y fecha estimada; puede preparar un mensaje de seguimiento por WhatsApp. El estado Enviado/Entregado guarda su fecha.
+- **Cupones:** el panel permite crear, editar, pausar y limitar cupones porcentuales o fijos; el servidor vuelve a comprobar vigencia, monto mínimo y usos al guardar un pedido.
+- **Reseñas:** los clientes que tengan una compra marcada como entregada pueden enviar una reseña por producto. Todas comienzan pendientes y el propietario/administrador decide si se publican.
+- **Favoritos:** se guardan localmente para visitantes y en Supabase para clientes con sesión. La página favoritos.html muestra la lista guardada.
+- **Catálogo:** filtros de precio, solo ofertas, ocultar productos con stock cero y etiquetas de stock cuando existe una cantidad configurada.
+- **CRM y métricas:** el panel muestra dirección guardada, conteos de pedidos y gasto confirmado por cliente; incluye ingresos netos, descuentos, cancelaciones, compradores recurrentes, ventas por categoría y filtros por fecha. Los pedidos cargados se pueden exportar a CSV.
+- **Perfil y checkout:** perfil y checkout leen la información guardada; el checkout usa metadatos como respaldo para campos de perfil que aún estén vacíos.
+
+## Pago en línea: estado actual
+
+NovaShop **todavía no procesa pagos con tarjeta ni confirma automáticamente transferencias**. El flujo actual registra el pedido como pendiente y continúa a WhatsApp. Para activar pagos reales hace falta escoger un proveedor (por ejemplo, Mercado Pago o Wompi), disponer de sus credenciales de comercio y configurar la notificación/webhook segura que confirme pagos. No se deben publicar claves secretas ni marcar un pedido como pagado solo porque el cliente regresó al sitio.
