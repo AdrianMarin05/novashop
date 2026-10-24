@@ -139,7 +139,7 @@ El panel administrativo está protegido por roles validados en el servidor. No g
 
 ## Funciones comerciales recientes
 
-- **Envíos:** el panel de pedidos permite guardar transportadora, número de guía y fecha estimada; puede preparar un mensaje de seguimiento por WhatsApp. El estado Enviado/Entregado guarda su fecha.
+- **Envíos e inventario:** el panel de pedidos permite guardar transportadora, número de guía y fecha estimada; puede preparar un mensaje de seguimiento por WhatsApp. Al confirmar pago, el servidor descuenta una sola vez el stock configurado; si se cancela antes del envío, lo repone. El estado Enviado/Entregado guarda su fecha.
 - **Cupones:** el panel permite crear, editar, pausar y limitar cupones porcentuales o fijos; el servidor vuelve a comprobar vigencia, monto mínimo y usos al guardar un pedido.
 - **Reseñas:** los clientes que tengan una compra marcada como entregada pueden enviar una reseña por producto. Todas comienzan pendientes y el propietario/administrador decide si se publican.
 - **Favoritos:** se guardan localmente para visitantes y en Supabase para clientes con sesión. La página favoritos.html muestra la lista guardada.
