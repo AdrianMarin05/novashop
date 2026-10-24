@@ -52,21 +52,22 @@ function createMap(id,latName,lngName,statusId,coordsId,useButtonId){
  const map=L.map(id,{scrollWheelZoom:false}).setView([4.5709,-74.2973],5);
  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
  let marker=null;
- function put(lat,lng,zoom=16){
+ function put(lat,lng,zoom=16,userInitiated=false){
   lat=Number(lat);lng=Number(lng);if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)return;
+  if(userInitiated){const mapForm=document.getElementById(id)?.closest("form");if(mapForm)mapForm.dataset.mapTouched="1";}
   $("#"+latName).value=lat.toFixed(7);$("#"+lngName).value=lng.toFixed(7);
   if(!marker)marker=L.marker([lat,lng],{draggable:true}).addTo(map);else marker.setLatLng([lat,lng]);
-  marker.off("dragend").on("dragend",()=>{const p=marker.getLatLng();put(p.lat,p.lng,16);});
+  marker.off("dragend").on("dragend",()=>{const p=marker.getLatLng();put(p.lat,p.lng,16,true);});
   map.setView([lat,lng],zoom);
   $("#"+statusId).textContent="Pin seleccionado. Arrástralo hasta la entrada correcta.";
   $("#"+coordsId).textContent=lat.toFixed(6)+", "+lng.toFixed(6);
   mapState[id]={map,put,marker:()=>marker};
  }
- map.on("click",e=>put(e.latlng.lat,e.latlng.lng));
+ map.on("click",e=>put(e.latlng.lat,e.latlng.lng,16,true));
  $("#"+useButtonId)?.addEventListener("click",()=>{
   if(!navigator.geolocation){msg("Tu navegador no permite obtener la ubicación. Puedes marcar el mapa manualmente.","error");return;}
   $("#"+statusId).textContent="Solicitando permiso de ubicación…";
-  navigator.geolocation.getCurrentPosition(pos=>put(pos.coords.latitude,pos.coords.longitude,17),()=>{
+  navigator.geolocation.getCurrentPosition(pos=>put(pos.coords.latitude,pos.coords.longitude,17,true),()=>{
    $("#"+statusId).textContent="No se obtuvo la ubicación; toca el mapa para colocar el pin.";
    msg("No pudimos obtener tu ubicación. Revisa los permisos o marca el mapa manualmente.","error");
   },{enableHighAccuracy:true,timeout:12000,maximumAge:0});
@@ -232,6 +233,19 @@ async function showDashboard(user){
   const saved=profile?.[key];
   el.value=String(saved!=null&&String(saved).trim()!==""?saved:(fallback??""));
  }
+ const savedLatitude=profile?.latitude??metadata.latitude??"";
+ const savedLongitude=profile?.longitude??metadata.longitude??"";
+ form.elements.latitude.value=savedLatitude==null?"":String(savedLatitude);
+ form.elements.longitude.value=savedLongitude==null?"":String(savedLongitude);
+ form.dataset.mapTouched="0";
+ form.dataset.savedAddressKey=deliveryAddressKey(formObj(form));
+ if(savedLatitude!==""&&savedLongitude!==""&&Number.isFinite(Number(savedLatitude))&&Number.isFinite(Number(savedLongitude))){
+  mapState.profileMap?.put(Number(savedLatitude),Number(savedLongitude),16,false);
+  $("#profileMapStatus").textContent="Ubicación guardada. Puedes mover el pin para actualizarla.";
+ }else{
+  $("#profileMapStatus").textContent="Este perfil no tiene un pin guardado. Marca la nueva ubicación en el mapa.";
+  $("#profileMapCoordinates").textContent="Sin pin seleccionado";
+ }
  $("#userEmail").textContent=profile?.email||user.email||user.phone||metadata.email||"Cuenta verificada";
  await loadOrders();
  if(new URLSearchParams(location.search).get("registered")==="1")msg("¡Tu cuenta ya está verificada! Guarda tus datos y consulta aquí tus pedidos.","success");
@@ -250,15 +264,34 @@ async function loadOrders(){
   return '<article class="account-order"><div class="account-order-head"><div><h3>'+esc(o.order_number)+'</h3><small>'+esc(new Date(o.created_at).toLocaleString("es-CO"))+'</small></div><span class="account-status">'+(labels[o.status]||"En revisión")+'</span></div><ul>'+items+'</ul>'+(o.coupon_code?'<p class="account-help">Cupón aplicado: <strong>'+esc(o.coupon_code)+'</strong></p>':"")+'<div class="account-order-total"><span>Subtotal</span><strong>'+money(subtotal)+'</strong></div>'+(discount>0?'<div class="account-order-total"><span>Descuento</span><strong>−'+money(discount)+'</strong></div>':"")+'<div class="account-order-total"><span>Total del pedido</span><strong>'+money(total)+'</strong></div>'+shipping+'</article>';
  }).join("");
 }
+function deliveryAddressKey(values){
+ return [values.address,values.neighborhood,values.city,values.department,values.postalCode]
+  .map(value=>String(value||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").trim().toLowerCase())
+  .join("|");
+}
 async function saveProfileHandler(event){
  event.preventDefault();if(!session?.user)return;const f=event.currentTarget;if(!f.reportValidity())return;
- const values={fullName:f.elements.fullName.value.trim(),phone:e164(f.elements.phone.value),email:f.elements.email.value.trim().toLowerCase(),address:f.elements.address.value.trim(),neighborhood:f.elements.neighborhood.value.trim(),city:f.elements.city.value.trim(),department:f.elements.department.value.trim(),postalCode:f.elements.postalCode.value.trim(),deliveryReference:f.elements.deliveryReference.value.trim()};
+ const values={fullName:f.elements.fullName.value.trim(),phone:e164(f.elements.phone.value),email:f.elements.email.value.trim().toLowerCase(),address:f.elements.address.value.trim(),neighborhood:f.elements.neighborhood.value.trim(),city:f.elements.city.value.trim(),department:f.elements.department.value.trim(),postalCode:f.elements.postalCode.value.trim(),deliveryReference:f.elements.deliveryReference.value.trim(),latitude:f.elements.latitude.value.trim(),longitude:f.elements.longitude.value.trim()};
+ const savedAddressKey=f.dataset.savedAddressKey||deliveryAddressKey(values);
+ const addressChanged=deliveryAddressKey(values)!==savedAddressKey;
+ if(addressChanged&&f.dataset.mapTouched!=="1"){
+  msg("Cambiaste la dirección. Para evitar conservar el pin de la casa anterior, marca el nuevo punto en el mapa o pulsa «Usar mi ubicación» antes de guardar.","error");
+  $("#profileDeliveryMap")?.scrollIntoView({behavior:"smooth",block:"center"});
+  return;
+ }
+ if((values.latitude&&!values.longitude)||(!values.latitude&&values.longitude)){
+  msg("La ubicación no está completa. Selecciona el punto en el mapa y vuelve a guardar.","error");
+  $("#profileDeliveryMap")?.scrollIntoView({behavior:"smooth",block:"center"});
+  return;
+ }
  try{
   await saveProfile(session.user,values);
   await updateCustomerMetadata(session.user,values);
-  // Actualizar también la sesión local para que el checkout use de inmediato los datos guardados.
+  // Actualizar la sesión local para que los pedidos futuros usen los datos guardados.
   const {data}=await client.auth.getUser();if(data?.user)session={user:data.user};
-  msg("Tus datos de entrega se guardaron correctamente y se usarán al comprar.","success");
+  f.dataset.savedAddressKey=deliveryAddressKey(values);
+  f.dataset.mapTouched="0";
+  msg("Tus datos de entrega y la ubicación del mapa se guardaron correctamente. Se usarán en tus próximas compras.","success");
  }catch(e){msg("No pudimos guardar el perfil: "+e.message,"error");}
 }
 function init(){
@@ -294,6 +327,7 @@ function init(){
  $("#signOut").addEventListener("click",async()=>{await client.auth.signOut();session=null;setVisible("login");msg("Has cerrado sesión.","success");});
  // El mapa se inicializa aquí y actualiza su tamaño cuando se muestra el paso de dirección.
  createMap("registerMap","registerLatitude","registerLongitude","registerMapStatus","registerMapCoordinates","useRegisterLocation");
+ createMap("profileDeliveryMap","profileLatitude","profileLongitude","profileMapStatus","profileMapCoordinates","useProfileLocation");
  if(!client||!db?.isConfigured?.()){msg("Supabase no está conectado. Revisa la URL y la clave publicable.","error");return;}
  client.auth.onAuthStateChange((event,s)=>{
   if(s?.user){session={user:s.user};if(!authActionInProgress)showDashboard(s.user);}else{session=null;}
