@@ -221,6 +221,9 @@ Deno.serve(async (req: Request) => {
       usedCoupon = coupon;
     }
     const totalCop = subtotal - discountCop;
+    if (isBoldPayment && totalCop < 1000) {
+      return json({ error: "El total después del descuento debe ser de al menos $1.000 COP para pagar con Bold. Cambia el cupón o selecciona otro importe." }, 400);
+    }
     const types = new Set(lines.map((l: any) => l.delivery_type));
     const deliveryType = types.size > 1 ? "mixed" : lines[0].delivery_type;
     if (!isBoldPayment && types.has("digital")) {
