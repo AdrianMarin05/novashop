@@ -99,3 +99,44 @@ body[data-page="streaming"] .hero .eyebrow{color:#ffb49f}
 .product-media .tag{z-index:2}
 @media(max-width:600px){.announcement-track{animation-duration:17s!important}.announcement-group{gap:15px;padding-right:15px}.announcement-group span{font-size:11px}.featured-view-cta{top:12px;right:12px;padding:8px 10px;font-size:10px}}
 @media(prefers-reduced-motion:reduce){.announcement-track{animation-duration:28s!important}}
+
+
+/* NovaShop product discovery, favorites, FAQs and verified reviews */
+.catalog-filters{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:0 0 16px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.catalog-filters label{display:grid;gap:5px;font-size:10px;font-weight:800;color:#53616d}
+.catalog-filters input[type=number]{width:135px;max-width:100%;height:38px;border:1px solid #dce3e9;border-radius:9px;padding:0 10px;font:inherit;font-size:12px;color:var(--ink);background:#fff}
+.catalog-filters .catalog-filter-check{display:flex;align-items:center;gap:7px;min-height:38px}
+.catalog-filter-check input{width:16px;height:16px;accent-color:var(--accent)}
+.favorite-toggle{position:absolute;z-index:3;right:10px;top:10px;width:38px;height:38px;border:1px solid #e2e7eb;border-radius:50%;background:#fff;color:#687580;font-size:23px;line-height:1;display:grid;place-items:center;box-shadow:0 4px 14px #14283a18;cursor:pointer}
+.favorite-toggle:hover{transform:scale(1.05);color:#e84f42}
+.favorite-toggle.is-favorite{color:#ef4f45;border-color:#ffd5cf;background:#fff4f1}
+.stock-label{display:block;color:#398054;font-size:10px;font-weight:750;margin-top:8px}
+.stock-label.sold-out{color:#b33c2a}
+.add-btn:disabled,.favorite-product-actions button:disabled{opacity:.55;cursor:not-allowed}
+.faq-section{background:#fff}
+.faq-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.faq-grid details{border:1px solid #e1e8ed;border-radius:13px;background:#fff;padding:15px 16px}
+.faq-grid summary{font-size:13px;font-weight:800;color:#21364a;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:14px}
+.faq-grid summary::-webkit-details-marker{display:none}
+.faq-grid summary:after{content:"+";font-size:18px;color:var(--accent);line-height:1}
+.faq-grid details[open] summary:after{content:"−"}
+.faq-grid details p{font-size:12px;line-height:1.75;color:#65727d;margin:12px 0 0}
+.coupon-code-field{display:grid;gap:6px;font-size:12px;font-weight:750;color:#43515e}
+.coupon-code-field input{width:100%;min-width:0;min-height:43px;border:1px solid #dce3e9;border-radius:11px;padding:10px 12px;font:inherit;font-weight:500;outline:none;background:#fff;color:#172332;text-transform:uppercase}
+.coupon-code-field small{font-size:11px;font-weight:500;color:#687781;line-height:1.5}
+.product-review-form{display:grid;gap:12px;padding:18px;border:1px solid #e1e7ec;border-radius:16px;background:#fff;margin:0 0 20px}
+.product-review-form h3{font-size:16px;margin:0}
+.product-review-form label{display:grid;gap:6px;font-size:12px;font-weight:750;color:#43515e}
+.product-review-form input,.product-review-form select,.product-review-form textarea{width:100%;min-height:42px;border:1px solid #dce3e9;border-radius:10px;padding:10px 12px;font:inherit;font-size:13px;color:#172332;background:#fff}
+.product-review-form textarea{resize:vertical}
+.product-reviews-list{display:grid;gap:10px}
+.product-review-card{border:1px solid #e1e7ec;border-radius:13px;padding:15px;background:#fff}
+.product-review-card-head{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.product-review-card-head strong{font-size:13px;color:#203547}
+.product-review-meta{font-size:10px;color:#7a8791;margin-top:4px}
+.product-review-stars{color:#d28b16;letter-spacing:2px;white-space:nowrap}
+.product-review-card p{font-size:12px;color:#52616d;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+#productReviewSummary{font-size:12px;color:#687781}
+#toggleProductFavorite.is-favorite{border-color:#ffd5cf;color:#e84f42;background:#fff4f1}
+@media(max-width:720px){.faq-grid{grid-template-columns:1fr}.catalog-filters{align-items:stretch}.catalog-filters label{flex:1;min-width:calc(50% - 10px)}.catalog-filters input[type=number]{width:100%}}
+@media(max-width:420px){.catalog-filters label{min-width:100%}.product-review-form{padding:13px}}
