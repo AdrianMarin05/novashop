@@ -9,10 +9,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=37">
-  <link rel="stylesheet" href="storefront-enhancements.css?v=4"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="storefront-enhancements.css?v=5"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body data-page="streaming">
-  <div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Coordinamos el envío según tu destino</span><b>•</b><span>💳 Compra en línea con Bold</span><b>•</b><span>🧾 Consulta el costo de envío antes de confirmar</span><b>•</b><span>🤝 Atención cercana en cada paso</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Coordinamos el envío según tu destino</span><b>•</b><span>💳 Compra en línea con Bold</span><b>•</b><span>🧾 Consulta el costo de envío antes de confirmar</span><b>•</b><span>🤝 Atención cercana en cada paso</span><b>•</b></div></div></div></div>
+  <div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>💻 Servicios digitales sin envío físico</span><b>•</b><span>💳 Pago en línea con Bold</span><b>•</b><span>🔎 Revisa duración y modalidad de acceso</span><b>•</b><span>🤝 Consulta disponibilidad antes de comprar</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>💻 Servicios digitales sin envío físico</span><b>•</b><span>💳 Pago en línea con Bold</span><b>•</b><span>🔎 Revisa duración y modalidad de acceso</span><b>•</b><span>🤝 Consulta disponibilidad antes de comprar</span><b>•</b></div></div></div></div>
 
   <header class="site-header">
     <div class="container nav-wrap">
@@ -45,7 +45,7 @@
         <div class="hero-copy">
           <span class="eyebrow">PLATAFORMAS Y SERVICIOS DIGITALES</span>
           <h1>Tu entretenimiento.<br><em>En un solo lugar.</em></h1>
-          <p>Encuentra el servicio digital que buscas, revisa sus condiciones y paga directamente desde la página con Bold. Para consultar dudas sobre un servicio antes de comprar, escríbenos por WhatsApp.</p>
+          <p>Encuentra el servicio digital que buscas y revisa con calma sus detalles antes de pagar con Bold. Confirma disponibilidad, duración, modalidad de acceso y condiciones; si algo no está claro, consúltanos por WhatsApp.</p>
           <div class="hero-product-search" role="search" aria-label="Buscar servicios digitales">
             <div class="hero-search-shell">
               <span class="hero-search-icon" aria-hidden="true">⌕</span>
@@ -115,13 +115,17 @@
       </div>
     </section>
 
-    <section class="newsletter section">
-      <div class="container newsletter-card">
-        <div><span class="eyebrow">PRÓXIMAMENTE</span><h2>Muy pronto: novedades y ofertas</h2><p>Estamos preparando este espacio. Mientras tanto, explora el catálogo; si tienes dudas sobre un servicio, consúltanos por WhatsApp.</p></div>
-        <form id="newsletterForm" class="newsletter-form">
-          <input type="email" placeholder="Suscripción por correo próximamente" aria-label="Suscripción por correo" disabled>
-          <button class="btn btn-primary" type="submit" disabled>Próximamente</button>
-        </form>
+    <section class="next-step-section section" aria-labelledby="digitalNextStepTitle">
+      <div class="container next-step-card">
+        <div class="next-step-copy">
+          <span class="eyebrow">ANTES DE PAGAR</span>
+          <h2 id="digitalNextStepTitle">Elige tu próximo servicio digital con claridad.</h2>
+          <p>Los servicios digitales no requieren envío físico. Revisa la duración, disponibilidad, modalidad de acceso y condiciones en la ficha de cada servicio; si tienes dudas, pregúntanos antes de comprar.</p>
+        </div>
+        <div class="next-step-actions">
+          <a class="btn btn-primary" href="#productos">Explorar servicios <span aria-hidden="true">→</span></a>
+          <a class="btn btn-ghost" href="https://wa.me/573003358382?text=Hola%20NovaShop%2C%20tengo%20una%20consulta%20sobre%20un%20servicio%20digital." target="_blank" rel="noopener noreferrer">Consultar una duda <span aria-hidden="true">↗</span></a>
+        </div>
       </div>
     </section>
   </main>
