@@ -140,3 +140,16 @@ body[data-page="streaming"] .hero .eyebrow{color:#ffb49f}
 #toggleProductFavorite.is-favorite{border-color:#ffd5cf;color:#e84f42;background:#fff4f1}
 @media(max-width:720px){.faq-grid{grid-template-columns:1fr}.catalog-filters{align-items:stretch}.catalog-filters label{flex:1;min-width:calc(50% - 10px)}.catalog-filters input[type=number]{width:100%}}
 @media(max-width:420px){.catalog-filters label{min-width:100%}.product-review-form{padding:13px}}
+
+
+/* Customer order tracking and additional admin analytics */
+.account-order-shipping{display:grid;gap:5px;margin-top:12px;padding:12px;border:1px solid #d9e8f4;border-radius:11px;background:#f5faff;color:#425b70;font-size:12px;line-height:1.55}
+.account-order-shipping>strong{color:#203e56;font-size:12px}
+.product-reviews-section{padding-top:28px;padding-bottom:42px}
+.product-reviews-section .account-message{margin:0 0 16px;padding:11px 13px;border-radius:10px;background:#eef5ff;color:#244b72;font-size:12px;line-height:1.55}
+.product-reviews-section .account-message.error{background:#fff0ee;color:#a63220}
+.product-reviews-section .account-message.success{background:#eaf8ef;color:#20653a}
+.product-review-form[hidden]{display:none!important}
+.product-review-card .admin-help{display:block;font-size:11px;line-height:1.5;color:#7c6b43}
+.admin-category-row .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.admin-metric strong{font-variant-numeric:tabular-nums}
