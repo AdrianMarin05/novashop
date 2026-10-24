@@ -341,8 +341,26 @@ Deno.serve(async (req: Request) => {
 
     if (action === "metrics") {
       if (!canSeeMetrics) return json({error:"No tienes permiso para consultar métricas de ventas."},403,origin);
+      let startDate: Date | null = null;
+      let endDate: Date | null = null;
+      if (body.start_date) {
+        const parsed = new Date(String(body.start_date));
+        if (Number.isNaN(parsed.getTime())) return json({error:"Fecha inicial no válida."},400,origin);
+        startDate = parsed;
+      }
+      if (body.end_date) {
+        const parsed = new Date(String(body.end_date));
+        if (Number.isNaN(parsed.getTime())) return json({error:"Fecha final no válida."},400,origin);
+        endDate = parsed;
+      }
+      if (startDate && endDate && startDate > endDate) return json({error:"El período de fechas no es válido."},400,origin);
+      let orderQuery = admin.from("orders")
+        .select("id,status,payment_status,subtotal_cop,discount_cop,total_cop,customer_email,created_at")
+        .order("created_at",{ascending:false}).limit(10000);
+      if (startDate) orderQuery = orderQuery.gte("created_at",startDate.toISOString());
+      if (endDate) orderQuery = orderQuery.lte("created_at",endDate.toISOString());
       const [ordersResult, itemsResult, productsResult] = await Promise.all([
-        admin.from("orders").select("id,status,payment_status,subtotal_cop,discount_cop,total_cop,created_at").order("created_at",{ascending:false}).limit(10000),
+        orderQuery,
         admin.from("order_items").select("order_id,product_id,product_name,quantity,unit_price_cop,line_total_cop").limit(50000),
         admin.from("products").select("id,name,category,stock_quantity,is_active,price_cop").order("id",{ascending:true}).limit(10000)
       ]);
@@ -373,6 +391,26 @@ Deno.serve(async (req: Request) => {
         .map((p: any) => ({...p,percentage:unitsSold ? Math.round((p.units / unitsSold) * 1000) / 10 : 0}))
         .sort((a: any,b: any) => b.units-a.units)
         .slice(0,15);
+      const categoryMap = new Map();
+      for (const it of confirmedItems) {
+        const p: any = productById.get(Number(it.product_id));
+        const category = p?.category || "Otra";
+        const row: any = categoryMap.get(category) || {category,units:0,revenueCop:0};
+        row.units += Number(it.quantity || 0);
+        row.revenueCop += Number(it.line_total_cop ?? (Number(it.unit_price_cop || 0) * Number(it.quantity || 0)));
+        categoryMap.set(category,row);
+      }
+      const categoryMix = Array.from(categoryMap.values())
+        .map((p: any) => ({...p,percentage:unitsSold ? Math.round((p.units / unitsSold) * 1000) / 10 : 0}))
+        .sort((a: any,b: any) => b.units-a.units);
+      const emailCounts = new Map<string,number>();
+      for (const o of paidOrders) {
+        const email = String(o.customer_email||"").trim().toLowerCase();
+        if (email) emailCounts.set(email,(emailCounts.get(email)||0)+1);
+      }
+      const repeatCustomers = Array.from(emailCounts.values()).filter((count:number)=>count>=2).length;
+      const cancelledOrders = orders.filter((o:any)=>o.status==="cancelled").length;
+      const discountsCop = paidOrders.reduce((n:number,o:any)=>n+Number(o.discount_cop||0),0);
       const active = products.filter((p: any) => p.is_active);
       const tracked = active.filter((p: any) => p.stock_quantity !== null && p.stock_quantity !== undefined);
       const outOfStock = tracked.filter((p: any) => Number(p.stock_quantity) === 0);
@@ -380,12 +418,13 @@ Deno.serve(async (req: Request) => {
       const untracked = active.filter((p: any) => p.stock_quantity === null || p.stock_quantity === undefined);
       const pendingOrders = orders.filter((o: any) => o.status === "pending_payment" || o.payment_status === "pending").length;
       return json({ok:true,metrics:{
-        revenueCop,paidOrders:paidOrders.length,unitsSold,pendingOrders,
+        revenueCop,discountsCop,paidOrders:paidOrders.length,unitsSold,pendingOrders,cancelledOrders,repeatCustomers,
+        periodStart:startDate?.toISOString()||null,periodEnd:endDate?.toISOString()||null,
         inventory:{activeProducts:active.length,trackedProducts:tracked.length,untrackedProducts:untracked.length,
           trackedUnits:tracked.reduce((n: number,p: any)=>n+Number(p.stock_quantity||0),0),
           lowStockProducts:lowStock.map((p: any)=>({id:p.id,name:p.name,stock_quantity:p.stock_quantity})),
           outOfStockProducts:outOfStock.map((p: any)=>({id:p.id,name:p.name,stock_quantity:p.stock_quantity}))},
-        salesMix
+        salesMix,categoryMix
       }},200,origin);
     }
 
