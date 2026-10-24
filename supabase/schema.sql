@@ -468,3 +468,8 @@ create trigger apply_novashop_order_stock
 before update of status on public.orders
 for each row when (old.status is distinct from new.status)
 execute function private.apply_order_stock();
+
+
+-- Keep internal stock-adjustment records inaccessible to browser roles.
+drop policy if exists "No direct access to stock adjustments" on public.order_stock_adjustments;
+create policy "No direct access to stock adjustments" on public.order_stock_adjustments for all to anon,authenticated using(false) with check(false);
