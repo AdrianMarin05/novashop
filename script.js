@@ -365,8 +365,8 @@ async function submitCheckoutForm(event){
 }
 window.openModal=function(type){
   const content={
-    shipping:['Envíos','El costo y el tiempo de entrega dependen del destino y de los productos. Consulta ambos datos por WhatsApp antes de confirmar tu pedido.'],
-    returns:['Cambios y devoluciones','Si tienes dudas sobre cambios, devoluciones o garantía, consulta por WhatsApp las condiciones aplicables al producto antes de comprar. Esto no limita los derechos que te reconoce la normativa vigente.'],
+    shipping:['Envíos','Si pagas en línea con Bold, el envío de productos físicos es gratis. Si eliges contraentrega, el costo del flete depende del destino y debe pagarse por anticipado a la transportadora; el producto se paga al recibirlo.'],
+    returns:['Cambios y devoluciones','Para consultas sobre cambios, devoluciones o garantía, escribe a hola@novashop.co. Las condiciones aplicables no limitan los derechos que te reconoce la normativa vigente.'],
     privacy:['Privacidad','Los datos que compartes se utilizan para gestionar tu cuenta y coordinar los pedidos. No ingreses números de tarjeta, contraseñas ni códigos de seguridad en esta página. Para consultas sobre tus datos, escríbenos a hola@novashop.co.']
   }[type];
   $('#modalContent').innerHTML=`<span class="eyebrow">INFORMACIÓN</span><h2>${content[0]}</h2><p>${content[1]}</p>`;
