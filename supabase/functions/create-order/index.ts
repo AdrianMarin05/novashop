@@ -257,14 +257,49 @@ Deno.serve(async (req: Request) => {
       throw linesError;
     }
 
-    // Counts are updated by the trusted server only, never by the browser.
+    // Consume a coupon using an optimistic conditional update so simultaneous checkouts
+    // cannot exceed max_uses or overwrite each other's usage counters.
     if (usedCoupon) {
-      const { error: usageError } = await admin.from("coupons")
-        .update({ uses_count: Number(usedCoupon.uses_count || 0) + 1, updated_at: new Date().toISOString() })
-        .eq("id", usedCoupon.id);
-      if (usageError) {
+      let usageCommitted = false;
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const {data: liveCoupon, error: readError} = await admin.from("coupons")
+          .select("id,uses_count,max_uses,is_active,starts_at,ends_at")
+          .eq("id", usedCoupon.id).maybeSingle();
+        if (readError) {
+          await admin.from("orders").delete().eq("id", order.id);
+          throw readError;
+        }
+        if (!liveCoupon || !liveCoupon.is_active) {
+          await admin.from("orders").delete().eq("id", order.id);
+          return json({error:"El cupón dejó de estar disponible. Inténtalo con otro código."},409);
+        }
+        const usageNow = Date.now();
+        if (new Date(liveCoupon.starts_at).getTime() > usageNow ||
+            (liveCoupon.ends_at && new Date(liveCoupon.ends_at).getTime() < usageNow)) {
+          await admin.from("orders").delete().eq("id", order.id);
+          return json({error:"El cupón ya no está vigente."},409);
+        }
+        const count = Number(liveCoupon.uses_count || 0);
+        if (liveCoupon.max_uses != null && count >= Number(liveCoupon.max_uses)) {
+          await admin.from("orders").delete().eq("id", order.id);
+          return json({error:"Este cupón acaba de alcanzar su límite de usos."},409);
+        }
+        const {data:counterUpdated,error:usageError} = await admin.from("coupons")
+          .update({uses_count:count+1,updated_at:new Date().toISOString()})
+          .eq("id",usedCoupon.id).eq("uses_count",count)
+          .select("id").maybeSingle();
+        if (usageError) {
+          await admin.from("orders").delete().eq("id", order.id);
+          throw usageError;
+        }
+        if (counterUpdated) {
+          usageCommitted = true;
+          break;
+        }
+      }
+      if (!usageCommitted) {
         await admin.from("orders").delete().eq("id", order.id);
-        throw usageError;
+        return json({error:"No pudimos reservar el uso del cupón por actividad simultánea. Inténtalo de nuevo."},409);
       }
     }
 
