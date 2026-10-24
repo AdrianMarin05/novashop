@@ -153,16 +153,38 @@ Deno.serve(async (req: Request) => {
       const carrier=clean(body.shipping_carrier,80);
       const tracking=clean(body.tracking_number,100);
       const eta=clean(body.estimated_delivery_date,10);
+      const feeRaw=body.shipping_fee_cop;
+      const fee=feeRaw===null||feeRaw===undefined||String(feeRaw).trim()===""?null:Number(feeRaw);
+      const shippingPaid=body.shipping_paid===true;
       if(!/^[0-9a-f-]{36}$/i.test(orderId))return json({error:"Identificador de pedido no válido."},400,origin);
       if(carrier.length>80||tracking.length>100||(eta&&!/^\d{4}-\d{2}-\d{2}$/.test(eta)))return json({error:"Revisa la transportadora, guía y fecha estimada."},400,origin);
+      if(fee!==null&&(!Number.isSafeInteger(fee)||fee<0||fee>100000000))return json({error:"El costo del envío debe ser un importe entero entre $0 y $100.000.000."},400,origin);
+      const {data:current,error:lookupError}=await admin.from("orders")
+        .select("id,order_number,payment_provider,delivery_type").eq("id",orderId).maybeSingle();
+      if(lookupError)throw lookupError;
+      if(!current)return json({error:"No encontramos ese pedido."},404,origin);
+      if(current.delivery_type==="digital")return json({error:"Los pedidos digitales no requieren una transportadora."},400,origin);
+
+      let shippingFee: number|null=fee;
+      let shippingPaymentStatus="pending";
+      if(current.payment_provider==="bold"){
+        shippingFee=0;
+        shippingPaymentStatus="not_required";
+      }else{
+        if(shippingFee===0)return json({error:"Los pedidos contraentrega no tienen envío gratis; registra el costo real de la transportadora."},400,origin);
+        if(shippingPaid&&shippingFee===null)return json({error:"Registra primero el costo del flete antes de marcarlo como pagado."},400,origin);
+        shippingPaymentStatus=shippingPaid?"approved":"pending";
+      }
       const {data:updated,error}=await admin.from("orders").update({
         shipping_carrier:carrier||null,
         tracking_number:tracking||null,
         estimated_delivery_date:eta||null,
+        shipping_fee_cop:shippingFee,
+        shipping_payment_status:shippingPaymentStatus,
         updated_at:new Date().toISOString()
-      }).eq("id",orderId).select("id,order_number,shipping_carrier,tracking_number,estimated_delivery_date,updated_at").single();
+      }).eq("id",orderId).select("id,order_number,payment_provider,shipping_carrier,tracking_number,estimated_delivery_date,shipping_fee_cop,shipping_payment_status,updated_at").single();
       if(error)throw error;
-      return json({ok:true,order:updated,message:"Datos de envío guardados."},200,origin);
+      return json({ok:true,order:updated,message:shippingPaymentStatus==="approved"?"Datos guardados; flete marcado como pagado.":shippingPaymentStatus==="not_required"?"Envío gratis con pago en línea Bold.":"Cotización de envío guardada; falta registrar el pago anticipado del flete."},200,origin);
     }
 
     if (action === "list-orders") {
@@ -175,7 +197,7 @@ Deno.serve(async (req: Request) => {
         return json({error:"Filtro de estado no válido."},400,origin);
       }
       let query = admin.from("orders").select(
-        "id,order_number,user_id,status,payment_status,payment_provider,payment_reference,currency,subtotal_cop,discount_cop,total_cop,coupon_code,delivery_type,customer_first_name,customer_last_name,customer_email,customer_phone,address,neighborhood,city,department,postal_code,delivery_reference,preferred_payment_method,customer_note,shipping_carrier,tracking_number,estimated_delivery_date,shipped_at,delivered_at,created_at,updated_at,latitude,longitude,order_items(id,product_id,product_name,quantity,unit_price_cop,line_total_cop,delivery_type)"
+        "id,order_number,user_id,status,payment_status,payment_provider,payment_reference,currency,subtotal_cop,discount_cop,total_cop,coupon_code,delivery_type,customer_first_name,customer_last_name,customer_email,customer_phone,address,neighborhood,city,department,postal_code,delivery_reference,preferred_payment_method,customer_note,shipping_carrier,tracking_number,estimated_delivery_date,shipping_fee_cop,shipping_payment_status,shipped_at,delivered_at,created_at,updated_at,latitude,longitude,order_items(id,product_id,product_name,quantity,unit_price_cop,line_total_cop,delivery_type)"
       ).order("created_at",{ascending:false}).range(offset,offset+limit-1);
       if (requestedStatus && requestedStatus !== "all") query = query.eq("status",requestedStatus);
       const {data,error} = await query;
@@ -192,7 +214,7 @@ Deno.serve(async (req: Request) => {
       if (!/^[0-9a-f-]{36}$/i.test(orderId)) return json({error:"Identificador de pedido no válido."},400,origin);
       if (!allowedStatuses.has(nextStatus)) return json({error:"Selecciona un estado válido."},400,origin);
       const {data:currentOrder,error:lookupError} = await admin.from("orders")
-        .select("id,status,payment_status,order_number,shipped_at,delivered_at").eq("id",orderId).maybeSingle();
+        .select("id,status,payment_status,payment_provider,shipping_fee_cop,shipping_payment_status,order_number,shipped_at,delivered_at").eq("id",orderId).maybeSingle();
       if (lookupError) throw lookupError;
       if (!currentOrder) return json({error:"No encontramos ese pedido."},404,origin);
       if (["cancelled","refunded","payment_failed"].includes(currentOrder.status) && nextStatus !== currentOrder.status) {
@@ -201,17 +223,23 @@ Deno.serve(async (req: Request) => {
       if (nextStatus === "pending_payment" && ["approved","refunded"].includes(currentOrder.payment_status)) {
         return json({error:"Este pedido ya tiene un pago aprobado o reembolsado y no puede volver a pendiente de pago."},409,origin);
       }
+      if (nextStatus === "shipped" && currentOrder.payment_provider === "cash_on_delivery" &&
+          (!(Number(currentOrder.shipping_fee_cop)>0) || currentOrder.shipping_payment_status !== "approved")) {
+        return json({error:"No se puede despachar un pedido contraentrega hasta registrar el costo del flete y verificar que fue pagado por anticipado a la transportadora."},409,origin);
+      }
       const now=new Date().toISOString();
       const update:any = {status:nextStatus,updated_at:now};
       if (nextStatus==="shipped"&&!currentOrder.shipped_at) update.shipped_at=now;
       if (nextStatus==="delivered"&&!currentOrder.delivered_at) update.delivered_at=now;
-      if (["paid","preparing","shipped","delivered"].includes(nextStatus)) update.payment_status = "approved";
-      else if (nextStatus === "payment_failed") update.payment_status = "rejected";
+      if (nextStatus === "paid" || nextStatus === "delivered" ||
+          (["preparing","shipped"].includes(nextStatus) && currentOrder.payment_provider !== "cash_on_delivery")) {
+        update.payment_status = "approved";
+      } else if (nextStatus === "payment_failed") update.payment_status = "rejected";
       else if (nextStatus === "refunded") update.payment_status = "refunded";
       else if (nextStatus === "cancelled" && currentOrder.payment_status !== "approved") update.payment_status = "cancelled";
       else if (nextStatus === "pending_payment") update.payment_status = "pending";
       const {data:updated,error:updateError} = await admin.from("orders").update(update)
-        .eq("id",orderId).select("id,order_number,status,payment_status,updated_at").single();
+        .eq("id",orderId).select("id,order_number,status,payment_status,payment_provider,shipping_fee_cop,shipping_payment_status,updated_at").single();
       if (updateError) throw updateError;
       return json({ok:true,order:updated,message:"Estado del pedido actualizado."},200,origin);
     }
@@ -321,7 +349,7 @@ Deno.serve(async (req: Request) => {
         if (!order.user_id) continue;
         const row:any=orderMap.get(order.user_id)||{order_count:0,paid_orders:0,lifetime_spend_cop:0};
         row.order_count++;
-        if (order.payment_status==="approved" || ["paid","preparing","shipped","delivered"].includes(order.status)) {
+        if (order.payment_status==="approved") {
           row.paid_orders++;
           row.lifetime_spend_cop+=Number(order.total_cop ?? (Number(order.subtotal_cop||0)-Number(order.discount_cop||0)));
         }
@@ -465,8 +493,7 @@ Deno.serve(async (req: Request) => {
       const orders = ordersResult.data || [];
       const items = itemsResult.data || [];
       const products = productsResult.data || [];
-      const paidStatuses = new Set(["paid","preparing","shipped","delivered"]);
-      const paidOrders = orders.filter((o: any) => o.payment_status === "approved" || paidStatuses.has(o.status));
+      const paidOrders = orders.filter((o: any) => o.payment_status === "approved");
       const paidOrderIds = new Set(paidOrders.map((o: any) => o.id));
       const revenueCop = paidOrders.reduce((n: number, o: any) => n + Number(o.total_cop ?? (Number(o.subtotal_cop || 0) - Number(o.discount_cop || 0))), 0);
       const confirmedItems = items.filter((it: any) => paidOrderIds.has(it.order_id));
