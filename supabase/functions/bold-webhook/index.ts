@@ -40,7 +40,11 @@ Deno.serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const publicKey = defaultKey(Deno.env.get("SUPABASE_PUBLISHABLE_KEYS")) || Deno.env.get("SUPABASE_ANON_KEY");
     const serviceKey = defaultKey(Deno.env.get("SUPABASE_SECRET_KEYS")) || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const mode = clean(Deno.env.get("BOLD_ENVIRONMENT") || "live", 16).toLowerCase();
+    const mode = clean(Deno.env.get("BOLD_ENVIRONMENT") || "", 16).toLowerCase();
+    if (!["test", "live"].includes(mode)) {
+      console.error("bold-webhook: configura BOLD_ENVIRONMENT como test o live.");
+      return json({ error: "Configuración de ambiente incompleta." }, 500);
+    }
     const secret = mode === "test" ? "" : (Deno.env.get("BOLD_SECRET_KEY") || "");
     if (!supabaseUrl || !publicKey || !serviceKey) {
       console.error("bold-webhook: faltan variables de entorno de Supabase.");
