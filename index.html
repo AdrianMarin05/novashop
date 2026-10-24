@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=36">
+  <link rel="stylesheet" href="styles.css?v=37">
   <link rel="stylesheet" href="storefront-enhancements.css?v=4">
 </head>
 <body>
@@ -45,7 +45,7 @@
         <div class="hero-copy">
           <span class="eyebrow">DESCUBRE ALGO NUEVO · OFERTAS DESTACADAS</span>
           <h1>Lo que buscas.<br><em>Más fácil.</em></h1>
-          <p>Encuentra productos para tu día a día y completa tu compra desde la página. Con Bold tienes envío gratis; con contraentrega, pagas el producto al recibirlo y el flete por anticipado. Para dudas sobre un producto, consúltanos por WhatsApp.</p>
+          <p>Bienvenido a NovaShop. Descubre productos y servicios digitales para hacerte el día más fácil. Explora con calma, compara tus opciones y cuenta con nosotros si necesitas orientación.</p>
           <div class="hero-product-search" role="search" aria-label="Buscar en el catálogo">
             <div class="hero-search-shell">
               <span class="hero-search-icon" aria-hidden="true">⌕</span>
@@ -60,8 +60,8 @@
             <a class="btn btn-ghost" href="#categorias">Ver categorías</a>
           </div>
           <div class="micro-trust">
-            <span>✓ Atención personalizada por WhatsApp</span>
-            <span>✓ Tu pedido, paso a paso</span>
+            <span>✓ Envío gratis con Bold en productos físicos</span>
+            <span>✓ Dudas sobre productos, por WhatsApp</span>
           </div>
         </div>
         <div class="hero-visual">
@@ -74,6 +74,23 @@
   <div class="float-card float-one" aria-hidden="true">⚡ <span>Compra rápida</span></div>
   <div class="float-card float-two" aria-hidden="true">★ <span>Productos seleccionados</span></div>
 </div>
+      </div>
+    </section>
+
+    <section class="experience-strip" aria-label="Una experiencia de compra sencilla">
+      <div class="container experience-grid">
+        <article class="experience-item">
+          <span class="experience-icon" aria-hidden="true">♡</span>
+          <div><h2>Compra sin afán</h2><p>Explora a tu ritmo y guarda lo que te guste para más tarde.</p></div>
+        </article>
+        <article class="experience-item">
+          <span class="experience-icon" aria-hidden="true">↗</span>
+          <div><h2>Opciones claras</h2><p>Bold para pagar en línea; contraentrega para productos físicos.</p></div>
+        </article>
+        <article class="experience-item">
+          <span class="experience-icon" aria-hidden="true">☺</span>
+          <div><h2>Estamos para ayudarte</h2><p>Resuelve dudas sobre un producto por WhatsApp antes de decidir.</p></div>
+        </article>
       </div>
     </section>
 
@@ -136,13 +153,17 @@
       </div>
     </section>
 
-    <section class="newsletter section">
-      <div class="container newsletter-card">
-        <div><span class="eyebrow">PRÓXIMAMENTE</span><h2>Muy pronto: novedades y ofertas</h2><p>Estamos preparando este espacio. Mientras tanto, explora el catálogo; si tienes dudas sobre un producto, puedes consultarnos por WhatsApp.</p></div>
-        <form id="newsletterForm" class="newsletter-form">
-          <input type="email" placeholder="Suscripción por correo próximamente" aria-label="Suscripción por correo" disabled>
-          <button class="btn btn-primary" type="submit" disabled>Próximamente</button>
-        </form>
+    <section class="next-step-section section" aria-labelledby="nextStepTitle">
+      <div class="container next-step-card">
+        <div class="next-step-copy">
+          <span class="eyebrow">A TU RITMO</span>
+          <h2 id="nextStepTitle">Compra con calma. Elige lo que de verdad te sirve.</h2>
+          <p>Guarda tus favoritos para volver cuando quieras. Y si tienes una pregunta sobre un producto, aquí hay alguien para orientarte antes de comprar.</p>
+        </div>
+        <div class="next-step-actions">
+          <a class="btn btn-primary" href="favoritos.html">Ver mis favoritos <span aria-hidden="true">♡</span></a>
+          <a class="btn btn-ghost" href="#productos">Seguir explorando <span aria-hidden="true">→</span></a>
+        </div>
       </div>
     </section>
   </main>
@@ -271,12 +292,16 @@
   </div>
 
   <div class="toast" id="toast" role="status"></div>
+  <a class="floating-product-help" href="https://wa.me/573003358382?text=Hola%20NovaShop%2C%20tengo%20una%20consulta%20sobre%20un%20producto." target="_blank" rel="noopener noreferrer" aria-label="Consultar por WhatsApp sobre un producto">
+    <span class="floating-help-icon" aria-hidden="true">✆</span>
+    <span class="floating-help-copy"><strong>¿Te ayudamos?</strong><small>Consultas sobre productos</small></span>
+  </a>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=17"></script>
   <script src="supabase-client.js?v=28"></script><script src="auth-nav.js?v=17"></script>
   <script src="products.js?v=18"></script>
   <script src="bold-checkout.js?v=2"></script>
-  <script src="script.js?v=34"></script>
+  <script src="script.js?v=35"></script>
   <script src="storefront-enhancements.js?v=2"></script>
 </body>
 </html>
