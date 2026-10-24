@@ -109,7 +109,7 @@ async function deleteAdminUser(userId){
  if(currentRole!=="owner"){userStatus("Solo el propietario puede eliminar cuentas.","error");return;}
  const target=adminUsers.find(u=>u.id===userId);if(!target||target.role==="owner")return;
  const label=target.email||target.full_name||"este usuario";
- const confirmed=confirm("Vas a eliminar definitivamente la cuenta de "+label+" en Supabase Authentication. Se borrarán sus datos de perfil, rol, favoritos y reseñas. Los pedidos se conservarán para el historial comercial, pero dejarán de estar vinculados a la cuenta. Esta acción no se puede deshacer. ¿Deseas continuar?");
+ const confirmed=confirm("Vas a eliminar definitivamente la cuenta de "+label+" en Supabase Authentication. Se borrarán su perfil, rol, favoritos y reseñas. Los pedidos históricos se conservarán y quedarán desvinculados de la cuenta; pueden mantener datos necesarios para respaldar las compras. Esta acción no se puede deshacer. ¿Deseas continuar?");
  if(!confirmed)return;
  const button=$('[data-user-delete="'+CSS.escape(userId)+'"]');
  if(button){button.disabled=true;button.textContent="Eliminando…";}
