@@ -206,13 +206,15 @@ function renderProductCheckoutSummary() {
 function configureProductPaymentMethods(form){
   const allowContraentrega=currentProduct.deliveryType==="physical";
   const select=form?.querySelector('select[name="paymentMethod"]');
+  const boldOption=select?.querySelector('option[value="bold"]');
   const codOption=select?.querySelector('option[value="cash_on_delivery"]');
+  if(boldOption)boldOption.textContent=allowContraentrega?"Pagar en línea con Bold · envío gratis":"Pagar en línea con Bold";
   if(codOption){codOption.hidden=!allowContraentrega;codOption.disabled=!allowContraentrega;}
   if(select&&!allowContraentrega)select.value="bold";
   const policy=form?.querySelector("[data-payment-policy]");
   if(policy)policy.textContent=allowContraentrega
-    ?"Con Bold el envío es gratis y puedes elegir un medio habilitado en la pasarela. Con contraentrega pagas el producto al recibirlo y el flete por anticipado a la transportadora."
-    :"Este es un servicio digital: paga en línea con Bold. No aplica contraentrega ni envío físico.";
+    ?"Con Bold el envío es gratis y puedes elegir un medio habilitado en la pasarela. Con contraentrega pagas el producto al recibirlo y el flete cotizado según destino por anticipado a la transportadora."
+    :"Este es un servicio digital: paga en línea con Bold. No aplica contraentrega ni envío físico. Si tienes preguntas sobre el servicio, consúltanos por WhatsApp antes de comprar.";
 }
 function openProductCheckout() {
   renderProductCheckoutSummary();
