@@ -24,9 +24,15 @@
       script.async = true;
       script.onload = () => {
         if (typeof window.BoldCheckout === "function") resolve();
-        else reject(new Error("No se pudo inicializar la pasarela de Bold."));
+        else {
+          script.remove();
+          reject(new Error("No se pudo inicializar la pasarela de Bold."));
+        }
       };
-      script.onerror = () => reject(new Error("No pudimos cargar la pasarela de Bold. Revisa tu conexión."));
+      script.onerror = () => {
+        script.remove();
+        reject(new Error("No pudimos cargar la pasarela de Bold. Revisa tu conexión."));
+      };
       document.head.appendChild(script);
     }).catch((error) => {
       loadPromise = null;
