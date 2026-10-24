@@ -27,7 +27,7 @@ No se debe publicar ninguna clave secreta ni `service_role`. La clave publishabl
 
 ## Estado de pagos
 
-El registro de pedidos funciona, pero el checkout de esta versión aún abre WhatsApp y deja los pedidos en estado `pending_payment`. No existe una pasarela de pago online ni confirmación automática de pago integrada. No despaches pedidos basándote solo en el registro; confirma el pago hasta que se añada un proveedor de pagos con notificaciones verificadas.
+El checkout ofrece pago en línea con Bold o contraentrega para productos físicos. Bold tiene envío gratis; contraentrega mantiene el pago del producto pendiente hasta la entrega y exige cotizar y pagar el flete por anticipado a la transportadora. El webhook/consulta de Bold marca el pago en línea como aprobado solo cuando se verifica la transacción. Las llaves del comercio y la configuración del webhook son necesarias antes de aceptar pagos reales.
 
 ## Supabase Auth
 
@@ -62,7 +62,7 @@ Replace the example text with your own verified account UUID. Never give this ro
 
 ## Current payment status
 
-NovaShop has a Bold custom checkout integration in place. Orders are created on the server and start as `pending_payment`. The shopper can select Bold in either the cart checkout or product checkout. The checkout signature is generated server-side; the return page queries Bold's transaction API and a separate Edge Function validates Bold webhook signatures and payment amounts before updating an order. The integration still requires the merchant's own Bold integration keys and webhook registration before it can accept real payments; it must be tested with Bold's test keys first. Do not dispatch orders solely because the customer returns to the store.
+NovaShop has a Bold custom checkout integration in place. Orders are created on the server and start as `pending_payment`. Customers can select Bold from the cart or product page; payment methods available inside Bold depend on the merchant's enabled methods. Bold payments have free shipping. Physical-product COD orders keep product payment pending until delivery and require the carrier's freight amount to be quoted and prepaid before the order can be marked shipped. The checkout signature is generated server-side; the return page queries Bold's transaction API and a separate Edge Function validates Bold webhook signatures and transaction amounts before updating an order. Real payments require the merchant's own Bold integration keys and production webhook registration. Do not dispatch orders solely because the customer returns to the store.
 
 
 ## Admin panel de productos
@@ -89,7 +89,7 @@ NovaShop has a Bold custom checkout integration in place. Orders are created on 
 - El panel privado calcula ingresos y porcentajes solo a partir de pedidos con pago confirmado.
 - `products.stock_quantity`: entero no negativo; `NULL` significa inventario aún no configurado y `0` significa agotado.
 - Los productos existentes quedan con stock sin configurar porque no se proporcionó una cantidad real para ellos.
-- Los pedidos pendientes por WhatsApp no se consideran ventas pagadas. Hace falta integrar una pasarela con webhook de pago para registrar las ventas automáticamente.
+- Los pedidos con `payment_status` distinto de `approved` no se consideran ventas pagadas. Los pedidos COD solo pasan a pago aprobado cuando el producto se marca recibido/pagado; el flete prepagado se administra por separado.
 - El acceso a métricas y administración se comprueba en la Edge Function `admin-products` contra `public.store_admins`.
 
 
@@ -155,5 +155,5 @@ El panel administrativo está protegido por roles validados en el servidor. No g
 - Configura como secretos de Edge Functions `BOLD_API_KEY` (llave de identidad del botón de pagos) y `BOLD_SECRET_KEY` (llave secreta de ese mismo ambiente). Opcionalmente define `NOVASHOP_SITE_URL` con la URL pública completa del sitio.
 - Configura `BOLD_ENVIRONMENT=test` para la llave secreta de pruebas (el webhook de pruebas se firma con una clave vacía según Bold). En producción usa la pareja de llaves de producción y `BOLD_ENVIRONMENT=live`.
 - Registra en el panel de Bold el endpoint `https://fbcffmhcypsprvgdbtas.supabase.co/functions/v1/bold-webhook` como webhook de Botón de pagos. Prueba primero con el ambiente de pruebas y verifica una transacción antes de habilitar ventas reales.
-- El monto que se cobra en Bold corresponde al total de productos menos descuentos. El costo de envío todavía se confirma por WhatsApp y puede cobrarse aparte, tal como se indica en el checkout.
+- El monto de Bold corresponde al total de productos menos descuentos y el envío es gratis para compras pagadas en línea. Los pedidos contraentrega cotizan el flete por separado; el cliente paga ese flete por anticipado a la transportadora y paga el producto al recibirlo. El panel administrativo debe registrar el valor real del flete y verificar su pago antes de marcar el pedido como enviado.
 - No guardes llaves privadas en GitHub ni en archivos públicos del frontend.
