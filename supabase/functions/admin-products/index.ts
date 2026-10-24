@@ -387,6 +387,7 @@ Deno.serve(async (req: Request) => {
       if (targetLegacyError) throw targetLegacyError;
       const oldRole = targetRole?.role || (targetLegacy ? "owner" : "customer");
       if (oldRole === "owner") return json({error:"El propietario está protegido; no se puede cambiar su rol desde el panel."},409,origin);
+      if (oldRole === "admin" && !isOwner) return json({error:"Solo el propietario puede cambiar el rol de otro administrador."},403,origin);
       const {error:saveError} = await admin.from("store_user_roles").upsert({
         user_id:targetId,role:wantedRole,granted_by:user.id,updated_at:new Date().toISOString()
       },{onConflict:"user_id"});
