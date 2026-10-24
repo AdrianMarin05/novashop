@@ -107,8 +107,18 @@
 <div id="dashboard" hidden class="account-dashboard"><h2 id="welcome">Mi cuenta</h2><p id="userEmail" class="account-help"></p>
 <form id="profileForm" class="account-form"><h3>Mis datos de entrega</h3>
 <div class="form-grid two-cols"><label><span>Nombres y apellidos *</span><input name="fullName" required maxlength="120"></label><label><span>Teléfono *</span><input name="phone" required maxlength="24"></label><label class="full"><span>Correo electrónico</span><input name="email" type="email" maxlength="120"></label>
-<label class="full"><span>Dirección exacta *</span><input name="address" required maxlength="180"></label><label><span>Barrio *</span><input name="neighborhood" required maxlength="80"></label><label><span>Ciudad / Municipio *</span><input name="city" required maxlength="80"></label><label><span>Departamento *</span><input name="department" required maxlength="80"></label><label><span>Código postal</span><input name="postalCode" maxlength="12"></label><label class="full"><span>Referencia</span><textarea name="deliveryReference" rows="2" maxlength="240"></textarea></label></div>
-<p class="account-help">La dirección guardada se utilizará para coordinar tus entregas.</p>
+<label class="full"><span>Dirección exacta *</span><input name="address" required maxlength="180"></label><label><span>Barrio *</span><input name="neighborhood" required maxlength="80"></label><label><span>Ciudad / Municipio *</span><input name="city" required maxlength="80"></label><label><span>Departamento *</span><input name="department" required maxlength="80"></label><label><span>Código postal</span><input name="postalCode" maxlength="12"></label><label class="full"><span>Indicaciones adicionales para llegar</span><textarea name="deliveryReference" rows="2" maxlength="240" placeholder="Portería, torre, apartamento, color de la casa, punto de referencia..."></textarea></label></div>
+<div class="map-card profile-delivery-map-card" style="margin-top:16px">
+ <div class="map-toolbar">
+  <div><strong>Ubicación exacta de entrega</strong><br><small>Si cambiaste de dirección, mueve el pin o selecciona el nuevo punto en el mapa.</small></div>
+  <button type="button" class="btn" id="useProfileLocation" style="padding:9px 12px;font-size:12px">Usar mi ubicación</button>
+ </div>
+ <div id="profileDeliveryMap" class="delivery-map" role="application" aria-label="Mapa para actualizar la ubicación de entrega"></div>
+ <div class="map-toolbar"><small id="profileMapStatus">Cargando la ubicación guardada…</small><span id="profileMapCoordinates" class="map-coordinates">Sin pin seleccionado</span></div>
+</div>
+<input type="hidden" name="latitude" id="profileLatitude">
+<input type="hidden" name="longitude" id="profileLongitude">
+<p class="account-help">Al cambiar la dirección, debes confirmar el nuevo punto del mapa antes de guardar. Las indicaciones adicionales se guardan junto con el perfil y se utilizarán en futuras compras.</p>
 <button class="btn btn-primary wide" type="submit">Guardar datos de entrega</button></form>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:25px"><h2>Mis pedidos</h2><button type="button" id="refreshOrders" class="account-ghost">Actualizar ↻</button></div><div id="ordersList"><p class="account-help">Tus pedidos aparecerán aquí.</p></div>
 <div style="display:flex;gap:15px;flex-wrap:wrap;margin-top:18px"><button type="button" id="signOut" class="account-ghost">Cerrar sesión</button></div>
@@ -117,5 +127,5 @@
 
 </section></main>
 <footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Cuenta gratuita y opcional</span></div></footer>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=30"></script><script src="supabase-client.js?v=34"></script><script src="auth-nav.js?v=29"></script><script src="account.js?v=37"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=30"></script><script src="supabase-client.js?v=34"></script><script src="auth-nav.js?v=29"></script><script src="account.js?v=38"></script>
 </body></html>
