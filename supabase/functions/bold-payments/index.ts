@@ -52,14 +52,16 @@ Deno.serve(async (req: Request) => {
     }
     const site = new URL(siteUrl);
     if (site.protocol !== "https:") return json({ error: "La URL pública de NovaShop debe usar HTTPS." }, 500);
-    if (!boldApiKey || !boldSecretKey) {
-      return json({ error: "Faltan las llaves de integración de Bold en Supabase. Configura BOLD_API_KEY y BOLD_SECRET_KEY en los secretos de la función." }, 503);
-    }
-
     const rawBody = await req.text();
     if (rawBody.length > 12000) return json({ error: "La solicitud es demasiado grande." }, 413);
     let body: any;
     try { body = JSON.parse(rawBody); } catch { return json({ error: "El formato de la solicitud no es válido." }, 400); }
+    const action = clean(body.action, 40);
+    // This public preflight reveals only whether configuration exists; it never returns credentials.
+    if (action === "status") return json({ ok: true, configured: Boolean(boldApiKey && boldSecretKey) });
+    if (!boldApiKey || !boldSecretKey) {
+      return json({ error: "Faltan las llaves de integración de Bold en Supabase. Configura BOLD_API_KEY y BOLD_SECRET_KEY en los secretos de la función." }, 503);
+    }
 
     const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const authHeader = req.headers.get("Authorization") || "";
@@ -72,8 +74,6 @@ Deno.serve(async (req: Request) => {
       if (error || !data.user) return json({ error: "Tu sesión no es válida. Inicia sesión de nuevo." }, 401);
       requester = data.user;
     }
-
-    const action = clean(body.action, 40);
 
     if (action === "create-checkout") {
       const orderId = clean(body.order_id, 50);
