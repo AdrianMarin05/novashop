@@ -151,15 +151,22 @@ function openCart(){ $('#cartDrawer').classList.add('open'); $('#drawerOverlay')
 function closeCart(){ $('#cartDrawer').classList.remove('open'); $('#drawerOverlay').classList.remove('show'); document.body.style.overflow=''; }
 function toast(msg,duration=1800){ const t=$('#toast'); if(!t)return; t.textContent=msg; t.classList.add('show'); clearTimeout(window.__toast); window.__toast=setTimeout(()=>t.classList.remove('show'),duration); }
 
-function configureCheckoutPaymentMethods(form,allowContraentrega){
+function configureCheckoutPaymentMethods(form,allowContraentrega,digitalOnly){
   const select=form?.querySelector('select[name="paymentMethod"]');
+  const boldOption=select?.querySelector('option[value="bold"]');
   const codOption=select?.querySelector('option[value="cash_on_delivery"]');
+  if(boldOption)boldOption.textContent=digitalOnly?"Pagar en línea con Bold":"Pagar en línea con Bold · envío gratis";
   if(codOption){codOption.hidden=!allowContraentrega;codOption.disabled=!allowContraentrega;}
   if(select&&!allowContraentrega)select.value="bold";
   const policy=form?.querySelector("[data-payment-policy]");
-  if(policy)policy.textContent=allowContraentrega
-    ?"Con Bold el envío es gratis y el cliente elige un medio habilitado en Bold. Con contraentrega, el producto se paga al recibirlo y el flete se paga por anticipado a la transportadora."
-    :"Este carrito contiene productos digitales: se paga en línea con Bold. No aplica contraentrega ni envío físico.";
+  if(!policy)return;
+  if(digitalOnly){
+    policy.textContent="Este carrito contiene solo servicios digitales: se paga en línea con Bold y no aplica envío físico ni contraentrega. Si tienes preguntas sobre un servicio, consúltanos por WhatsApp antes de comprar.";
+  }else if(allowContraentrega){
+    policy.textContent="Con Bold el envío es gratis y el cliente elige un medio habilitado en Bold. Con contraentrega, el producto se paga al recibirlo y el flete se cotiza según el destino y se paga por anticipado a la transportadora.";
+  }else{
+    policy.textContent="Este carrito mezcla productos físicos y servicios digitales, por lo que solo está disponible el pago en línea con Bold. El envío de los productos físicos es gratis al pagar en línea.";
+  }
 }
 function checkoutWhatsApp(){
   if(!cart.length){toast("Añade al menos un producto");return;}
@@ -168,7 +175,7 @@ function checkoutWhatsApp(){
   const allowContraentrega=cart.every(item=>product(item.id)?.deliveryType==="physical");
   const form=$("#checkoutForm");
   const deliveryFields=$("#cartDeliveryFields");if(deliveryFields)deliveryFields.hidden=digitalOnly;
-  configureCheckoutPaymentMethods(form,allowContraentrega);
+  configureCheckoutPaymentMethods(form,allowContraentrega,digitalOnly);
   openCheckoutModal();
   window.NovaShopDB?.prefillCheckout?.(form).catch(err=>console.warn("Perfil no precargado:",err));
 }
