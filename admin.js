@@ -3,7 +3,7 @@
 const $=s=>document.querySelector(s), db=window.NovaShopDB;
 const money=n=>new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(Number(n)||0);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let products=[], editingImages=[], editingVideo=null, metrics=null, currentRole=null, adminUsers=[], adminOrders=[], ordersOffset=0, ordersHasMore=false, ordersLoading=false, productEditorReturnFocus=null;
+let products=[], editingImages=[], editingVideo=null, metrics=null, currentRole=null, adminUsers=[], adminOrders=[], adminCoupons=[], adminReviews=[], ordersOffset=0, ordersHasMore=false, ordersLoading=false, productEditorReturnFocus=null;
 function status(text,kind="info"){const el=$("#adminStatus");el.textContent=text;el.className="admin-status "+kind;}
 function formData(){const f=$("#adminProductForm"),v=new FormData(f);return {id:v.get("id")?Number(v.get("id")):null,name:String(v.get("name")||"").trim(),category:String(v.get("category")||""),delivery_type:v.get("delivery_type"),price_cop:Number(v.get("price_cop")),old_price_cop:v.get("old_price_cop")?Number(v.get("old_price_cop")):null,stock_quantity:v.get("stock_quantity")===""?null:Number(v.get("stock_quantity")),description:String(v.get("description")||"").trim(),features:String(v.get("features")||"").split("\n").map(s=>s.trim()).filter(Boolean),images:editingImages.slice(),video_url:editingVideo,tag:String(v.get("tag")||"").trim(),shipping:String(v.get("shipping")||"").trim(),is_active:!!f.elements.is_active.checked,sort_order:v.get("sort_order")?Number(v.get("sort_order")):(v.get("id")?Number(v.get("id")):100)};}
 async function call(body){if(!db?.isConfigured?.())throw new Error("Supabase no está conectado.");return db.adminCall(body);}
@@ -93,12 +93,78 @@ async function inviteUser(event){
  }catch(e){userStatus(e.message||"No pudimos invitar al usuario.","error");}
  finally{button.disabled=false;button.textContent="Enviar invitación por correo";}
 }
+
+function couponNotice(message,kind="info"){const el=$("#adminCouponsStatus");if(el){el.textContent=message;el.className="admin-status "+kind;}}
+function reviewNotice(message,kind="info"){const el=$("#adminReviewsStatus");if(el){el.textContent=message;el.className="admin-status "+kind;}}
+function toLocalInputDate(value){if(!value)return "";const d=new Date(value);if(Number.isNaN(d.getTime()))return "";return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);}
+function loadAdminCoupons(){
+ if(!["owner","admin"].includes(currentRole))return;
+ call({action:"list-coupons"}).then(result=>{adminCoupons=result.coupons||[];renderAdminCoupons();couponNotice("Cupones cargados. Los descuentos se validan en el servidor al comprar.","success");}).catch(e=>couponNotice(e.message||"No pudimos cargar los cupones.","error"));
+}
+function renderAdminCoupons(){
+ const box=$("#adminCouponsList");if(!box)return;
+ if(!adminCoupons.length){box.innerHTML='<div class="admin-orders-empty">Todavía no hay cupones. Crea el primero desde el formulario.</div>';return;}
+ box.innerHTML=adminCoupons.map(c=>{
+  const discount=c.discount_type==="percent"?Number(c.discount_value)+"%":money(c.discount_value);
+  const usage=c.max_uses==null?Number(c.uses_count||0)+" usos · sin límite":Number(c.uses_count||0)+" / "+Number(c.max_uses)+" usos";
+  const expiry=c.ends_at?"Vence: "+new Date(c.ends_at).toLocaleString("es-CO",{dateStyle:"medium",timeStyle:"short"}):"Sin vencimiento";
+  return '<article class="admin-coupon-row"><div class="admin-coupon-top"><div><div class="admin-coupon-code">'+esc(c.code)+'</div><div class="admin-coupon-info">'+esc(c.description||"Sin descripción")+'<br>'+esc(discount)+' de descuento · Compra mínima '+money(c.minimum_subtotal_cop||0)+'<br>'+esc(usage)+' · '+esc(expiry)+'</div></div><span class="admin-pill '+(c.is_active?"":"off")+'">'+(c.is_active?"Activo":"Pausado")+'</span></div><div class="admin-coupon-actions"><button type="button" data-coupon-edit="'+esc(c.id)+'">Editar</button><button type="button" data-coupon-toggle="'+esc(c.id)+'">'+(c.is_active?"Pausar":"Activar")+'</button></div></article>';
+ }).join("");
+ box.querySelectorAll("[data-coupon-edit]").forEach(button=>button.addEventListener("click",()=>editAdminCoupon(button.dataset.couponEdit)));
+ box.querySelectorAll("[data-coupon-toggle]").forEach(button=>button.addEventListener("click",()=>toggleAdminCoupon(button.dataset.couponToggle)));
+}
+function editAdminCoupon(id){
+ const c=adminCoupons.find(x=>x.id===id),f=$("#adminCouponForm");if(!c||!f)return;
+ f.elements.id.value=c.id;f.elements.code.value=c.code;f.elements.description.value=c.description||"";
+ f.elements.discount_type.value=c.discount_type;f.elements.discount_value.value=c.discount_value;
+ f.elements.minimum_subtotal_cop.value=c.minimum_subtotal_cop||0;f.elements.max_uses.value=c.max_uses??"";
+ f.elements.starts_at.value=toLocalInputDate(c.starts_at);f.elements.ends_at.value=toLocalInputDate(c.ends_at);
+ f.elements.is_active.checked=!!c.is_active;f.scrollIntoView({behavior:"smooth",block:"center"});
+ couponNotice("Editando el cupón "+c.code+".","info");
+}
+async function saveAdminCoupon(event){
+ event.preventDefault();const f=event.currentTarget;if(!f.reportValidity())return;
+ const v=new FormData(f),button=f.querySelector('[type="submit"]');
+ const starts=v.get("starts_at")?new Date(v.get("starts_at")).toISOString():new Date().toISOString();
+ let ends=null;try{ends=v.get("ends_at")?new Date(v.get("ends_at")).toISOString():null;}catch(_){ends=null;}
+ if(v.get("ends_at")&&!ends){couponNotice("La fecha de vencimiento no es válida.","error");return;}
+ const payload={action:"save-coupon",id:v.get("id")||null,code:String(v.get("code")||"").trim().toUpperCase(),description:String(v.get("description")||"").trim(),discount_type:v.get("discount_type"),discount_value:Number(v.get("discount_value")),minimum_subtotal_cop:Number(v.get("minimum_subtotal_cop")||0),max_uses:v.get("max_uses")===""?null:Number(v.get("max_uses")),starts_at:starts,ends_at:ends,is_active:f.elements.is_active.checked};
+ button.disabled=true;button.textContent="Guardando…";
+ try{const result=await call(payload);couponNotice("Cupón "+result.coupon.code+" guardado correctamente.","success");f.reset();f.elements.id.value="";f.elements.minimum_subtotal_cop.value="0";f.elements.is_active.checked=true;loadAdminCoupons();}
+ catch(e){couponNotice(e.message||"No pudimos guardar el cupón.","error");}
+ finally{button.disabled=false;button.textContent="Guardar cupón";}
+}
+async function toggleAdminCoupon(id){
+ const c=adminCoupons.find(x=>x.id===id);if(!c)return;
+ try{await call({action:"save-coupon",id:c.id,code:c.code,description:c.description,discount_type:c.discount_type,discount_value:c.discount_value,minimum_subtotal_cop:c.minimum_subtotal_cop,max_uses:c.max_uses,starts_at:c.starts_at,ends_at:c.ends_at,is_active:!c.is_active});couponNotice("Estado del cupón actualizado.","success");loadAdminCoupons();}
+ catch(e){couponNotice(e.message||"No pudimos cambiar el estado del cupón.","error");}
+}
+function loadAdminReviews(){
+ if(!["owner","admin"].includes(currentRole))return;
+ call({action:"list-reviews"}).then(result=>{adminReviews=result.reviews||[];renderAdminReviews();reviewNotice("Reseñas cargadas: "+adminReviews.length+".","success");}).catch(e=>reviewNotice(e.message||"No pudimos cargar las reseñas.","error"));
+}
+function renderAdminReviews(){
+ const box=$("#adminReviewsList");if(!box)return;
+ if(!adminReviews.length){box.innerHTML='<div class="admin-orders-empty">Todavía no hay reseñas.</div>';return;}
+ box.innerHTML=adminReviews.map(r=>{
+  const name=typeof r.products==="object"?(Array.isArray(r.products)?r.products[0]?.name:r.products?.name):"Producto";
+  return '<article class="admin-review-row"><div class="admin-review-top"><div><strong>'+esc(name||"Producto")+'</strong><div class="admin-review-meta">'+esc(r.customer_name||"Cliente")+' · '+esc(formatDate(r.created_at))+'</div></div><div class="admin-review-stars">'+("★".repeat(Number(r.rating)||0))+("☆".repeat(5-(Number(r.rating)||0)))+'</div></div>'+(r.title?'<strong>'+esc(r.title)+'</strong>':"")+'<div class="admin-review-body">'+esc(r.body)+'</div><div class="admin-review-actions"><span class="admin-pill '+(r.is_approved?"":"off")+'">'+(r.is_approved?"Publicada":"Pendiente")+'</span><button type="button" data-review-toggle="'+esc(r.id)+'" data-next="'+(!r.is_approved)+'">'+(r.is_approved?"Ocultar reseña":"Aprobar reseña")+'</button></div></article>';
+ }).join("");
+ box.querySelectorAll("[data-review-toggle]").forEach(button=>button.addEventListener("click",()=>setReviewStatus(button.dataset.reviewToggle,button.dataset.next==="true")));
+}
+async function setReviewStatus(id,isApproved){
+ try{await call({action:"set-review-status",id,is_approved:isApproved});reviewNotice(isApproved?"Reseña aprobada y visible en la tienda.":"Reseña ocultada de la tienda.","success");loadAdminReviews();}
+ catch(e){reviewNotice(e.message||"No pudimos cambiar el estado de la reseña.","error");}
+}
+
 function configureRolePanels(){
  document.body.classList.add("admin-authorized");
- const users=$("#adminUsersWrap"),ordersWrap=$("#adminOrdersWrap"),editor=document.querySelector(".admin-grid > section:first-of-type"),catalog=document.querySelector(".admin-grid > section:nth-of-type(2)"),metricsWrap=document.querySelector(".admin-metrics-wrap");
+ const users=$("#adminUsersWrap"),ordersWrap=$("#adminOrdersWrap"),couponsWrap=$("#adminCouponsWrap"),reviewsWrap=$("#adminReviewsWrap"),editor=document.querySelector(".admin-grid > section:first-of-type"),catalog=document.querySelector(".admin-grid > section:nth-of-type(2)"),metricsWrap=document.querySelector(".admin-metrics-wrap");
  const canManage=["owner","admin"].includes(currentRole),canEdit=["owner","admin","catalog_manager"].includes(currentRole),canAnalyze=["owner","admin","analyst"].includes(currentRole);
  if(users)users.hidden=!canManage;
  if(ordersWrap)ordersWrap.hidden=!canManage;
+ if(couponsWrap)couponsWrap.hidden=!canManage;
+ if(reviewsWrap)reviewsWrap.hidden=!canManage;
  if(editor)editor.hidden=!canEdit;
  if(catalog)catalog.hidden=!canEdit&&currentRole!=="analyst";
  if(metricsWrap)metricsWrap.hidden=!canAnalyze;
@@ -185,19 +251,42 @@ function renderAdminOrders(){
    const itemRows=items.map(item=>'<li><span>'+esc(item.product_name||"Producto")+' ×'+Number(item.quantity||0)+'</span><strong>'+money(item.line_total_cop??(Number(item.unit_price_cop||0)*Number(item.quantity||0)))+'</strong></li>').join("");
    const wa=whatsappHref(order.customer_phone);
    const validCoords=order.latitude!==null&&order.latitude!==undefined&&order.longitude!==null&&order.longitude!==undefined&&Number.isFinite(Number(order.latitude))&&Number.isFinite(Number(order.longitude));
-   const mapUrl=validCoords
-    ? 'https://www.google.com/maps?q='+Number(order.latitude)+','+Number(order.longitude)
-    : (address?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(address):"");
+   const mapUrl=validCoords?'https://www.google.com/maps?q='+Number(order.latitude)+','+Number(order.longitude):(address?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(address):"");
    const coords=mapUrl?'<a target="_blank" rel="noopener noreferrer" href="'+mapUrl+'">Abrir mapa para entrega ↗</a>':"";
    const badges='<span class="admin-order-badge '+(order.status==="pending_payment"?"pending":(["paid","preparing","shipped","delivered"].includes(order.status)?"paid":(["cancelled","payment_failed","refunded"].includes(order.status)?"cancelled":"")))+'">'+esc(orderStateLabel(order.status))+'</span><span class="admin-order-badge">Pago: '+esc(paymentLabel(order.payment_status))+'</span>';
    const options=ORDER_STATES.map(([value,label])=>'<option value="'+value+'" '+(order.status===value?"selected":"")+'>'+label+'</option>').join("");
    const email=order.customer_email?'<div>Correo: <a href="mailto:'+esc(order.customer_email)+'">'+esc(order.customer_email)+'</a></div>':"";
    const phone=order.customer_phone?'<div>Teléfono: <a href="tel:'+esc(String(order.customer_phone).replace(/[^+\d]/g,""))+'">'+esc(order.customer_phone)+'</a> '+(wa?'<a target="_blank" rel="noopener noreferrer" href="'+wa+'">WhatsApp ↗</a>':"")+'</div>':"";
-   return '<article class="admin-order-card" data-order-card="'+esc(order.id)+'"><div class="admin-order-top"><div><div class="admin-order-id">'+esc(order.order_number||order.id)+'</div><div class="admin-order-date">'+esc(formatDate(order.created_at))+'</div></div><div class="admin-order-badges">'+badges+'</div></div><div class="admin-order-grid"><section><div class="admin-order-label">Datos del comprador</div><div class="admin-order-customer">'+esc(customer)+'</div><div class="admin-order-meta">'+email+phone+(address?'<div>Dirección: '+esc(address)+'</div>':'<div>Dirección: No indicada</div>')+(order.delivery_reference?'<div>Referencia: '+esc(order.delivery_reference)+'</div>':"")+(order.preferred_payment_method?'<div>Pago elegido: '+esc(order.preferred_payment_method)+'</div>':"")+(coords?'<div>'+coords+'</div>':"")+(order.customer_note?'<div>Nota: '+esc(order.customer_note)+'</div>':"")+'</div></section><section><div class="admin-order-label">Resumen del pedido · '+esc(order.delivery_type||"")+'</div><ul class="admin-order-lines">'+(itemRows||'<li>Detalle de productos no disponible.</li>')+'</ul><div class="admin-order-total"><span>Total del pedido</span><strong>'+money(order.subtotal_cop)+'</strong></div></section></div><div class="admin-order-foot"><div class="admin-order-meta">Última actualización: '+esc(formatDate(order.updated_at||order.created_at))+'</div><div class="admin-order-update"><label>Actualizar estado<select data-order-status="'+esc(order.id)+'">'+options+'</select></label><button type="button" data-order-update="'+esc(order.id)+'">Guardar estado</button></div></div></article>';
+   const subtotal=Number(order.subtotal_cop)||0,discount=Number(order.discount_cop)||0,total=Number(order.total_cop??(subtotal-discount));
+   const priceInfo=(order.coupon_code?'<div class="admin-order-meta">Cupón: <strong>'+esc(order.coupon_code)+'</strong> · Descuento: '+money(discount)+'</div>':(discount>0?'<div class="admin-order-meta">Descuento: '+money(discount)+'</div>':""));
+   const isShippable=order.delivery_type!=="digital";
+   const shipping=isShippable?'<div class="admin-shipping-editor" data-shipping-editor="'+esc(order.id)+'"><label>Transportadora<input type="text" maxlength="80" data-shipping-carrier="'+esc(order.id)+'" value="'+esc(order.shipping_carrier||"")+'" placeholder="Ej. Inter Rapidísimo"></label><label>Número de guía<input type="text" maxlength="100" data-tracking-number="'+esc(order.id)+'" value="'+esc(order.tracking_number||"")+'" placeholder="Guía de envío"></label><label>Entrega estimada<input type="date" data-estimated-date="'+esc(order.id)+'" value="'+esc(String(order.estimated_delivery_date||"").slice(0,10))+'"></label><div class="admin-shipping-current">'+(order.tracking_number?'Guía guardada: <strong>'+esc(order.tracking_number)+'</strong> · ':'')+(order.shipping_carrier?'Transportadora: '+esc(order.shipping_carrier)+' · ':'')+(order.estimated_delivery_date?'Fecha estimada: '+esc(String(order.estimated_delivery_date).slice(0,10)):'')+'</div><div class="admin-shipping-actions"><button type="button" data-shipping-save="'+esc(order.id)+'">Guardar envío</button>'+(wa&&order.tracking_number?'<a class="admin-order-open-link admin-shipping-notify" target="_blank" rel="noopener noreferrer" href="'+whatsappShippingHref(order)+'">Avisar por WhatsApp ↗</a>':"")+'</div></div>':'<div class="admin-shipping-current">Este pedido es digital; no requiere seguimiento de transportadora.</div>';
+   return '<article class="admin-order-card" data-order-card="'+esc(order.id)+'"><div class="admin-order-top"><div><div class="admin-order-id">'+esc(order.order_number||order.id)+'</div><div class="admin-order-date">'+esc(formatDate(order.created_at))+'</div></div><div class="admin-order-badges">'+badges+'</div></div><div class="admin-order-grid"><section><div class="admin-order-label">Datos del comprador</div><div class="admin-order-customer">'+esc(customer)+'</div><div class="admin-order-meta">'+email+phone+(address?'<div>Dirección: '+esc(address)+'</div>':'<div>Dirección: No indicada</div>')+(order.delivery_reference?'<div>Referencia: '+esc(order.delivery_reference)+'</div>':"")+(order.preferred_payment_method?'<div>Pago elegido: '+esc(order.preferred_payment_method)+'</div>':"")+(coords?'<div>'+coords+'</div>':"")+(order.customer_note?'<div>Nota: '+esc(order.customer_note)+'</div>':"")+'</div></section><section><div class="admin-order-label">Resumen del pedido · '+esc(order.delivery_type||"")+'</div><ul class="admin-order-lines">'+(itemRows||'<li>Detalle de productos no disponible.</li>')+'</ul>'+priceInfo+'<div class="admin-order-total"><span>'+(discount?'Total con descuento':'Total del pedido')+'</span><strong>'+money(total)+'</strong></div></section></div><div class="admin-order-foot"><div class="admin-order-meta">Última actualización: '+esc(formatDate(order.updated_at||order.created_at))+'</div><div class="admin-order-update"><label>Actualizar estado<select data-order-status="'+esc(order.id)+'">'+options+'</select></label><button type="button" data-order-update="'+esc(order.id)+'">Guardar estado</button></div></div>'+shipping+'</article>';
   }).join("");
  }
  const more=$("#loadMoreOrders");if(more){more.hidden=!ordersHasMore;more.disabled=ordersLoading;}
  box.querySelectorAll("[data-order-update]").forEach(button=>button.addEventListener("click",()=>updateOrderStatus(button.dataset.orderUpdate,button)));
+ box.querySelectorAll("[data-shipping-save]").forEach(button=>button.addEventListener("click",()=>saveOrderShipping(button.dataset.shippingSave,button)));
+}
+function whatsappShippingHref(order){
+ const digits=String(order.customer_phone||"").replace(/\D/g,"");
+ if(digits.length<10)return "";
+ const number=digits.length===10?"57"+digits:digits;
+ const customer=[order.customer_first_name,order.customer_last_name].filter(Boolean).join(" ")||"cliente";
+ const message=["Hola "+customer+", te compartimos la actualización de tu pedido "+(order.order_number||"NovaShop")+".","Transportadora: "+(order.shipping_carrier||"por confirmar"),"Número de guía: "+(order.tracking_number||"por confirmar"),order.estimated_delivery_date?"Fecha estimada: "+String(order.estimated_delivery_date).slice(0,10):null,"Gracias por comprar en NovaShop."].filter(Boolean).join("\n");
+ return "https://wa.me/"+number+"?text="+encodeURIComponent(message);
+}
+async function saveOrderShipping(orderId,button){
+ if(!["owner","admin"].includes(currentRole)){orderStatusNotice("No tienes permiso para gestionar envíos.","error");return;}
+ const id=CSS.escape(orderId),carrier=document.querySelector('input[data-shipping-carrier="'+id+'"]'),tracking=document.querySelector('input[data-tracking-number="'+id+'"]'),date=document.querySelector('input[data-estimated-date="'+id+'"]');
+ if(!carrier||!tracking||!date)return;
+ button.disabled=true;button.textContent="Guardando…";
+ try{
+  const result=await call({action:"update-order-shipping",order_id:orderId,shipping_carrier:carrier.value.trim(),tracking_number:tracking.value.trim(),estimated_delivery_date:date.value||null});
+  const order=adminOrders.find(x=>x.id===orderId);if(order&&result.order)Object.assign(order,result.order);
+  orderStatusNotice("Datos de envío guardados. Puedes avisar al cliente por WhatsApp.","success");renderAdminOrders();
+ }catch(error){orderStatusNotice(error.message||"No pudimos guardar el seguimiento.","error");}
+ finally{button.disabled=false;button.textContent="Guardar envío";}
 }
 async function updateOrderStatus(orderId,button){
  if(!["owner","admin"].includes(currentRole)){orderStatusNotice("No tienes permiso para actualizar pedidos.","error");return;}
@@ -385,6 +474,10 @@ async function init(){
  $("#productEditorModal")?.addEventListener("click",event=>{if(event.target.id==="productEditorModal")closeProductEditor();});
  document.addEventListener("keydown",event=>{if(event.key==="Escape")closeProductEditor();});$("#resetAdminForm").addEventListener("click",resetForm);$("#refreshAdminProducts").addEventListener("click",loadProducts);$("#refreshAdminMetrics")?.addEventListener("click",loadProducts);
  $("#refreshAdminOrders")?.addEventListener("click",()=>loadAdminOrders(true));
+ $("#refreshAdminCoupons")?.addEventListener("click",loadAdminCoupons);
+ $("#adminCouponForm")?.addEventListener("submit",saveAdminCoupon);
+ $("#resetAdminCoupon")?.addEventListener("click",()=>{const f=$("#adminCouponForm");f.reset();f.elements.id.value="";f.elements.minimum_subtotal_cop.value="0";f.elements.is_active.checked=true;couponNotice("Formulario listo para crear un nuevo cupón.");});
+ $("#refreshAdminReviews")?.addEventListener("click",loadAdminReviews);
  $("#filterAdminOrders")?.addEventListener("click",()=>loadAdminOrders(true));
  $("#adminOrderStatusFilter")?.addEventListener("change",()=>loadAdminOrders(true));
  $("#adminOrderSearch")?.addEventListener("input",renderAdminOrders);
@@ -396,7 +489,7 @@ async function init(){
  try{const me=await call({action:"whoami"});currentRole=me.role;configureRolePanels();}
  catch(e){status(e.message||"Tu cuenta no tiene permisos de administración.","error");return;}
  await loadProducts();
- if(["owner","admin"].includes(currentRole)){await Promise.all([loadAdminUsers(),loadAdminOrders(true)]);}
+ if(["owner","admin"].includes(currentRole)){await Promise.all([loadAdminUsers(),loadAdminOrders(true)]);loadAdminCoupons();loadAdminReviews();}
  db.client.auth.onAuthStateChange((_event,s)=>{if(!s){products=[];adminUsers=[];renderProducts();status("Sesión cerrada.","error");location.href="cuenta.html?tab=login";}});
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
