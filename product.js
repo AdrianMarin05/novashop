@@ -294,6 +294,20 @@ function buildProductWhatsAppMessage(data, orderInfo={}) {
 async function submitProductCheckout(event) {
   event.preventDefault();
   const form=event.currentTarget;
+  const formButton=form.querySelector('button[type="submit"],button[data-bold-ready]');
+  if(form.dataset.boldOrderId){
+    if(!window.NovaShopBold?.prepare){showToast('La integración de Bold no está disponible. Recarga la página e inténtalo de nuevo.');return;}
+    if(formButton){formButton.disabled=true;formButton.textContent='Preparando pago…';}
+    try{
+      await window.NovaShopBold.prepare(form.dataset.boldOrderId,formButton,closeProductCheckout);
+      window.NovaShopBold.setMessage(form,'Tu pedido ya está registrado. Pulsa «Pagar ahora con Bold» para abrir la pasarela segura y completar el pago.');
+    }catch(error){
+      if(formButton){formButton.type='submit';formButton.onclick=null;formButton.disabled=false;formButton.textContent='Reintentar pago con Bold';}
+      window.NovaShopBold.setMessage(form,(error?.message||'No pudimos preparar el pago.')+' Tu pedido está guardado; puedes reintentar sin crear otro pedido.');
+      showToast(error?.message||'No pudimos preparar el pago con Bold.');
+    }
+    return;
+  }
   if(!form.checkValidity()){form.reportValidity();return;}
   const raw=new FormData(form);
   const data={
@@ -306,12 +320,14 @@ async function submitProductCheckout(event) {
     couponCode:cleanField(raw.get('couponCode')).toUpperCase(),
     latitude:cleanField(raw.get('latitude')),longitude:cleanField(raw.get('longitude'))
   };
+  const useBold=data.paymentMethod==='bold';
+  if(useBold)data.paymentMethod='Pago en línea con Bold';
   if(currentProduct.deliveryType!=='digital' && (!data.address || !data.neighborhood || !data.city || !data.department)){
     showToast('Para productos físicos, completa dirección, barrio, ciudad y departamento.');
     return;
   }
-  // Pre-open WhatsApp during the click to avoid browser popup blocking after the async database call.
-  const whatsappTab=window.open('about:blank','_blank');
+  // Pre-open WhatsApp only for the existing assisted checkout. Bold opens on a dedicated click.
+  const whatsappTab=useBold?null:window.open('about:blank','_blank');
   let savedOrder=null;
   if(window.NovaShopDB?.isConfigured?.()){
     const button=form.querySelector('button[type="submit"]');
@@ -323,7 +339,25 @@ async function submitProductCheckout(event) {
       showToast(error?.message||'No pudimos guardar el pedido. Inténtalo de nuevo.');
       if(button){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}
       return;
-    }finally{if(button){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}}
+    }finally{if(button&&!useBold){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}}
+  }
+  if(useBold){
+    if(!savedOrder?.id){showToast('El servidor no devolvió el identificador del pedido. No hemos abierto el pago.');return;}
+    form.dataset.boldOrderId=savedOrder.id;
+    form.querySelectorAll('input,select,textarea').forEach(field=>{field.disabled=true;});
+    const button=form.querySelector('button[type="submit"]');
+    if(button){button.disabled=true;button.textContent='Preparando pago…';}
+    window.NovaShopBold?.setMessage(form,'Pedido '+(savedOrder.order_number||'registrado')+'. Estamos preparando el checkout seguro de Bold.');
+    try{
+      if(!window.NovaShopBold?.prepare)throw new Error('La integración de Bold no está disponible. Recarga la página.');
+      await window.NovaShopBold.prepare(savedOrder.id,button,closeProductCheckout);
+      window.NovaShopBold.setMessage(form,'Pedido '+(savedOrder.order_number||'registrado')+'. Pulsa «Pagar ahora con Bold» para completar el pago en la pasarela segura.');
+    }catch(error){
+      if(button){button.type='submit';button.onclick=null;button.disabled=false;button.textContent='Reintentar pago con Bold';}
+      window.NovaShopBold?.setMessage(form,(error?.message||'No pudimos preparar el pago.')+' Tu pedido está guardado; al reintentar no se creará uno nuevo.');
+      showToast(error?.message||'No pudimos preparar el pago con Bold.');
+    }
+    return;
   }
   const text=buildProductWhatsAppMessage(data,savedOrder||{});
   const url=`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
