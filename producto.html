@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="storefront-enhancements.css?v=4"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body class="product-page">
-  <div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
+  <div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Coordinamos el envío según tu destino</span><b>•</b><span>💬 Confirma tu pedido por WhatsApp</span><b>•</b><span>🧾 Consulta el costo de envío antes de confirmar</span><b>•</b><span>🤝 Atención cercana en cada paso</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Coordinamos el envío según tu destino</span><b>•</b><span>💬 Confirma tu pedido por WhatsApp</span><b>•</b><span>🧾 Consulta el costo de envío antes de confirmar</span><b>•</b><span>🤝 Atención cercana en cada paso</span><b>•</b></div></div></div></div>
 
   <header class="site-header">
     <div class="container nav-wrap">
@@ -66,9 +66,9 @@
             <p class="product-description" id="productDescription"></p>
 
             <div class="trust-list">
-              <div>✓ <span>Producto disponible</span></div>
-              <div>✓ <span>Envíos a todo Colombia</span></div>
-              <div>✓ <span>Atención directa por WhatsApp</span></div>
+              <div>✓ <span>Consulta disponibilidad antes de confirmar</span></div>
+              <div>✓ <span>Opciones de entrega según tu destino</span></div>
+              <div>✓ <span>Resolvemos tus dudas por WhatsApp</span></div>
             </div>
 
             <div class="purchase-box">
@@ -80,9 +80,9 @@
                   <button type="button" id="qtyPlus" aria-label="Aumentar cantidad">+</button>
                 </div>
               </div>
-              <button class="btn btn-primary product-add-btn" id="addProductToCart">Añadir al carrito</button>
+              <button class="btn btn-primary product-add-btn" id="addProductToCart">Agregar al carrito</button>
             </div>
-            <button class="btn btn-ghost wide" id="buyNow">💬 Comprar por WhatsApp</button>
+            <button class="btn btn-ghost wide" id="buyNow">💬 Consultar y pedir por WhatsApp</button>
             <button class="btn btn-ghost wide" type="button" id="toggleProductFavorite" aria-pressed="false">♡ Guardar en favoritos</button>
 
             <div class="detail-note">
@@ -148,10 +148,10 @@
       <div class="checkout-head">
         <span class="eyebrow">FINALIZAR COMPRA</span>
         <h2 id="productCheckoutTitle">Completa tu pedido</h2>
-        <p>✨ Completa tus datos y te llevaremos a WhatsApp con este producto y toda la información de entrega lista para confirmar.</p>
+        <p>Completa tus datos y revisa el resumen. Por WhatsApp podrás confirmar disponibilidad, envío y forma de pago antes de cerrar tu compra.</p>
       </div>
 
-      <div class="checkout-account-hint">✨ ¿Quieres consultar tus compras más adelante? <a href="cuenta.html" target="_blank" rel="noopener">Crea una cuenta gratis</a>. También puedes comprar como invitado.</div>
+      <div class="checkout-account-hint">¿Quieres consultar tus compras más adelante? <a href="cuenta.html" target="_blank" rel="noopener">Crea una cuenta gratis</a>. También puedes comprar como invitado.</div>
       <form id="productCheckoutForm" class="checkout-form"><input type="hidden" id="productCheckoutLat" name="latitude"><input type="hidden" id="productCheckoutLng" name="longitude"><input type="hidden" name="latitude"><input type="hidden" name="longitude">
         <div class="form-section-title">👤 Información personal</div>
         <div class="form-grid two-cols">
@@ -235,7 +235,7 @@
         <label class="coupon-code-field"><span>Código promocional (opcional)</span><input name="couponCode" type="text" maxlength="32" autocomplete="off" placeholder="Ej. NOVASHOP10"><small>El descuento se confirma cuando se valide el pedido.</small></label>
         <div class="checkout-summary" id="productCheckoutSummary"></div>
         <button class="btn btn-primary wide checkout-submit" type="submit">💬 Continuar a WhatsApp</button>
-        <p class="checkout-privacy">No introduzcas datos de tarjetas, contraseñas ni códigos de seguridad en este formulario.</p>
+        <p class="checkout-privacy">Tu pedido queda pendiente hasta que confirmemos contigo los detalles. No introduzcas datos de tarjetas, contraseñas ni códigos de seguridad aquí.</p>
       </form>
     </div>
   </div>
@@ -246,6 +246,6 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="delivery-map.js?v=16"></script><script src="supabase-config.js?v=19"></script>
   <script src="supabase-client.js?v=27"></script><script src="auth-nav.js?v=19"></script>
   <script src="products.js?v=19"></script>
-  <script src="product.js?v=20"></script>
+  <script src="product.js?v=21"></script>
 </body>
 </html>
