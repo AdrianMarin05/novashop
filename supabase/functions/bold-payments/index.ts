@@ -44,6 +44,7 @@ Deno.serve(async (req: Request) => {
     const serviceKey = defaultKey(Deno.env.get("SUPABASE_SECRET_KEYS")) || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const boldApiKey = Deno.env.get("BOLD_API_KEY") || "";
     const boldSecretKey = Deno.env.get("BOLD_SECRET_KEY") || "";
+    const boldEnvironment = clean(Deno.env.get("BOLD_ENVIRONMENT") || "live", 16).toLowerCase();
     const siteUrl = (Deno.env.get("NOVASHOP_SITE_URL") || "https://adrianmarin05.github.io/novashop").replace(/\/+$/, "");
 
     if (!supabaseUrl || !publicKey || !serviceKey) {
@@ -190,6 +191,18 @@ Deno.serve(async (req: Request) => {
         nextPaymentStatus = "cancelled";
       } else {
         return json({ ok: true, status: "pending", order_number: order.order_number, provider_status: providerStatus, message: "Bold aún no devuelve un estado final de la transacción." });
+      }
+
+      if (boldEnvironment === "test") {
+        return json({
+          ok: true,
+          status: "test",
+          order_number: order.order_number,
+          provider_status: providerStatus,
+          message: providerStatus === "APPROVED"
+            ? "Bold confirmó una transacción de prueba. No se marcó el pedido como pagado ni se modificó el inventario."
+            : "Bold confirmó un resultado de prueba (" + providerStatus + "). El pedido real no se modificó.",
+        });
       }
 
       const patch: Record<string, unknown> = {
