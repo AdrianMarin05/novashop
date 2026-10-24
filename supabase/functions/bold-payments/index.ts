@@ -44,7 +44,8 @@ Deno.serve(async (req: Request) => {
     const serviceKey = defaultKey(Deno.env.get("SUPABASE_SECRET_KEYS")) || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const boldApiKey = Deno.env.get("BOLD_API_KEY") || "";
     const boldSecretKey = Deno.env.get("BOLD_SECRET_KEY") || "";
-    const boldEnvironment = clean(Deno.env.get("BOLD_ENVIRONMENT") || "live", 16).toLowerCase();
+    const boldEnvironment = clean(Deno.env.get("BOLD_ENVIRONMENT") || "", 16).toLowerCase();
+    const validBoldEnvironment = ["test", "live"].includes(boldEnvironment);
     const siteUrl = (Deno.env.get("NOVASHOP_SITE_URL") || "https://adrianmarin05.github.io/novashop").replace(/\/+$/, "");
 
     if (!supabaseUrl || !publicKey || !serviceKey) {
@@ -59,7 +60,10 @@ Deno.serve(async (req: Request) => {
     try { body = JSON.parse(rawBody); } catch { return json({ error: "El formato de la solicitud no es válido." }, 400); }
     const action = clean(body.action, 40);
     // This public preflight reveals only whether configuration exists; it never returns credentials.
-    if (action === "status") return json({ ok: true, configured: Boolean(boldApiKey && boldSecretKey) });
+    if (action === "status") return json({ ok: true, configured: Boolean(boldApiKey && boldSecretKey && validBoldEnvironment) });
+    if (!validBoldEnvironment) {
+      return json({ error: "Configura BOLD_ENVIRONMENT como test o live en los secretos de Supabase." }, 503);
+    }
     if (!boldApiKey || !boldSecretKey) {
       return json({ error: "Faltan las llaves de integración de Bold en Supabase. Configura BOLD_API_KEY y BOLD_SECRET_KEY en los secretos de la función." }, 503);
     }
