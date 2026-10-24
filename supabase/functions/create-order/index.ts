@@ -46,6 +46,7 @@ Deno.serve(async (req: Request) => {
     try { body = JSON.parse(rawBody); } catch { return json({ error: "El formato del pedido no es válido." }, 400); }
 
     const c = body?.customer ?? {};
+    const couponCode = clean(c.couponCode ?? body?.couponCode, 32).toUpperCase();
     let firstName = clean(c.firstName, 60);
     let lastName = clean(c.lastName, 60);
     let email = clean(c.email, 120).toLowerCase();
@@ -177,6 +178,35 @@ Deno.serve(async (req: Request) => {
     if (!Number.isSafeInteger(subtotal) || subtotal <= 0 || subtotal > 100_000_000) {
       return json({ error: "No se pudo validar el total del pedido." }, 400);
     }
+
+    let discountCop = 0;
+    let usedCoupon: any = null;
+    if (couponCode) {
+      if (!/^[A-Z0-9_-]{3,32}$/.test(couponCode)) {
+        return json({ error: "El código del cupón no tiene un formato válido." }, 400);
+      }
+      const { data: coupon, error: couponError } = await admin.from("coupons")
+        .select("id,code,discount_type,discount_value,minimum_subtotal_cop,max_uses,uses_count,starts_at,ends_at,is_active")
+        .eq("code", couponCode).maybeSingle();
+      if (couponError) throw couponError;
+      if (!coupon || !coupon.is_active) return json({ error: "Ese cupón no existe o está desactivado." }, 400);
+      const now = Date.now();
+      if (new Date(coupon.starts_at).getTime() > now || (coupon.ends_at && new Date(coupon.ends_at).getTime() < now)) {
+        return json({ error: "Ese cupón todavía no está vigente o ya venció." }, 400);
+      }
+      if (coupon.max_uses != null && Number(coupon.uses_count) >= Number(coupon.max_uses)) {
+        return json({ error: "Ese cupón ya alcanzó su límite de usos." }, 400);
+      }
+      if (subtotal < Number(coupon.minimum_subtotal_cop || 0)) {
+        return json({ error: "El pedido no alcanza el mínimo de compra para usar ese cupón." }, 400);
+      }
+      discountCop = coupon.discount_type === "percent"
+        ? Math.round(subtotal * Number(coupon.discount_value) / 100)
+        : Math.min(subtotal, Number(coupon.discount_value));
+      discountCop = Math.max(0, Math.min(subtotal, discountCop));
+      usedCoupon = coupon;
+    }
+    const totalCop = subtotal - discountCop;
     const types = new Set(lines.map((l: any) => l.delivery_type));
     const deliveryType = types.size > 1 ? "mixed" : lines[0].delivery_type;
     if (types.has("physical") && (!address || !neighborhood || !city || !department)) {
@@ -189,6 +219,9 @@ Deno.serve(async (req: Request) => {
       payment_status: "pending",
       currency: "COP",
       subtotal_cop: subtotal,
+      discount_cop: discountCop,
+      total_cop: totalCop,
+      coupon_code: usedCoupon ? usedCoupon.code : null,
       delivery_type: deliveryType,
       customer_first_name: firstName,
       customer_last_name: lastName,
@@ -205,7 +238,7 @@ Deno.serve(async (req: Request) => {
       postal_code: postalCode || null,
       delivery_reference: reference || null,
       preferred_payment_method: paymentMethod || null,
-    }).select("id,order_number,status,payment_status,subtotal_cop,created_at").single();
+    }).select("id,order_number,status,payment_status,subtotal_cop,discount_cop,total_cop,coupon_code,created_at").single();
     if (orderError) throw orderError;
 
     const orderLines = lines.map((line: any) => ({ ...line, order_id: order.id }));
@@ -215,11 +248,23 @@ Deno.serve(async (req: Request) => {
       throw linesError;
     }
 
+    // Counts are updated by the trusted server only, never by the browser.
+    if (usedCoupon) {
+      const { error: usageError } = await admin.from("coupons")
+        .update({ uses_count: Number(usedCoupon.uses_count || 0) + 1, updated_at: new Date().toISOString() })
+        .eq("id", usedCoupon.id);
+      if (usageError) {
+        await admin.from("orders").delete().eq("id", order.id);
+        throw usageError;
+      }
+    }
+
     return json({
       ok: true,
       order: {
         id: order.id, order_number: order.order_number, status: order.status,
         payment_status: order.payment_status, subtotal_cop: order.subtotal_cop,
+        discount_cop: order.discount_cop, total_cop: order.total_cop, coupon_code: order.coupon_code,
         created_at: order.created_at,
       },
       message: "Pedido guardado con estado pendiente de pago. El pedido no se considera pagado hasta integrar y verificar el proveedor de pagos.",
