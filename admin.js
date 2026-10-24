@@ -13,26 +13,58 @@ function roleLabel(role){return ({owner:"Propietario",admin:"Administrador",cata
 function userStatus(text,kind="info"){const el=$("#adminUsersStatus");if(el){el.textContent=text;el.className="admin-status "+kind;}}
 async function loadAdminUsers(){
  if(!["owner","admin"].includes(currentRole))return;
+ const refresh=$("#refreshAdminUsers");
+ if(refresh){refresh.disabled=true;refresh.textContent="Actualizando…";}
  try{
   const result=await call({action:"list-users"});adminUsers=result.users||[];renderAdminUsers();
-  userStatus("Usuarios cargados. Los cambios de rol se validan en el servidor.","success");
+  userStatus("Lista sincronizada directamente con Supabase Authentication. "+adminUsers.length+" cuenta(s) activa(s).","success");
  }catch(e){userStatus(e.message||"No pudimos cargar los usuarios.","error");}
+ finally{if(refresh){refresh.disabled=false;refresh.textContent="Actualizar usuarios";}}
 }
 function renderAdminUsers(){
  const box=$("#adminUsersList");if(!box)return;
- $("#adminUsersCount").textContent=String(adminUsers.length);
- if(!adminUsers.length){box.innerHTML='<p class="admin-help">Todavía no hay usuarios registrados.</p>';return;}
- box.innerHTML=adminUsers.map(u=>{
+ const normalize=value=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+ const query=normalize($("#adminUserSearch")?.value||"");
+ const roleFilter=$("#adminUserRoleFilter")?.value||"all";
+ const filtered=adminUsers.filter(u=>{
+  if(roleFilter!=="all"&&u.role!==roleFilter)return false;
+  if(!query)return true;
+  return normalize([u.full_name,u.username,u.email,u.phone,u.address,u.neighborhood,u.city,u.department].join(" ")).includes(query);
+ });
+ const count=$("#adminUsersCount");
+ if(count)count.textContent=filtered.length===adminUsers.length?String(adminUsers.length):filtered.length+" / "+adminUsers.length;
+ const customers=adminUsers.filter(u=>u.role==="customer").length;
+ const staff=adminUsers.filter(u=>["admin","catalog_manager","analyst"].includes(u.role)).length;
+ const stats=$("#adminUsersStats");
+ if(stats)stats.innerHTML='<span><strong>'+adminUsers.length+'</strong> cuentas</span><span><strong>'+customers+'</strong> clientes</span><span><strong>'+staff+'</strong> equipo</span>';
+ if(!filtered.length){
+  box.innerHTML='<div class="admin-users-empty"><span>⌕</span><strong>'+(adminUsers.length?'No encontramos coincidencias':'Todavía no hay usuarios registrados')+'</strong><p>'+(adminUsers.length?'Prueba otro nombre, correo, teléfono o rol.':'Invita al primer usuario desde el formulario.')+'</p></div>';
+  return;
+ }
+ box.innerHTML=filtered.map(u=>{
   const id=esc(u.id);
   const options=[["customer","Cliente"],["catalog_manager","Gestor de catálogo"],["analyst","Analista"],["admin","Administrador"]];
+  const editableRole=u.role!=="owner"&&(currentRole==="owner"||u.role!=="admin");
   const safeOptions=options.filter(([value])=>value!=="admin"||currentRole==="owner"||u.role==="admin");
   const select=safeOptions.map(([value,label])=>'<option value="'+value+'" '+(u.role===value?'selected':'')+'>'+label+'</option>').join("");
-  const reset=currentRole==="owner"&&u.role!=="owner"
-   ? '<div class="admin-password-reset"><button type="button" class="admin-password-toggle" data-password-panel-toggle="'+id+'">Establecer contraseña temporal</button><form class="admin-password-form" data-password-reset-form="'+id+'" hidden><p class="admin-help">Para '+esc(u.email||u.full_name||"este usuario")+'. Solo el propietario puede realizar este cambio.</p><label>Contraseña temporal<input name="password" type="password" required minlength="12" maxlength="128" autocomplete="new-password" placeholder="Mínimo 12 caracteres"></label><label>Confirmar contraseña<input name="confirmPassword" type="password" required minlength="12" maxlength="128" autocomplete="new-password" placeholder="Escríbela otra vez"></label><div class="admin-password-actions"><button type="button" data-password-generate="'+id+'">Generar segura</button><button type="button" data-password-reveal="'+id+'">Mostrar</button><button type="submit">Guardar contraseña</button></div><p class="admin-help">Después de guardar, podrás copiar la contraseña temporal del formulario y enviarla en un chat privado.</p></form></div>'
+  const isOwner=u.role==="owner";
+  const canEdit=!isOwner&&(currentRole==="owner"||u.role!=="admin");
+  const canDelete=currentRole==="owner"&&!isOwner;
+  const address=[u.address,u.neighborhood,u.city,u.department,u.postal_code].filter(Boolean).join(", ");
+  const reset=currentRole==="owner"&&!isOwner
+   ? '<div class="admin-password-reset"><button type="button" class="admin-password-toggle" data-password-panel-toggle="'+id+'">Establecer contraseña temporal</button><form class="admin-password-form" data-password-reset-form="'+id+'" hidden><p class="admin-help">Para '+esc(u.email||u.full_name||"este usuario")+'. Solo el propietario puede realizar este cambio.</p><label>Contraseña temporal<input name="password" type="password" required minlength="12" maxlength="128" autocomplete="new-password" placeholder="Mínimo 12 caracteres"></label><label>Confirmar contraseña<input name="confirmPassword" type="password" required minlength="12" maxlength="128" autocomplete="new-password" placeholder="Escríbela otra vez"></label><div class="admin-password-actions"><button type="button" data-password-generate="'+id+'">Generar segura</button><button type="button" data-password-reveal="'+id+'">Mostrar</button><button type="submit">Guardar contraseña</button></div><p class="admin-help">Comparte una contraseña temporal únicamente por un canal privado.</p></form></div>'
    : "";
-  return '<article class="admin-user" data-user-row="'+id+'"><div class="admin-user-top"><div><div class="admin-user-name">'+esc(u.full_name||u.username||"Usuario")+'</div><div class="admin-user-email">'+esc(u.email||u.phone||"Sin correo")+'</div></div><span class="admin-pill '+(u.role==="customer"?"off":"")+'">'+esc(roleLabel(u.role))+'</span></div><div class="admin-user-meta"><span>'+(u.email_confirmed?"Correo confirmado":"Correo pendiente")+'</span><span>·</span><span>Alta: '+esc(new Date(u.created_at).toLocaleDateString("es-CO"))+'</span>'+(u.last_sign_in_at?'<span>·</span><span>Último acceso: '+esc(new Date(u.last_sign_in_at).toLocaleDateString("es-CO"))+'</span>':'')+'</div>'+(u.address||u.city?'<div class="admin-user-email">Dirección guardada: '+esc([u.address,u.neighborhood,u.city,u.department,u.postal_code].filter(Boolean).join(", "))+'</div>':'<div class="admin-user-meta">Dirección aún no guardada</div>')+'<div class="admin-user-meta"><span>Pedidos: '+Number(u.order_count||0)+'</span><span>·</span><span>Pagados: '+Number(u.paid_orders||0)+'</span><span>·</span><strong>Compras confirmadas: '+money(u.lifetime_spend_cop||0)+'</strong></div><div class="admin-user-controls"><label>Asignar rol<select data-role-select="'+id+'" '+(u.role==="owner"?"disabled":"")+'>'+select+'</select></label><button type="button" data-role-save="'+id+'" '+(u.role==="owner"?"disabled":"")+'>Guardar rol</button></div>'+reset+'</article>';
+  const edit=canEdit
+   ? '<details class="admin-user-edit"><summary>Editar datos del usuario</summary><form class="admin-user-edit-form" data-user-edit-form="'+id+'"><div class="admin-user-edit-grid"><label>Nombre completo *<input name="full_name" required maxlength="100" value="'+esc(u.full_name||"")+'"></label><label>Correo de acceso *<input name="email" type="email" required maxlength="120" value="'+esc(u.email||"")+'" '+(currentRole!=="owner"?'readonly aria-readonly="true" title="Solo el propietario puede cambiar el correo"':'')+'></label><label>Nombre de usuario<input name="username" maxlength="60" pattern="[A-Za-z0-9._-]{3,60}" value="'+esc(u.username||"")+'" placeholder="usuario"></label><label>Teléfono<input name="phone" maxlength="30" value="'+esc(u.phone||"")+'" placeholder="+57…"></label><label class="wide">Dirección<input name="address" maxlength="250" value="'+esc(u.address||"")+'"></label><label>Barrio<input name="neighborhood" maxlength="120" value="'+esc(u.neighborhood||"")+'"></label><label>Ciudad<input name="city" maxlength="100" value="'+esc(u.city||"")+'"></label><label>Departamento<input name="department" maxlength="100" value="'+esc(u.department||"")+'"></label><label>Código postal<input name="postal_code" maxlength="20" value="'+esc(u.postal_code||"")+'"></label></div><p class="admin-help">'+(currentRole==="owner"?'Los cambios de correo se aplican a la cuenta de acceso y al perfil.':'El correo de acceso solo lo puede modificar el propietario.')+'</p><button type="submit" class="admin-user-save-profile">Guardar datos del usuario</button></form></details>'
+   : (isOwner?'':'<p class="admin-help admin-owner-lock">Solo el propietario puede editar una cuenta de administrador.</p>');
+  const deleteButton=canDelete
+   ? '<button type="button" class="admin-user-delete" data-user-delete="'+id+'"><span aria-hidden="true">×</span> Eliminar cuenta</button>'
+   : "";
+  return '<article class="admin-user '+(isOwner?'admin-user-protected':'')+'" data-user-row="'+id+'"><div class="admin-user-top"><div><div class="admin-user-name">'+esc(u.full_name||u.username||"Usuario")+'</div><div class="admin-user-email">'+esc(u.email||u.phone||"Sin correo")+'</div></div><span class="admin-pill '+(u.role==="customer"?"off":"")+'">'+esc(roleLabel(u.role))+'</span></div><div class="admin-user-meta"><span class="admin-user-state '+(u.email_confirmed?'is-confirmed':'')+'"><i></i>'+(u.email_confirmed?"Correo confirmado":"Correo pendiente")+'</span><span>Alta: '+esc(new Date(u.created_at).toLocaleDateString("es-CO"))+'</span>'+(u.last_sign_in_at?'<span>Último acceso: '+esc(new Date(u.last_sign_in_at).toLocaleDateString("es-CO"))+'</span>':'')+'</div>'+(address?'<div class="admin-user-address"><span aria-hidden="true">⌖</span><span>'+esc(address)+'</span></div>':'<div class="admin-user-meta">Dirección aún no guardada</div>')+'<div class="admin-user-stats"><span>Pedidos <strong>'+Number(u.order_count||0)+'</strong></span><span>Pagados <strong>'+Number(u.paid_orders||0)+'</strong></span><span>Compras confirmadas <strong>'+money(u.lifetime_spend_cop||0)+'</strong></span></div><div class="admin-user-controls"><label>Asignar rol<select data-role-select="'+id+'" '+(!editableRole?"disabled":"")+'>'+select+'</select></label><button type="button" data-role-save="'+id+'" '+(!editableRole?"disabled":"")+'>'+((u.role==="owner"||!editableRole)?"Rol protegido":"Guardar rol")+'</button></div>'+edit+reset+(deleteButton?'<div class="admin-user-danger-zone"><span>Esta acción elimina la cuenta de acceso en Supabase.</span>'+deleteButton+'</div>':isOwner?'<p class="admin-help admin-owner-lock">La cuenta propietaria está protegida.</p>':'')+'</article>';
  }).join("");
  box.querySelectorAll("[data-role-save]").forEach(button=>button.addEventListener("click",()=>saveUserRole(button.dataset.roleSave)));
+ box.querySelectorAll("[data-user-edit-form]").forEach(form=>form.addEventListener("submit",event=>saveAdminUserProfile(event,form)));
+ box.querySelectorAll("[data-user-delete]").forEach(button=>button.addEventListener("click",()=>deleteAdminUser(button.dataset.userDelete)));
  box.querySelectorAll("[data-password-panel-toggle]").forEach(button=>button.addEventListener("click",()=>{
   const form=box.querySelector('[data-password-reset-form="'+CSS.escape(button.dataset.passwordPanelToggle)+'"]');
   if(!form)return;form.hidden=!form.hidden;
@@ -57,6 +89,34 @@ function renderAdminUsers(){
  }));
  box.querySelectorAll("[data-password-reset-form]").forEach(form=>form.addEventListener("submit",event=>setUserPassword(event,form)));
 }
+async function saveAdminUserProfile(event,form){
+ event.preventDefault();if(!form.reportValidity())return;
+ const userId=form.dataset.userEditForm;
+ const button=form.querySelector('[type="submit"]');
+ const data=new FormData(form);
+ const payload={action:"update-user",user_id:userId,
+  full_name:String(data.get("full_name")||"").trim(),email:String(data.get("email")||"").trim().toLowerCase(),
+  username:String(data.get("username")||"").trim(),phone:String(data.get("phone")||"").trim(),
+  address:String(data.get("address")||"").trim(),neighborhood:String(data.get("neighborhood")||"").trim(),
+  city:String(data.get("city")||"").trim(),department:String(data.get("department")||"").trim(),
+  postal_code:String(data.get("postal_code")||"").trim()};
+ button.disabled=true;button.textContent="Guardando…";
+ try{const result=await call(payload);userStatus(result.message||"Datos del usuario actualizados.","success");await loadAdminUsers();}
+ catch(error){userStatus(error.message||"No se pudieron guardar los datos del usuario.","error");}
+ finally{button.disabled=false;button.textContent="Guardar datos del usuario";}
+}
+async function deleteAdminUser(userId){
+ if(currentRole!=="owner"){userStatus("Solo el propietario puede eliminar cuentas.","error");return;}
+ const target=adminUsers.find(u=>u.id===userId);if(!target||target.role==="owner")return;
+ const label=target.email||target.full_name||"este usuario";
+ const confirmed=confirm("Vas a eliminar definitivamente la cuenta de "+label+" en Supabase Authentication. Se borrarán sus datos de perfil, rol, favoritos y reseñas. Los pedidos se conservarán para el historial comercial, pero dejarán de estar vinculados a la cuenta. Esta acción no se puede deshacer. ¿Deseas continuar?");
+ if(!confirmed)return;
+ const button=$('[data-user-delete="'+CSS.escape(userId)+'"]');
+ if(button){button.disabled=true;button.textContent="Eliminando…";}
+ try{const result=await call({action:"delete-user",user_id:userId});userStatus(result.message||"Cuenta eliminada correctamente.","success");await loadAdminUsers();}
+ catch(error){userStatus(error.message||"No se pudo eliminar la cuenta.","error");if(button){button.disabled=false;button.innerHTML='<span aria-hidden="true">×</span> Eliminar cuenta';}}
+}
+
 async function setUserPassword(event,form){
  event.preventDefault();
  if(currentRole!=="owner"){userStatus("Solo el propietario puede cambiar contraseñas desde el panel.","error");return;}
@@ -546,7 +606,7 @@ async function init(){
  $("#adminOrderStatusFilter")?.addEventListener("change",()=>loadAdminOrders(true));
  $("#adminOrderSearch")?.addEventListener("input",renderAdminOrders);
  $("#loadMoreOrders")?.addEventListener("click",()=>loadAdminOrders(false));
- $("#adminInviteForm")?.addEventListener("submit",inviteUser);$("#refreshAdminUsers")?.addEventListener("click",loadAdminUsers);
+ $("#adminInviteForm")?.addEventListener("submit",inviteUser);$("#refreshAdminUsers")?.addEventListener("click",loadAdminUsers);$("#adminUserSearch")?.addEventListener("input",renderAdminUsers);$("#adminUserRoleFilter")?.addEventListener("change",renderAdminUsers);
  if(!db?.isConfigured?.()){status("Supabase no está conectado.","error");return;}
  const {data}=await db.client.auth.getSession();
  if(!data.session){status("Inicia sesión con una cuenta autorizada para administrar NovaShop.","error");return;}
