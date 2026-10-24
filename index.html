@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=16">
+  <link rel="stylesheet" href="styles.css?v=32">
 </head>
 <body>
   <div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
@@ -23,6 +23,7 @@
         <a href="#inicio">Inicio</a>
         <a href="#categorias">Categorías</a>
         <a href="#productos">Productos</a><a href="streaming.html">Streaming</a>
+        <a href="favoritos.html">♡ Favoritos</a>
         <a href="#beneficios">Beneficios</a>
       </nav>
       <div class="header-actions account-actions"><a class="account-btn auth-nav-link" data-auth-nav="login" href="cuenta.html?tab=login">Iniciar sesión</a><a class="account-btn auth-nav-link" data-auth-nav="register" href="cuenta.html?tab=register">Crear cuenta</a><a class="account-btn auth-nav-link" data-auth-nav="account" href="cuenta.html" hidden>Mi cuenta</a><button class="icon-btn" id="searchToggle" aria-label="Buscar">⌕</button><button class="cart-btn" id="cartToggle" aria-label="Abrir carrito">🛒 <span>Carrito</span><b id="cartCount">0</b></button></div>
@@ -91,6 +92,12 @@
               <option value="name">Nombre A–Z</option>
             </select>
           </div>
+          <div class="catalog-filters" aria-label="Filtros adicionales">
+            <label>Precio mínimo <input id="minPriceFilter" type="number" min="0" step="1000" placeholder="$0"></label>
+            <label>Precio máximo <input id="maxPriceFilter" type="number" min="0" step="1000" placeholder="Sin máximo"></label>
+            <label class="catalog-filter-check"><input id="hideSoldOut" type="checkbox"> Ocultar agotados</label>
+            <label class="catalog-filter-check"><input id="onlyOffers" type="checkbox"> Solo ofertas</label>
+          </div>
         </div>
         <div class="product-grid" id="productGrid"></div>
         <div class="empty-state" id="emptyState" hidden>No encontramos productos con esos filtros.</div>
@@ -102,6 +109,20 @@
         <article><span>⚡</span><div><h3>Compra sencilla</h3><p>Encuentra, agrega al carrito y envía tu pedido en pocos pasos.</p></div></article>
         <article><span>💬</span><div><h3>Atención directa</h3><p>Recibe tu resumen de compra y continúa la conversación por WhatsApp.</p></div></article>
         <article><span>🔒</span><div><h3>Pago fuera del sitio</h3><p>La página no solicita números de tarjeta ni contraseñas.</p></div></article>
+      </div>
+    </section>
+
+    <section class="section faq-section" id="preguntas-frecuentes">
+      <div class="container">
+        <div class="section-head"><div><span class="eyebrow">AYUDA</span><h2>Preguntas frecuentes</h2><p>Información clara antes de comprar.</p></div></div>
+        <div class="faq-grid">
+          <details><summary>¿Cómo hago un pedido?</summary><p>Elige tus productos, añádelos al carrito y completa los datos de entrega. Antes de confirmar, NovaShop te mostrará el resumen para continuar por WhatsApp.</p></details>
+          <details><summary>¿Puedo guardar mis datos de envío?</summary><p>Sí. Crea una cuenta y completa Mi perfil. La próxima vez que compres, la tienda intentará rellenar automáticamente tus datos guardados.</p></details>
+          <details><summary>¿Cómo se confirma el pago?</summary><p>Por ahora el pedido continúa por WhatsApp y queda pendiente de pago hasta que NovaShop confirme el pago. No ingreses los datos de tu tarjeta en esta página.</p></details>
+          <details><summary>¿Cuándo llega mi pedido?</summary><p>El costo y el plazo se confirman según los productos y la dirección. Si el pedido se envía por transportadora, NovaShop puede compartir la guía cuando esté disponible.</p></details>
+          <details><summary>¿Puedo usar un cupón?</summary><p>Introduce tu código en el formulario de compra. El servidor comprueba si está activo, vigente y cumple las condiciones antes de aplicar el descuento.</p></details>
+          <details><summary>¿Cómo contacto a NovaShop?</summary><p>Puedes continuar la conversación por WhatsApp desde el proceso de compra para confirmar disponibilidad, envío y pago.</p></details>
+        </div>
       </div>
     </section>
 
@@ -212,6 +233,8 @@
 
         <p class="account-help">El equipo de NovaShop podrá abrir la dirección en un mapa desde el panel administrativo para coordinar el envío.</p>
         </div>
+        <div class="form-section-title">🎟️ Cupón de descuento</div>
+        <label class="coupon-code-field"><span>Código promocional (opcional)</span><input name="couponCode" type="text" maxlength="32" autocomplete="off" placeholder="Ej. NOVASHOP10"><small>El descuento se confirma cuando se valide el pedido.</small></label>
         <div class="form-section-title">💳 Pago y confirmación</div>
         <div class="form-grid two-cols">
           <label class="full">
@@ -240,9 +263,9 @@
 
   <div class="toast" id="toast" role="status"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=16"></script>
-  <script src="supabase-client.js?v=22"></script><script src="auth-nav.js?v=16"></script>
-  <script src="products.js?v=16"></script>
-  <script src="script.js?v=17"></script>
+  <script src="supabase-config.js?v=17"></script>
+  <script src="supabase-client.js?v=23"></script><script src="auth-nav.js?v=17"></script>
+  <script src="products.js?v=17"></script>
+  <script src="script.js?v=18"></script>
 </body>
 </html>
