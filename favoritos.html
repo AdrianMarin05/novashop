@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Tus productos favoritos de NovaShop.">
+<title>Mis favoritos — NovaShop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=33">
+<style>
+.favorites-wrap{max-width:1120px;margin:36px auto 70px;padding:0 20px;min-height:45vh}.favorites-heading{display:flex;justify-content:space-between;align-items:end;gap:15px;flex-wrap:wrap;margin-bottom:22px}.favorites-heading h1{margin:6px 0;font-size:clamp(28px,4vw,42px);letter-spacing:-.045em}.favorites-heading p{margin:0;color:#65727d;font-size:13px;line-height:1.6}.favorites-empty{border:1px dashed #d8e1e7;background:#f8fafb;border-radius:18px;text-align:center;padding:50px 20px;color:#60717d}.favorites-empty h2{margin:0 0 8px;color:#1b2e3e}.favorites-empty p{font-size:13px;line-height:1.6}.favorite-toggle{position:absolute;z-index:2;right:10px;top:10px;width:38px;height:38px;border:1px solid #e2e7eb;border-radius:50%;background:#fff;color:#63707a;font-size:23px;display:grid;place-items:center;box-shadow:0 4px 14px #14283a18;cursor:pointer}.favorite-toggle.is-favorite{color:#ee4f44;border-color:#ffd6d0;background:#fff4f1}.favorite-product-actions{display:flex;gap:8px;padding:0 14px 14px}.favorite-product-actions button{flex:1}.fav-page-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media(max-width:520px){.favorites-wrap{margin-top:22px}.favorites-empty{padding:36px 15px}}
+</style>
+</head>
+<body>
+<div class="announcement"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>🔒 Compra segura</span><b>•</b><span>💬 Atención por WhatsApp</span></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos a toda Colombia</span><b>•</b><span>🔒 Compra segura</span><b>•</b><span>💬 Atención por WhatsApp</span></div></div></div></div>
+<header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a><nav class="main-nav"><a href="index.html">Tienda</a><a href="streaming.html">Streaming</a><a href="cuenta.html">Mi cuenta</a></nav><div class="header-actions account-actions"><a class="account-btn" href="index.html#productos">Seguir comprando</a></div></div></header>
+<main class="favorites-wrap">
+ <div class="favorites-heading"><div><span class="eyebrow">TU LISTA PERSONAL</span><h1>Mis favoritos <span aria-hidden="true">♡</span></h1><p>Guarda los productos que quieras volver a encontrar fácilmente.</p></div><a class="btn btn-ghost" href="index.html#productos">Explorar catálogo →</a></div>
+ <div id="favoritesStatus" class="account-message" role="status" hidden></div>
+ <div class="product-grid" id="favoritesGrid"></div>
+ <div class="favorites-empty" id="favoritesEmpty" hidden><h2>Aún no guardas favoritos</h2><p>En la tienda, toca el corazón de un producto para guardarlo aquí.</p><a class="btn btn-primary" href="index.html#productos">Descubrir productos</a></div>
+</main>
+<footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Mis favoritos</span></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=18"></script><script src="supabase-client.js?v=24"></script><script src="auth-nav.js?v=18"></script>
+<script src="products.js?v=18"></script><script src="favorites.js?v=1"></script>
+</body></html>
