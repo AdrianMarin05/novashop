@@ -29,7 +29,18 @@
  }
  async function createBoldCheckout(orderId){return callBold("create-checkout",orderId);}
  async function verifyBoldPayment(orderId){return callBold("verify-checkout",orderId);}
- async function checkBoldConfigured(){const result=await callBold("status","");return result.configured===true;}
+ async function checkBoldConfigured(){
+  const result=await callBold("status","");
+  if(result.configured===true)return true;
+  const names=Array.isArray(result.missing)?result.missing:[];
+  const labels={
+    BOLD_API_KEY:"BOLD_API_KEY (llave de identidad de Bold)",
+    BOLD_SECRET_KEY:"BOLD_SECRET_KEY (llave secreta de Bold)",
+    BOLD_ENVIRONMENT:"BOLD_ENVIRONMENT (debe ser test o live)"
+  };
+  const missing=names.map(name=>labels[name]||name);
+  throw new Error("Bold aún no está configurado en Supabase. Falta configurar: "+(missing.length?missing.join(", "):"las llaves del comercio y el ambiente")+". Abre Supabase → Edge Functions → Secrets. No compartas tus llaves en el chat ni las publiques en GitHub.");
+ }
  async function syncCatalog(localProducts){
   if(!client||!Array.isArray(localProducts))return localProducts;
   const {data,error}=await client.from("products").select("id,name,category,price_cop,delivery_type,is_active,updated_at,old_price_cop,description,images,video_url,features,rating,reviews,tag,shipping,sort_order,stock_quantity").eq("is_active",true).order("sort_order");
