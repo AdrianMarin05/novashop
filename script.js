@@ -151,13 +151,26 @@ function openCart(){ $('#cartDrawer').classList.add('open'); $('#drawerOverlay')
 function closeCart(){ $('#cartDrawer').classList.remove('open'); $('#drawerOverlay').classList.remove('show'); document.body.style.overflow=''; }
 function toast(msg,duration=1800){ const t=$('#toast'); if(!t)return; t.textContent=msg; t.classList.add('show'); clearTimeout(window.__toast); window.__toast=setTimeout(()=>t.classList.remove('show'),duration); }
 
+function configureCheckoutPaymentMethods(form,allowContraentrega){
+  const select=form?.querySelector('select[name="paymentMethod"]');
+  const codOption=select?.querySelector('option[value="cash_on_delivery"]');
+  if(codOption){codOption.hidden=!allowContraentrega;codOption.disabled=!allowContraentrega;}
+  if(select&&!allowContraentrega)select.value="bold";
+  const policy=form?.querySelector("[data-payment-policy]");
+  if(policy)policy.textContent=allowContraentrega
+    ?"Con Bold el envío es gratis y el cliente elige un medio habilitado en Bold. Con contraentrega, el producto se paga al recibirlo y el flete se paga por anticipado a la transportadora."
+    :"Este carrito contiene productos digitales: se paga en línea con Bold. No aplica contraentrega ni envío físico.";
+}
 function checkoutWhatsApp(){
-  if(!cart.length){ toast('Añade al menos un producto'); return; }
+  if(!cart.length){toast("Añade al menos un producto");return;}
   renderCheckoutSummary();
-  const digitalOnly=cart.every(item=>product(item.id)?.deliveryType==='digital');
-  const deliveryFields=$('#cartDeliveryFields');if(deliveryFields)deliveryFields.hidden=digitalOnly;
+  const digitalOnly=cart.every(item=>product(item.id)?.deliveryType==="digital");
+  const allowContraentrega=cart.every(item=>product(item.id)?.deliveryType==="physical");
+  const form=$("#checkoutForm");
+  const deliveryFields=$("#cartDeliveryFields");if(deliveryFields)deliveryFields.hidden=digitalOnly;
+  configureCheckoutPaymentMethods(form,allowContraentrega);
   openCheckoutModal();
-  window.NovaShopDB?.prefillCheckout?.($('#checkoutForm')).catch(err=>console.warn('Perfil no precargado:',err));
+  window.NovaShopDB?.prefillCheckout?.(form).catch(err=>console.warn("Perfil no precargado:",err));
 }
 
 function renderCheckoutSummary(){
@@ -272,91 +285,84 @@ async function submitCheckoutForm(event){
   const form=event.currentTarget;
   const formButton=form.querySelector('button[type="submit"],button[data-bold-ready]');
   if(form.dataset.boldOrderId){
-    if(!window.NovaShopBold?.prepare){toast('La integración de Bold no está disponible. Recarga la página e inténtalo de nuevo.');return;}
-    if(formButton){formButton.disabled=true;formButton.textContent='Preparando pago…';}
+    if(!window.NovaShopBold?.prepare){toast("La integración de Bold no está disponible. Recarga la página e inténtalo de nuevo.");return;}
+    if(formButton){formButton.disabled=true;formButton.textContent="Preparando pago…";}
     try{
       await window.NovaShopBold.prepare(form.dataset.boldOrderId,formButton,closeCheckoutModal);
-      window.NovaShopBold.setMessage(form,'Tu pedido ya está registrado. Pulsa «Pagar ahora con Bold» para abrir la pasarela segura y completar el pago.');
+      window.NovaShopBold.setMessage(form,"Tu pedido ya está registrado. Pulsa «Pagar ahora con Bold» para completar el pago seguro.");
     }catch(error){
-      if(formButton){formButton.type='submit';formButton.onclick=null;formButton.disabled=false;formButton.textContent='Reintentar pago con Bold';}
-      window.NovaShopBold.setMessage(form,(error?.message||'No pudimos preparar el pago.')+' Tu pedido está guardado; puedes reintentar sin crear otro pedido.');
-      toast(error?.message||'No pudimos preparar el pago con Bold.');
+      if(formButton){formButton.type="submit";formButton.onclick=null;formButton.disabled=false;formButton.textContent="Reintentar pago con Bold";}
+      window.NovaShopBold.setMessage(form,(error?.message||"No pudimos preparar el pago.")+" Tu pedido está guardado; puedes reintentar sin crear otro pedido.");
+      toast(error?.message||"No pudimos preparar el pago con Bold.");
     }
     return;
   }
-  if(!cart.length){ closeCheckoutModal(); toast('Tu carrito está vacío'); return; }
-  if(!form.checkValidity()){ form.reportValidity(); return; }
+  if(!cart.length){closeCheckoutModal();toast("Tu carrito está vacío");return;}
+  if(!form.checkValidity()){form.reportValidity();return;}
   const raw=new FormData(form);
   const data={
-    firstName:cleanField(raw.get('firstName')), lastName:cleanField(raw.get('lastName')),
-    phone:cleanField(raw.get('phone')), email:cleanField(raw.get('email')),
-    address:cleanField(raw.get('address')), neighborhood:cleanField(raw.get('neighborhood')),
-    city:cleanField(raw.get('city')), department:cleanField(raw.get('department')),
-    postalCode:cleanField(raw.get('postalCode')), reference:cleanField(raw.get('reference')),
-    paymentMethod:cleanField(raw.get('paymentMethod')),
-    couponCode:cleanField(raw.get('couponCode')).toUpperCase(),
-    latitude:cleanField(raw.get('latitude')),
-    longitude:cleanField(raw.get('longitude'))
+    firstName:cleanField(raw.get("firstName")),lastName:cleanField(raw.get("lastName")),
+    phone:cleanField(raw.get("phone")),email:cleanField(raw.get("email")),
+    address:cleanField(raw.get("address")),neighborhood:cleanField(raw.get("neighborhood")),
+    city:cleanField(raw.get("city")),department:cleanField(raw.get("department")),
+    postalCode:cleanField(raw.get("postalCode")),reference:cleanField(raw.get("reference")),
+    paymentMethod:cleanField(raw.get("paymentMethod")),
+    couponCode:cleanField(raw.get("couponCode")).toUpperCase(),
+    latitude:cleanField(raw.get("latitude")),longitude:cleanField(raw.get("longitude"))
   };
-  const useBold=data.paymentMethod==='bold';
-  if(useBold)data.paymentMethod='Pago en línea con Bold';
-  const needsAddress = cart.some(item => product(item.id)?.deliveryType !== 'digital');
-  if(needsAddress && (!data.address || !data.neighborhood || !data.city || !data.department)){
-    toast('Para productos físicos, completa dirección, barrio, ciudad y departamento.');
-    return;
+  const useBold=data.paymentMethod==="bold";
+  const useCOD=data.paymentMethod==="cash_on_delivery";
+  if(!useBold&&!useCOD){toast("Selecciona Bold o contraentrega para continuar.");return;}
+  if(useCOD&&cart.some(item=>product(item.id)?.deliveryType!=="physical")){
+    toast("La contraentrega solo está disponible para pedidos de productos físicos. Para servicios digitales, paga con Bold.");return;
+  }
+  data.paymentMethod=useBold?"Pago en línea con Bold":"Contraentrega";
+  const needsAddress=cart.some(item=>product(item.id)?.deliveryType!=="digital");
+  if(needsAddress&&(!data.address||!data.neighborhood||!data.city||!data.department)){
+    toast("Para productos físicos, completa dirección, barrio, ciudad y departamento.");return;
   }
   if(useBold){
     try{
       const configured=await window.NovaShopDB?.checkBoldConfigured?.();
-      if(!configured){toast('El pago en línea con Bold todavía está en configuración. Puedes elegir otra forma de pago o intentarlo cuando la tienda termine la configuración.');return;}
-    }catch(error){
-      toast(error?.message||'No pudimos comprobar la configuración de Bold. Inténtalo de nuevo más tarde.');
-      return;
-    }
+      if(!configured){toast("El pago con Bold todavía está en configuración. Elige contraentrega o inténtalo cuando se activen las llaves.");return;}
+    }catch(error){toast(error?.message||"No pudimos comprobar la configuración de Bold.");return;}
   }
-  // Pre-open WhatsApp only for the existing assisted checkout. Bold uses its own direct user click.
-  const whatsappTab = useBold ? null : window.open('about:blank', '_blank');
-  let savedOrder = null;
-  if(window.NovaShopDB?.isConfigured?.()){
-    const button=form.querySelector('button[type="submit"]');
-    if(button){button.disabled=true;button.textContent='Guardando pedido…';}
-    try{
-      savedOrder=await window.NovaShopDB.createOrder(data,cart.map(item=>({product_id:Number(item.id),quantity:Number(item.qty)})));
-    }catch(error){
-      whatsappTab?.close();
-      toast(error?.message||'No pudimos guardar el pedido. Inténtalo de nuevo.');
-      if(button){button.disabled=false;button.type='submit';button.textContent=useBold?'Reintentar pago con Bold':'💬 Continuar a WhatsApp';}
-      return;
-    }finally{if(button&&!useBold){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}}
+  if(!window.NovaShopDB?.isConfigured?.()){
+    toast("El sistema de pedidos no está disponible en este momento. No se ha registrado ni cobrado tu pedido.");return;
   }
-  if(useBold){
-    if(!savedOrder?.id){
-      toast('El servidor no devolvió el identificador del pedido. No hemos abierto el pago.');
-      return;
-    }
-    form.dataset.boldOrderId=savedOrder.id;
-    form.querySelectorAll('input,select,textarea').forEach(field=>{field.disabled=true;});
-    const button=form.querySelector('button[type="submit"]');
-    if(button){button.disabled=true;button.textContent='Preparando pago…';}
-    window.NovaShopBold?.setMessage(form,'Pedido '+(savedOrder.order_number||'registrado')+'. Estamos preparando el checkout seguro de Bold.');
-    try{
-      if(!window.NovaShopBold?.prepare)throw new Error('La integración de Bold no está disponible. Recarga la página.');
-      await window.NovaShopBold.prepare(savedOrder.id,button,closeCheckoutModal);
-      window.NovaShopBold.setMessage(form,'Pedido '+(savedOrder.order_number||'registrado')+'. Pulsa «Pagar ahora con Bold» para completar el pago en la pasarela segura.');
-    }catch(error){
-      if(button){button.type='submit';button.onclick=null;button.disabled=false;button.textContent='Reintentar pago con Bold';}
-      window.NovaShopBold?.setMessage(form,(error?.message||'No pudimos preparar el pago.')+' Tu pedido está guardado; al reintentar no se creará uno nuevo.');
-      toast(error?.message||'No pudimos preparar el pago con Bold.');
-    }
+  let savedOrder=null;
+  const button=form.querySelector('button[type="submit"]');
+  if(button){button.disabled=true;button.textContent="Registrando pedido…";}
+  try{
+    savedOrder=await window.NovaShopDB.createOrder(data,cart.map(item=>({product_id:Number(item.id),quantity:Number(item.qty)})));
+  }catch(error){
+    toast(error?.message||"No pudimos registrar el pedido. Inténtalo de nuevo.");
+    if(button){button.disabled=false;button.type="submit";button.textContent="Confirmar pedido";}
+    return;
+  }finally{
+    if(button&&!useBold){button.disabled=false;button.textContent="Confirmar pedido";}
+  }
+  if(useCOD){
+    if(!savedOrder?.order_number){toast("El servidor no devolvió el número del pedido. Contacta a soporte antes de repetirlo.");return;}
+    cart=[];saveCart();renderCart();closeCheckoutModal();
+    window.location.href="pedido.html?modo=contraentrega&pedido="+encodeURIComponent(savedOrder.order_number);
     return;
   }
-  const text=buildWhatsAppMessage(data,savedOrder||{});
-  const url=`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
-  closeCheckoutModal();
-  if(whatsappTab) whatsappTab.location.href=url;
-  else window.location.href=url;
+  if(!savedOrder?.id){toast("El servidor no devolvió el identificador del pedido. No hemos abierto el pago.");return;}
+  form.dataset.boldOrderId=savedOrder.id;
+  form.querySelectorAll("input,select,textarea").forEach(field=>{field.disabled=true;});
+  if(button){button.disabled=true;button.textContent="Preparando pago…";}
+  window.NovaShopBold?.setMessage(form,"Pedido "+(savedOrder.order_number||"registrado")+". Estamos preparando el checkout seguro de Bold.");
+  try{
+    if(!window.NovaShopBold?.prepare)throw new Error("La integración de Bold no está disponible. Recarga la página.");
+    await window.NovaShopBold.prepare(savedOrder.id,button,closeCheckoutModal);
+    window.NovaShopBold.setMessage(form,"Pedido "+(savedOrder.order_number||"registrado")+". Pulsa «Pagar ahora con Bold» para pagar y recibir envío gratis.");
+  }catch(error){
+    if(button){button.type="submit";button.onclick=null;button.disabled=false;button.textContent="Reintentar pago con Bold";}
+    window.NovaShopBold?.setMessage(form,(error?.message||"No pudimos preparar el pago.")+" Tu pedido está guardado; al reintentar no se creará otro pedido.");
+    toast(error?.message||"No pudimos preparar el pago con Bold.");
+  }
 }
-
 window.openModal=function(type){
   const content={
     shipping:['Envíos','El costo y el tiempo de entrega dependen del destino y de los productos. Consulta ambos datos por WhatsApp antes de confirmar tu pedido.'],
