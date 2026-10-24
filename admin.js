@@ -412,10 +412,12 @@ async function updateOrderStatus(orderId,button){
  const order=adminOrders.find(item=>item.id===orderId);if(!order)return;
  const next=select.value;
  if(next===order.status){orderStatusNotice("El pedido ya tiene ese estado.");return;}
- if(["paid","preparing","shipped","delivered"].includes(next)){
-  const accepted=confirm("Vas a marcar "+(order.order_number||"este pedido")+" como «"+orderStateLabel(next)+"». Esto registrará el pago como aprobado. Confirma solo si verificaste el pago.");
+ const productWillBePaid=next==="paid"||next==="delivered"||(["preparing","shipped"].includes(next)&&order.payment_provider!=="cash_on_delivery");
+ if(productWillBePaid){
+  const accepted=confirm("Vas a marcar "+(order.order_number||"este pedido")+" como «"+orderStateLabel(next)+"». Esto registrará el producto como pagado. Confirma solo si verificaste que el cliente lo pagó o lo recaudó la transportadora.");
   if(!accepted){select.value=order.status;return;}
- }else if(next==="refunded"&&!confirm("¿Confirmas que el reembolso de este pedido ya se realizó?")){select.value=order.status;return;}
+ }else if(next==="shipped"&&order.payment_provider==="cash_on_delivery"&&!confirm("Solo puedes despachar contraentrega si el flete real ya está cotizado y pagado por anticipado a la transportadora. ¿Ya lo verificaste?")){select.value=order.status;return;}
+ else if(next==="refunded"&&!confirm("¿Confirmas que el reembolso del producto ya se realizó?")){select.value=order.status;return;}
  else if(next==="cancelled"&&!confirm("¿Deseas cancelar este pedido?")){select.value=order.status;return;}
  button.disabled=true;button.textContent="Guardando…";
  try{
