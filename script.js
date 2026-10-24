@@ -159,13 +159,16 @@ function configureCheckoutPaymentMethods(form,allowContraentrega,digitalOnly){
   if(codOption){codOption.hidden=!allowContraentrega;codOption.disabled=!allowContraentrega;}
   if(select&&!allowContraentrega)select.value="bold";
   const policy=form?.querySelector("[data-payment-policy]");
-  if(!policy)return;
+  const intro=form?.querySelector("[data-payment-intro]");
   if(digitalOnly){
-    policy.textContent="Este carrito contiene solo servicios digitales: se paga en línea con Bold y no aplica envío físico ni contraentrega. Si tienes preguntas sobre un servicio, consúltanos por WhatsApp antes de comprar.";
+    if(intro)intro.textContent="Completa tus datos y paga los servicios digitales en línea con Bold. No hay envío físico ni contraentrega; si tienes dudas sobre un servicio, puedes consultarnos por WhatsApp antes de comprar.";
+    if(policy)policy.textContent="Este carrito contiene solo servicios digitales: se paga en línea con Bold y no aplica envío físico ni contraentrega. Si tienes preguntas sobre un servicio, consúltanos por WhatsApp antes de comprar.";
   }else if(allowContraentrega){
-    policy.textContent="Con Bold el envío es gratis y el cliente elige un medio habilitado en Bold. Con contraentrega, el producto se paga al recibirlo y el flete se cotiza según el destino y se paga por anticipado a la transportadora.";
+    if(intro)intro.textContent="Completa tus datos y elige cómo pagar. Con Bold el envío es gratis en productos físicos y en la pasarela podrás elegir uno de los medios habilitados. Con contraentrega pagas el producto al recibirlo y el flete se cotiza según destino y se paga por anticipado a la transportadora.";
+    if(policy)policy.textContent="Con Bold el envío es gratis y el cliente elige un medio habilitado en Bold. Con contraentrega, el producto se paga al recibirlo y el flete se cotiza según el destino y se paga por anticipado a la transportadora.";
   }else{
-    policy.textContent="Este carrito mezcla productos físicos y servicios digitales, por lo que solo está disponible el pago en línea con Bold. El envío de los productos físicos es gratis al pagar en línea.";
+    if(intro)intro.textContent="Completa tus datos y paga en línea con Bold. En este carrito hay productos físicos y servicios digitales, así que no está disponible la contraentrega; el envío de los productos físicos es gratis.";
+    if(policy)policy.textContent="Este carrito mezcla productos físicos y servicios digitales, por lo que solo está disponible el pago en línea con Bold. El envío de los productos físicos es gratis al pagar en línea.";
   }
 }
 function checkoutWhatsApp(){
