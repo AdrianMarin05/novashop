@@ -1,0 +1,67 @@
+(() => {
+  let loadPromise = null;
+
+  function loadBoldScript() {
+    if (typeof window.BoldCheckout === "function") return Promise.resolve();
+    if (loadPromise) return loadPromise;
+    loadPromise = new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[src="https://checkout.bold.co/library/boldPaymentButton.js"]');
+      if (existing) {
+        const startedAt = Date.now();
+        const timer = window.setInterval(() => {
+          if (typeof window.BoldCheckout === "function") {
+            window.clearInterval(timer);
+            resolve();
+          } else if (Date.now() - startedAt > 12000) {
+            window.clearInterval(timer);
+            reject(new Error("La pasarela de Bold no terminó de cargar. Inténtalo nuevamente."));
+          }
+        }, 100);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.bold.co/library/boldPaymentButton.js";
+      script.async = true;
+      script.onload = () => {
+        if (typeof window.BoldCheckout === "function") resolve();
+        else reject(new Error("No se pudo inicializar la pasarela de Bold."));
+      };
+      script.onerror = () => reject(new Error("No pudimos cargar la pasarela de Bold. Revisa tu conexión."));
+      document.head.appendChild(script);
+    }).catch((error) => {
+      loadPromise = null;
+      throw error;
+    });
+    return loadPromise;
+  }
+
+  async function prepare(orderId, button, closeDialog) {
+    if (!window.NovaShopDB?.createBoldCheckout) {
+      throw new Error("La integración de pagos de NovaShop no está disponible. Recarga la página e inténtalo de nuevo.");
+    }
+    const result = await window.NovaShopDB.createBoldCheckout(orderId);
+    await loadBoldScript();
+    if (!result.config?.apiKey || !result.config?.integritySignature || !result.config?.orderId) {
+      throw new Error("Bold no devolvió una configuración de pago válida.");
+    }
+    const checkout = new window.BoldCheckout(result.config);
+    button.type = "button";
+    button.disabled = false;
+    button.textContent = "💳 Pagar ahora con Bold";
+    button.setAttribute("aria-label", "Abrir la pasarela segura de Bold");
+    button.dataset.boldReady = "true";
+    button.onclick = (event) => {
+      event.preventDefault();
+      try {
+        if (typeof closeDialog === "function") closeDialog();
+        checkout.open();
+      } catch (error) {
+        console.error("No se pudo abrir el checkout de Bold:", error);
+        window.alert("No pudimos abrir la pasarela de Bold. Recarga la página e inténtalo de nuevo.");
+      }
+    };
+    return result;
+  }
+
+  window.NovaShopBold = { prepare };
+})();
