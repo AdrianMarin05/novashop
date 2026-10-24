@@ -63,5 +63,19 @@
     return result;
   }
 
-  window.NovaShopBold = { prepare };
+  function setMessage(form, message) {
+    let node = form.querySelector("[data-bold-payment-status]");
+    if (!node) {
+      node = document.createElement("p");
+      node.className = "checkout-privacy";
+      node.dataset.boldPaymentStatus = "";
+      const button = form.querySelector("button[type='submit'], button[data-bold-ready]");
+      if (button?.parentNode) button.parentNode.insertBefore(node, button);
+      else form.appendChild(node);
+    }
+    node.textContent = message;
+    node.hidden = false;
+  }
+
+  window.NovaShopBold = { prepare, setMessage };
 })();
