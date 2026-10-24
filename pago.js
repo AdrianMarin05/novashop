@@ -14,6 +14,7 @@
       rejected: ["Pago no aprobado", "Bold informó que el intento de pago fue rechazado o falló. El pedido no se considera pagado."],
       cancelled: ["Pago anulado", "La transacción figura como anulada. El pedido no se considera pagado."],
       refunded: ["Pago reembolsado", "La transacción figura como reembolsada."],
+      test: ["Prueba de Bold verificada", "Bold confirmó una transacción de prueba. No se cobró dinero real y NovaShop no marcó este pedido como pagado ni modificó el inventario. Cambia a las llaves de producción solo cuando termines las pruebas."],
       pending: ["Pago pendiente de confirmación", "Todavía no tenemos una confirmación definitiva de Bold. No repitas el pago inmediatamente; vuelve a consultar más tarde. La actualización puede tardar unos minutos."],
       error: ["No pudimos verificar el pago", "No conseguimos consultar el estado con Bold. El pedido no se marcará como pagado sin una verificación válida."]
     };
@@ -49,7 +50,7 @@
     retry.textContent = "Consultando a Bold…";
     try {
       const result = await window.NovaShopDB.verifyBoldPayment(orderId);
-      const status = ["approved", "rejected", "cancelled", "refunded"].includes(result.status) ? result.status : "pending";
+      const status = ["approved", "rejected", "cancelled", "refunded", "test"].includes(result.status) ? result.status : "pending";
       setView(status, result.order_number || "", result.message || "");
     } catch (error) {
       setView("error", "", error?.message || "No pudimos consultar a Bold. El pedido se mantendrá pendiente hasta recibir una confirmación válida.");
