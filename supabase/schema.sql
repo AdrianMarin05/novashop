@@ -298,3 +298,101 @@ create table if not exists public.store_user_roles (
 );
 alter table public.store_user_roles enable row level security;
 revoke all on public.store_user_roles from public, anon, authenticated;
+
+
+-- Operational features: shipping tracking, coupon discounts, verified reviews, and saved favorites.
+alter table public.orders
+  add column if not exists shipping_carrier text,
+  add column if not exists tracking_number text,
+  add column if not exists estimated_delivery_date date,
+  add column if not exists shipped_at timestamptz,
+  add column if not exists delivered_at timestamptz,
+  add column if not exists coupon_code text,
+  add column if not exists discount_cop bigint not null default 0 check (discount_cop >= 0),
+  add column if not exists total_cop bigint;
+update public.orders set total_cop=greatest(0,subtotal_cop-coalesce(discount_cop,0)) where total_cop is null;
+alter table public.orders alter column total_cop set default 0;
+alter table public.orders alter column total_cop set not null;
+
+create table if not exists public.coupons (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique check (code=upper(btrim(code)) and code ~ '^[A-Z0-9_-]{3,32}$'),
+  description text not null default '',
+  discount_type text not null check (discount_type in ('percent','fixed')),
+  discount_value bigint not null check (discount_value>0),
+  minimum_subtotal_cop bigint not null default 0 check (minimum_subtotal_cop>=0),
+  max_uses integer check (max_uses is null or max_uses>0),
+  uses_count integer not null default 0 check (uses_count>=0),
+  starts_at timestamptz not null default now(),
+  ends_at timestamptz,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (discount_type<>'percent' or discount_value<=100),
+  check (ends_at is null or ends_at>starts_at)
+);
+create index if not exists coupons_active_dates_idx on public.coupons(is_active,starts_at,ends_at);
+alter table public.coupons enable row level security;
+revoke all on public.coupons from public,anon,authenticated;
+grant all on public.coupons to service_role;
+drop policy if exists "No direct access to coupons" on public.coupons;
+create policy "No direct access to coupons" on public.coupons for all to anon,authenticated using(false) with check(false);
+
+create table if not exists public.product_reviews (
+  id uuid primary key default gen_random_uuid(),
+  product_id integer not null references public.products(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  rating smallint not null check (rating between 1 and 5),
+  title text not null default '' check (length(title)<=100),
+  body text not null default '' check (length(body) between 5 and 1500),
+  is_approved boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique(product_id,user_id)
+);
+create index if not exists product_reviews_product_status_idx on public.product_reviews(product_id,is_approved,created_at desc);
+create index if not exists product_reviews_user_idx on public.product_reviews(user_id,created_at desc);
+alter table public.product_reviews enable row level security;
+revoke all on public.product_reviews from public,anon,authenticated;
+grant select on public.product_reviews to anon,authenticated;
+grant insert (product_id,user_id,rating,title,body) on public.product_reviews to authenticated;
+grant update (rating,title,body,updated_at) on public.product_reviews to authenticated;
+grant all on public.product_reviews to service_role;
+drop policy if exists "Public read approved product reviews" on public.product_reviews;
+create policy "Public read approved product reviews" on public.product_reviews for select to anon,authenticated using(is_approved=true);
+drop policy if exists "Customers read own product reviews" on public.product_reviews;
+create policy "Customers read own product reviews" on public.product_reviews for select to authenticated using((select auth.uid())=user_id);
+drop policy if exists "Verified customers submit product reviews" on public.product_reviews;
+create policy "Verified customers submit product reviews" on public.product_reviews for insert to authenticated with check (
+  (select auth.uid())=user_id and exists (
+    select 1 from public.orders o join public.order_items oi on oi.order_id=o.id
+    where o.user_id=(select auth.uid()) and o.status='delivered' and oi.product_id=product_reviews.product_id
+  )
+);
+drop policy if exists "Customers edit own pending reviews" on public.product_reviews;
+create policy "Customers edit own pending reviews" on public.product_reviews for update to authenticated
+using((select auth.uid())=user_id and is_approved=false)
+with check((select auth.uid())=user_id and is_approved=false);
+
+create table if not exists public.customer_favorites (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  product_id integer not null references public.products(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key(user_id,product_id)
+);
+alter table public.customer_favorites enable row level security;
+revoke all on public.customer_favorites from public,anon,authenticated;
+grant select,insert,delete on public.customer_favorites to authenticated;
+grant all on public.customer_favorites to service_role;
+drop policy if exists "Customers manage own favorites" on public.customer_favorites;
+create policy "Customers manage own favorites" on public.customer_favorites for all to authenticated
+using((select auth.uid())=user_id) with check((select auth.uid())=user_id);
+
+-- Profile upsert needs UPDATE on id during ON CONFLICT, but not unrestricted table-level UPDATE.
+revoke update on table public.profiles from authenticated;
+grant update (id,full_name,phone,email,address,neighborhood,city,department,postal_code,delivery_reference,latitude,longitude,marketing_opt_in,updated_at)
+on table public.profiles to authenticated;
+
+-- Explicit deny policy documents that staff-role assignments must only be changed by the trusted server.
+drop policy if exists "No direct access to store_user_roles" on public.store_user_roles;
+create policy "No direct access to store_user_roles" on public.store_user_roles for all to anon,authenticated using(false) with check(false);
