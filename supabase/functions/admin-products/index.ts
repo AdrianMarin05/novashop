@@ -154,7 +154,7 @@ Deno.serve(async (req: Request) => {
       const tracking=clean(body.tracking_number,100);
       const eta=clean(body.estimated_delivery_date,10);
       if(!/^[0-9a-f-]{36}$/i.test(orderId))return json({error:"Identificador de pedido no válido."},400,origin);
-      if(carrier.length>80||tracking.length>100||(eta&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(eta)))return json({error:"Revisa la transportadora, guía y fecha estimada."},400,origin);
+      if(carrier.length>80||tracking.length>100||(eta&&!/^\d{4}-\d{2}-\d{2}$/.test(eta)))return json({error:"Revisa la transportadora, guía y fecha estimada."},400,origin);
       const {data:updated,error}=await admin.from("orders").update({
         shipping_carrier:carrier||null,
         tracking_number:tracking||null,
@@ -238,9 +238,11 @@ Deno.serve(async (req: Request) => {
       const legacy = new Set((legacyResult.data||[]).map((x:any)=>x.user_id));
       const users = allUsers.map((u:any)=>{
         const p:any = profileMap.get(u.id) || {};
-        return {id:u.id,email:u.email || null,phone:u.phone || p.phone || null,
+        return {id:u.id,email:u.email || p.email || null,phone:u.phone || p.phone || null,
           full_name:p.full_name || u.user_metadata?.full_name || "",
-          username:p.username || "",role:roleMap.get(u.id) || (legacy.has(u.id)?"owner":"customer"),
+          username:p.username || "",address:p.address || "",neighborhood:p.neighborhood || "",
+          city:p.city || "",department:p.department || "",postal_code:p.postal_code || "",
+          role:roleMap.get(u.id) || (legacy.has(u.id)?"owner":"customer"),
           created_at:u.created_at,last_sign_in_at:u.last_sign_in_at || null,
           email_confirmed:!!u.email_confirmed_at,phone_confirmed:!!u.phone_confirmed_at};
       });
@@ -340,7 +342,7 @@ Deno.serve(async (req: Request) => {
     if (action === "metrics") {
       if (!canSeeMetrics) return json({error:"No tienes permiso para consultar métricas de ventas."},403,origin);
       const [ordersResult, itemsResult, productsResult] = await Promise.all([
-        admin.from("orders").select("id,status,payment_status,subtotal_cop,created_at").order("created_at",{ascending:false}).limit(10000),
+        admin.from("orders").select("id,status,payment_status,subtotal_cop,discount_cop,total_cop,created_at").order("created_at",{ascending:false}).limit(10000),
         admin.from("order_items").select("order_id,product_id,product_name,quantity,unit_price_cop,line_total_cop").limit(50000),
         admin.from("products").select("id,name,category,stock_quantity,is_active,price_cop").order("id",{ascending:true}).limit(10000)
       ]);
@@ -353,7 +355,7 @@ Deno.serve(async (req: Request) => {
       const paidStatuses = new Set(["paid","preparing","shipped","delivered"]);
       const paidOrders = orders.filter((o: any) => o.payment_status === "approved" || paidStatuses.has(o.status));
       const paidOrderIds = new Set(paidOrders.map((o: any) => o.id));
-      const revenueCop = paidOrders.reduce((n: number, o: any) => n + Number(o.subtotal_cop || 0), 0);
+      const revenueCop = paidOrders.reduce((n: number, o: any) => n + Number(o.total_cop ?? (Number(o.subtotal_cop || 0) - Number(o.discount_cop || 0))), 0);
       const confirmedItems = items.filter((it: any) => paidOrderIds.has(it.order_id));
       const unitsSold = confirmedItems.reduce((n: number, it: any) => n + Number(it.quantity || 0), 0);
       const productById = new Map(products.map((p: any) => [Number(p.id), p]));
