@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Estado de tu pago en NovaShop.">
+<title>Estado del pago — NovaShop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=36">
+<link rel="stylesheet" href="storefront-enhancements.css?v=4">
+</head>
+<body>
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="index.html" aria-label="NovaShop inicio"><span class="brand-mark">N</span><span>Nova<span>Shop</span></span></a>
+    <nav class="main-nav" aria-label="Navegación principal"><a href="index.html">Inicio</a><a href="index.html#productos">Productos</a><a href="cuenta.html">Mi cuenta</a></nav>
+  </div>
+</header>
+<main class="section">
+  <div class="container" style="max-width:720px">
+    <section class="modal-card" style="position:relative;margin:28px auto;padding:clamp(24px,5vw,44px);border-radius:22px">
+      <span class="eyebrow">ESTADO DE TU PEDIDO</span>
+      <h1 id="paymentTitle" style="margin:12px 0;font-size:clamp(28px,5vw,40px)">Verificando tu pago…</h1>
+      <p id="paymentMessage" role="status" aria-live="polite">Estamos consultando a Bold para verificar el estado de tu pago.</p>
+      <div id="paymentOrder" class="checkout-summary" hidden></div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:24px">
+        <button id="verifyPaymentAgain" class="btn btn-primary" type="button">Verificar de nuevo</button>
+        <a class="btn btn-ghost" href="index.html">Volver a NovaShop</a>
+        <a class="btn btn-ghost" href="cuenta.html">Mi cuenta</a>
+      </div>
+      <p class="checkout-privacy" style="margin-top:24px">El estado se consulta con Bold desde el servidor. El parámetro de retorno por sí solo no confirma que el pago haya sido aprobado.</p>
+    </section>
+  </div>
+</main>
+<footer class="site-footer"><div class="container footer-bottom"><span>© 2026 NovaShop</span><span>Pagos en línea con Bold</span></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=19"></script>
+<script src="supabase-client.js?v=28"></script>
+<script src="pago.js?v=1"></script>
+</body>
+</html>
