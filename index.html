@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=36">
+  <link rel="stylesheet" href="storefront-enhancements.css?v=1">
 </head>
 <body>
   <div class="announcement" role="region" aria-label="Beneficios de NovaShop"><div class="announcement-viewport"><div class="announcement-track"><div class="announcement-group"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div><div class="announcement-group" aria-hidden="true"><span>🚚 Envíos gratis a toda Colombia</span><b>•</b><span>💳 Pago Seguro</span><b>•</b><span>🔒 Compra 100% Segura</span><b>•</b><span>💬 Soporte personalizado por WhatsApp</span><b>•</b></div></div></div></div>
@@ -45,6 +46,15 @@
           <span class="eyebrow">NUEVOS PRODUCTOS · OFERTAS DESTACADAS</span>
           <h1>Lo que buscas.<br><em>Más fácil.</em></h1>
           <p>Descubre productos útiles, modernos y con una experiencia de compra rápida desde cualquier dispositivo.</p>
+          <div class="hero-product-search" role="search" aria-label="Buscar en el catálogo">
+            <div class="hero-search-shell">
+              <span class="hero-search-icon" aria-hidden="true">⌕</span>
+              <input id="heroProductSearch" type="search" placeholder="¿Qué estás buscando hoy?" autocomplete="off" aria-label="Buscar productos por nombre o categoría">
+              <button id="heroSearchSubmit" class="hero-search-submit" type="button">Buscar <span aria-hidden="true">→</span></button>
+            </div>
+            <div class="hero-search-caption">Busca por nombre, categoría o característica.</div>
+            <div id="heroCategoryChips" class="hero-category-chips" aria-label="Categorías rápidas"></div>
+          </div>
           <div class="hero-cta">
             <a class="btn btn-primary" href="#productos">Explorar productos</a>
             <a class="btn btn-ghost" href="#categorias">Ver categorías</a>
@@ -266,6 +276,7 @@
   <script src="supabase-config.js?v=17"></script>
   <script src="supabase-client.js?v=24"></script><script src="auth-nav.js?v=17"></script>
   <script src="products.js?v=17"></script>
-  <script src="script.js?v=19"></script>
+  <script src="script.js?v=20"></script>
+  <script src="storefront-enhancements.js?v=1"></script>
 </body>
 </html>
