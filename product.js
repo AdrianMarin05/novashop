@@ -10,6 +10,7 @@ let currentProduct = products.find(p => p.id === productId) || products[0];
 
 const $ = (selector) => document.querySelector(selector);
 let quantity = 1;
+let productFavoriteIds = new Set();
 
 function cartData() {
   return JSON.parse(localStorage.getItem('novashop-cart') || '[]');
@@ -35,8 +36,9 @@ function showToast(message) {
 function addCurrentProduct(amount = quantity) {
   const cart = cartData();
   const existing = cart.find(item => item.id === currentProduct.id);
-
-  if (existing) {
+  if(currentProduct.stockQuantity!=null&&Number(currentProduct.stockQuantity)<=0){showToast('Este producto está agotado');return;}
+  if(existing&&currentProduct.stockQuantity!=null&&existing.qty+amount>Number(currentProduct.stockQuantity)){showToast('No hay más unidades disponibles');return;}
+  if(existing) {
     existing.qty += amount;
   } else {
     cart.push({
@@ -55,6 +57,77 @@ function addCurrentProduct(amount = quantity) {
 
 function cleanField(value) {
   return String(value || '').trim().replace(/\s+/g, ' ');
+}
+
+
+function escProduct(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+async function refreshProductFavorite(){
+ const button=$("#toggleProductFavorite");if(!button)return;
+ try{const ids=await window.NovaShopDB?.getFavoriteIds?.();if(Array.isArray(ids))productFavoriteIds=new Set(ids.map(Number));}
+ catch(e){console.warn("Favoritos:",e);}
+ const saved=productFavoriteIds.has(Number(currentProduct.id));button.textContent=saved?"♥ Guardado en favoritos":"♡ Guardar en favoritos";button.classList.toggle("is-favorite",saved);button.setAttribute("aria-pressed",String(saved));
+}
+async function toggleCurrentProductFavorite(){
+ const button=$("#toggleProductFavorite");if(!button)return;
+ try{
+  let ids=await window.NovaShopDB?.toggleFavorite?.(Number(currentProduct.id));
+  if(!Array.isArray(ids)){const next=new Set(productFavoriteIds);next.has(Number(currentProduct.id))?next.delete(Number(currentProduct.id)):next.add(Number(currentProduct.id));productFavoriteIds=next;localStorage.setItem("novashop-favorites-v1",JSON.stringify([...next]));}
+  else productFavoriteIds=new Set(ids.map(Number));
+  refreshProductFavorite();showToast(productFavoriteIds.has(Number(currentProduct.id))?"Añadido a favoritos":"Quitado de favoritos");
+ }catch(e){showToast(e.message||"No pudimos actualizar favoritos.");}
+}
+function reviewHint(text,kind="info"){const el=$("#productReviewHint");if(!el)return;el.textContent=text;el.className="account-message "+kind;el.hidden=!text;}
+async function loadProductReviews(){
+ const client=window.NovaShopDB?.client,box=$("#productReviewsList"),form=$("#productReviewForm"),summary=$("#productReviewSummary");
+ if(!box)return;
+ let session=null;
+ try{session=await window.NovaShopDB?.getSession?.();}catch(_){}
+ let reviews=[];
+ if(client){
+  const {data,error}=await client.from("product_reviews").select("id,user_id,rating,title,body,is_approved,created_at").eq("product_id",Number(currentProduct.id)).order("created_at",{ascending:false}).limit(100);
+  if(error){box.innerHTML='<div class="favorites-empty">No pudimos cargar las reseñas. Inténtalo de nuevo más tarde.</div>';console.warn("Reseñas:",error.message);}
+  else reviews=data||[];
+ }
+ const published=reviews.filter(r=>r.is_approved);
+ const own=session?.user?reviews.find(r=>r.user_id===session.user.id):null;
+ const mean=published.length?published.reduce((sum,r)=>sum+Number(r.rating||0),0)/published.length:0;
+ const ratingRow=document.querySelector(".rating-row");
+ if(ratingRow){
+  ratingRow.hidden=!published.length;
+  $("#productRating").textContent=published.length?mean.toFixed(1):"";
+  $("#productReviews").textContent=published.length?"("+published.length+" reseñas)":"";
+  $("#productRatingStars").textContent=published.length?("★".repeat(Math.round(mean))+"☆".repeat(5-Math.round(mean))):"";
+ }
+ if(summary)summary.textContent=published.length?published.length+" reseñas publicadas · Promedio "+mean.toFixed(1)+" de 5 estrellas.":"Todavía no hay reseñas publicadas de este producto.";
+ box.innerHTML=reviews.length?reviews.filter(r=>r.is_approved||(session?.user&&r.user_id===session.user.id)).map(r=>'<article class="product-review-card"><div class="product-review-card-head"><div><strong>'+escProduct(r.title||"Opinión de comprador")+'</strong><div class="product-review-meta">'+escProduct(r.user_id===session?.user?.id?"Tu reseña":"Comprador verificado")+' · '+escProduct(new Date(r.created_at).toLocaleDateString("es-CO"))+'</div></div><span class="product-review-stars">'+("★".repeat(Number(r.rating)||0))+("☆".repeat(5-(Number(r.rating)||0)))+'</span></div><p>'+escProduct(r.body)+'</p>'+(r.user_id===session?.user?.id&&!r.is_approved?'<small class="admin-help">Pendiente de revisión antes de publicarse.</small>':"")+'</article>').join(""):'<div class="favorites-empty"><h2>Tu opinión puede ser la primera</h2><p>Cuando haya reseñas aprobadas aparecerán aquí.</p></div>';
+ if(!form)return;
+ if(!session?.user){form.hidden=true;reviewHint("Inicia sesión con tu cuenta para escribir una reseña. Solo se aceptan reseñas de pedidos entregados.");return;}
+ if(own){form.hidden=true;reviewHint(own.is_approved?"Ya publicaste una reseña de este producto.":"Ya recibimos tu reseña; está pendiente de revisión.","success");return;}
+ let eligible=false;
+ try{
+  const {data:orders}=await client.from("orders").select("id").eq("user_id",session.user.id).eq("status","delivered").limit(100);
+  const orderIds=(orders||[]).map(o=>o.id);
+  if(orderIds.length){
+   const {data:items}=await client.from("order_items").select("product_id").eq("product_id",Number(currentProduct.id)).in("order_id",orderIds).limit(1);
+   eligible=!!items?.length;
+  }
+ }catch(e){console.warn("No se pudo comprobar la entrega para reseñas:",e.message);}
+ form.hidden=!eligible;
+ reviewHint(eligible?"Tu pedido fue entregado. Deja una reseña; se publicará tras la revisión de NovaShop.":"Podrás escribir una reseña cuando una compra de este producto figure como entregada.","info");
+}
+async function submitProductReview(event){
+ event.preventDefault();
+ const form=event.currentTarget;if(!form.reportValidity())return;
+ const session=await window.NovaShopDB?.getSession?.(),client=window.NovaShopDB?.client;
+ if(!session?.user||!client){reviewHint("Inicia sesión para dejar una reseña.","error");return;}
+ const raw=new FormData(form),button=form.querySelector('[type="submit"]');
+ button.disabled=true;button.textContent="Enviando…";
+ try{
+  const {error}=await client.from("product_reviews").insert({product_id:Number(currentProduct.id),user_id:session.user.id,rating:Number(raw.get("rating")),title:cleanField(raw.get("title")),body:cleanField(raw.get("body"))});
+  if(error){if(error.code==="23505")throw new Error("Ya enviaste una reseña para este producto.");throw error;}
+  form.reset();reviewHint("Gracias. Tu reseña quedó pendiente de revisión y se mostrará cuando sea aprobada.","success");await loadProductReviews();
+ }catch(e){reviewHint(e.message||"No se pudo enviar la reseña. Verifica que el pedido esté entregado.","error");}
+ finally{button.disabled=false;button.textContent="Enviar reseña";}
 }
 
 function renderProductCheckoutSummary() {
@@ -89,8 +162,12 @@ function closeProductCheckout() {
   document.body.style.overflow = '';
 }
 
-function buildProductWhatsAppMessage(data, orderNumber='') {
+function buildProductWhatsAppMessage(data, orderInfo={}) {
+  const order=typeof orderInfo==='string'?{order_number:orderInfo}:(orderInfo||{});
+  const orderNumber=order.order_number||'';
   const subtotal = currentProduct.price * quantity;
+  const discount=Math.max(0,Number(order.discount_cop)||0);
+  const finalTotal=order.total_cop!=null?Number(order.total_cop):Math.max(0,subtotal-discount);
 
   const I = {
     wave: '\u{1F44B}',
@@ -120,6 +197,9 @@ function buildProductWhatsAppMessage(data, orderNumber='') {
     `   Total: ${money(subtotal)}`,
     '',
     `${I.package} *Subtotal:* ${money(subtotal)}`,
+    order.coupon_code ? `🎟️ Cupón aplicado: ${order.coupon_code}` : null,
+    discount>0 ? `Descuento: -${money(discount)}` : null,
+    `*Total tras descuento:* ${money(finalTotal)}`,
     '',
     '━━━━━━━━━━━━━━━━━━━━',
     `${I.user} *DATOS DEL CLIENTE*`,
@@ -163,6 +243,7 @@ async function submitProductCheckout(event) {
     city:cleanField(raw.get('city')),department:cleanField(raw.get('department')),
     postalCode:cleanField(raw.get('postalCode')),reference:cleanField(raw.get('reference')),
     paymentMethod:cleanField(raw.get('paymentMethod')),
+    couponCode:cleanField(raw.get('couponCode')).toUpperCase(),
     latitude:cleanField(raw.get('latitude')),longitude:cleanField(raw.get('longitude'))
   };
   if(currentProduct.deliveryType!=='digital' && (!data.address || !data.neighborhood || !data.city || !data.department)){
@@ -184,7 +265,7 @@ async function submitProductCheckout(event) {
       return;
     }finally{if(button){button.disabled=false;button.textContent='💬 Continuar a WhatsApp';}}
   }
-  const text=buildProductWhatsAppMessage(data,savedOrder?.order_number||'');
+  const text=buildProductWhatsAppMessage(data,savedOrder||{});
   const url=`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
   closeProductCheckout();
   window.open(url,'_blank','noopener,noreferrer');
@@ -245,11 +326,14 @@ $('#qtyMinus').addEventListener('click', () => {
 });
 
 $('#qtyPlus').addEventListener('click', () => {
+  if(currentProduct.stockQuantity!=null&&quantity>=Number(currentProduct.stockQuantity)){showToast('No hay más unidades disponibles');return;}
   quantity += 1;
   $('#quantityValue').textContent = quantity;
 });
 
 $('#addProductToCart').addEventListener('click', () => addCurrentProduct());
+$('#toggleProductFavorite')?.addEventListener('click',toggleCurrentProductFavorite);
+$('#productReviewForm')?.addEventListener('submit',submitProductReview);
 $('#buyNow').addEventListener('click', openProductCheckout);
 $('#productCheckoutClose').addEventListener('click', closeProductCheckout);
 $('#productCheckoutModal').addEventListener('click', (event) => {
@@ -267,4 +351,6 @@ document.addEventListener('visibilitychange', () => {
 
 renderProduct();
 updateCartCount();
-window.NovaShopDB?.syncCatalog?.(products).then(()=>{currentProduct=products.find(p=>p.id===productId)||currentProduct;renderProduct();}).catch(err=>console.warn('Catálogo Supabase:',err));
+refreshProductFavorite();
+loadProductReviews();
+window.NovaShopDB?.syncCatalog?.(products).then(()=>{currentProduct=products.find(p=>p.id===productId)||currentProduct;renderProduct();refreshProductFavorite();loadProductReviews();}).catch(err=>console.warn('Catálogo Supabase:',err));
