@@ -223,6 +223,9 @@ Deno.serve(async (req: Request) => {
     const totalCop = subtotal - discountCop;
     const types = new Set(lines.map((l: any) => l.delivery_type));
     const deliveryType = types.size > 1 ? "mixed" : lines[0].delivery_type;
+    if (!isBoldPayment && types.has("digital")) {
+      return json({ error: "La contraentrega solo está disponible para pedidos exclusivamente de productos físicos. Para servicios digitales, paga con Bold." }, 400);
+    }
     if (types.has("physical") && (!address || !neighborhood || !city || !department)) {
       return json({ error: "Completa la dirección, barrio, ciudad y departamento para productos físicos." }, 400);
     }
